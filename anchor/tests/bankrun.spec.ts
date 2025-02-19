@@ -57,6 +57,8 @@ describe("Grasschain (Approach A) - Full Anchor Flow", () => {
   // Terms
   const principal = new BN(1_000_000);
   const yieldPerc = new BN(10);
+  const duration = new BN(30 * 24 * 60 * 60); // 30 days in seconds
+  const contractId = new BN(Date.now()); // Unique contract ID based on current time
 
   beforeAll(async () => {
     // 1) Start ephemeral environment
@@ -175,13 +177,17 @@ describe("Grasschain (Approach A) - Full Anchor Flow", () => {
 
   it("(4) createContract => status=Created", async () => {
     const [cPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("contract"), farmer.publicKey.toBuffer()],
+      [Buffer.from("contract"), farmer.publicKey.toBuffer(), contractId.toArrayLike(Buffer, "le", 8)],
       program.programId
     );
     contractPda = cPda;
 
+    // Set a short duration for testing purposes
+    const testDuration = new BN(10); // 10 seconds
+
+    // Update the createContract call to use the test duration
     const txSig = await program.methods
-      .createContract(principal, yieldPerc)
+      .createContract(principal, yieldPerc, testDuration, contractId)
       .accountsPartial({
         farmer: farmer.publicKey,
         contract: contractPda,
@@ -198,6 +204,9 @@ describe("Grasschain (Approach A) - Full Anchor Flow", () => {
     const contractData = await program.account.contract.fetch(contractPda);
     expect(contractData.status).toEqual({ created: {} });
     console.log("Contract => Created!");
+
+    // Wait for the duration to pass
+    await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
   });
 
   it("(5) fundContract => status=Funded", async () => {
@@ -249,14 +258,15 @@ describe("Grasschain (Approach A) - Full Anchor Flow", () => {
 
     const buyback = principal.toNumber() + (principal.toNumber() * yieldPerc.toNumber()) / 100;
 
+    // Now attempt to settle the contract
     const txSig = await program.methods
       .settleContract(new BN(buyback))
       .accountsPartial({
         contract: contractPda,
         farmer: farmer.publicKey,
         mint: mintPda,
-        investorTokenAccount: investorAta.address, // Use the derived ATA
-        farmerTokenAccount: farmerAta.address, // Use the derived ATA
+        investorTokenAccount: investorAta.address,
+        farmerTokenAccount: farmerAta.address,
         tokenProgram: TOKEN_PROGRAM_ID,
         systemProgram: SystemProgram.programId,
       })

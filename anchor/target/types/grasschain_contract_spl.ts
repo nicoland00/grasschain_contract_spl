@@ -5,40 +5,35 @@
  * IDL can be found at `target/idl/grasschain_contract_spl.json`.
  */
 export type GrasschainContractSpl = {
-  "address": "coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF",
+  "address": "2AW1LTvcsdXkUWU1WortvtdMARMXiCBDe1VVNSUHh333",
   "metadata": {
     "name": "grasschainContractSpl",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
+  "docs": [
+    "The main program"
+  ],
   "instructions": [
     {
-      "name": "createContract",
+      "name": "adminCancel",
       "docs": [
-        "(B) Create the contract => status = Created"
+        "(4) Admin cancels => refunds all invests"
       ],
       "discriminator": [
-        244,
-        48,
-        244,
-        178,
-        216,
-        88,
-        122,
-        52
+        34,
+        225,
+        37,
+        131,
+        38,
+        121,
+        43,
+        237
       ],
       "accounts": [
         {
-          "name": "farmer",
-          "writable": true,
-          "signer": true
-        },
-        {
           "name": "contract",
-          "docs": [
-            "The Contract data"
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -57,82 +52,50 @@ export type GrasschainContractSpl = {
               },
               {
                 "kind": "account",
-                "path": "farmer"
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
               }
             ]
           }
         },
         {
-          "name": "mint",
-          "docs": [
-            "The Mint (already created by init_mint)"
-          ]
-        },
-        {
-          "name": "escrowVault",
-          "docs": [
-            "The escrow vault (already created by init_mint)"
-          ],
-          "writable": true
-        },
-        {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "associatedTokenProgram",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "investmentAmount",
-          "type": "u64"
-        },
-        {
-          "name": "yieldPercentage",
-          "type": "i64"
-        }
-      ]
-    },
-    {
-      "name": "fundContract",
-      "docs": [
-        "(C) The investor funds => status = Funded"
-      ],
-      "discriminator": [
-        223,
-        48,
-        201,
-        90,
-        160,
-        45,
-        47,
-        118
-      ],
-      "accounts": [
-        {
-          "name": "contract",
-          "writable": true
-        },
-        {
-          "name": "investor",
+          "name": "admin",
           "writable": true,
           "signer": true
         },
         {
-          "name": "mint"
-        },
-        {
           "name": "escrowVault",
-          "docs": [
-            "The escrow from init_mint or from create_contract"
-          ],
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
         },
         {
           "name": "investorTokenAccount",
@@ -147,52 +110,209 @@ export type GrasschainContractSpl = {
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
+      "args": []
     },
     {
-      "name": "initMint",
+      "name": "adminWithdraw",
       "docs": [
-        "(A) Initialize a new Mint + its \"escrow vault\" token account",
-        "on chain. Similar to \"init_bank\" in your lending code."
+        "(3) Admin withdraw => contract => Active",
+        "Admin has 1 month from `funded_time` to do this"
       ],
       "discriminator": [
-        126,
-        176,
-        233,
-        16,
-        66,
-        117,
-        209,
-        125
+        160,
+        166,
+        147,
+        222,
+        46,
+        220,
+        75,
+        224
       ],
       "accounts": [
         {
-          "name": "signer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "mintAccount",
+          "name": "contract",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  109,
-                  105,
+                  99,
+                  111,
                   110,
+                  116,
+                  114,
+                  97,
+                  99,
                   116
                 ]
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrowVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "adminTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "checkMaturity",
+      "docs": [
+        "(5) Once contract => Active, after `start_time + duration`, we go => PendingBuyback",
+        "This can happen automatically or in a \"check_update\" instruction"
+      ],
+      "discriminator": [
+        221,
+        167,
+        57,
+        208,
+        206,
+        210,
+        34,
+        215
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "createContract",
+      "docs": [
+        "(1) Admin creates a contract => status=Created => 1 month to fill"
+      ],
+      "discriminator": [
+        244,
+        48,
+        244,
+        178,
+        216,
+        88,
+        122,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenMint"
+        },
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "admin"
+              },
+              {
+                "kind": "arg",
+                "path": "contractId"
               }
             ]
           }
@@ -210,12 +330,18 @@ export type GrasschainContractSpl = {
                   99,
                   114,
                   111,
-                  119
+                  119,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
                 ]
               },
               {
                 "kind": "account",
-                "path": "mintAccount"
+                "path": "contract"
               }
             ]
           }
@@ -235,147 +361,271 @@ export type GrasschainContractSpl = {
       ],
       "args": [
         {
-          "name": "decimals",
-          "type": "u8"
+          "name": "totalInvestmentNeeded",
+          "type": "u64"
+        },
+        {
+          "name": "yieldPercentage",
+          "type": "i64"
+        },
+        {
+          "name": "durationInSeconds",
+          "type": "i64"
+        },
+        {
+          "name": "contractId",
+          "type": "u64"
+        },
+        {
+          "name": "nftMint",
+          "type": "pubkey"
+        },
+        {
+          "name": "farmName",
+          "type": "string"
+        },
+        {
+          "name": "farmAddress",
+          "type": "string"
         }
       ]
     },
     {
-      "name": "mintTokensToUser",
+      "name": "defaultContract",
+      "docs": [
+        "(8) If admin/farmer fails to repay after prolongation => default"
+      ],
       "discriminator": [
-        85,
-        150,
-        103,
-        133,
-        240,
-        87,
-        44,
-        73
+        213,
+        78,
+        242,
+        37,
+        116,
+        191,
+        111,
+        33
       ],
       "accounts": [
         {
-          "name": "signer",
-          "docs": [
-            "The authority that can mint new tokens. If that's the farmer,",
-            "this must match the authority in your initMint instruction."
-          ],
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "mintAccount",
-          "docs": [
-            "The mint we created with initMint. Must have authority == `signer`."
-          ],
-          "writable": true
-        },
-        {
-          "name": "recipient",
-          "docs": [
-            "We will create an ATA for `recipient` if needed",
-            "(just a SystemAccount or Signer if you prefer)"
-          ]
-        },
-        {
-          "name": "recipientAta",
-          "docs": [
-            "The ATA for `recipient`. We'll do `init_if_needed` so ephemeral ledger sees it."
-          ],
+          "name": "contract",
           "writable": true,
           "pda": {
             "seeds": [
               {
-                "kind": "account",
-                "path": "recipient"
-              },
-              {
                 "kind": "const",
                 "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
                 ]
               },
               {
                 "kind": "account",
-                "path": "mintAccount"
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "expireFunding",
+      "docs": [
+        "(2b) Expire funding if not fully funded by the 1-month deadline => refunds each investor",
+        "This is optional, only if you want to forcibly end the contract if not enough invests"
+      ],
+      "discriminator": [
+        244,
+        210,
+        25,
+        185,
+        1,
+        167,
+        7,
+        89
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "investContract",
+      "docs": [
+        "(2) Investor invests any partial amount => track in separate `InvestorRecord` or in contract"
+      ],
+      "discriminator": [
+        185,
+        77,
+        47,
+        16,
+        164,
+        138,
+        118,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenMint"
+        },
+        {
+          "name": "escrowVault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investorTokenAccount",
+          "writable": true
+        },
+        {
+          "name": "investorRecord",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  118,
+                  101,
+                  115,
+                  116,
+                  111,
+                  114,
+                  45,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "investor"
+              }
+            ]
           }
         },
         {
           "name": "tokenProgram",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "associatedTokenProgram",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "systemProgram",
@@ -390,9 +640,68 @@ export type GrasschainContractSpl = {
       ]
     },
     {
+      "name": "prolongContract",
+      "docs": [
+        "(7) Admin can request a 2-week prolongation"
+      ],
+      "discriminator": [
+        77,
+        119,
+        29,
+        191,
+        10,
+        140,
+        123,
+        24
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "settleContract",
       "docs": [
-        "(D) Farmer settles => status = Settled"
+        "(6) If within buyback window, admin repays => contract => Settled"
       ],
       "discriminator": [
         158,
@@ -407,22 +716,46 @@ export type GrasschainContractSpl = {
       "accounts": [
         {
           "name": "contract",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
+              }
+            ]
+          }
         },
         {
-          "name": "farmer",
+          "name": "admin",
           "writable": true,
           "signer": true
         },
         {
-          "name": "mint"
-        },
-        {
-          "name": "investorTokenAccount",
+          "name": "adminTokenAccount",
           "writable": true
         },
         {
-          "name": "farmerTokenAccount",
+          "name": "investorTokenAccount",
           "writable": true
         },
         {
@@ -436,7 +769,7 @@ export type GrasschainContractSpl = {
       ],
       "args": [
         {
-          "name": "buybackAmount",
+          "name": "amount",
           "type": "u64"
         }
       ]
@@ -455,23 +788,86 @@ export type GrasschainContractSpl = {
         183,
         26
       ]
+    },
+    {
+      "name": "investorRecord",
+      "discriminator": [
+        170,
+        144,
+        39,
+        68,
+        178,
+        31,
+        194,
+        117
+      ]
     }
   ],
   "errors": [
     {
       "code": 6000,
       "name": "invalidContractStatus",
-      "msg": "Invalid contract status for this operation."
+      "msg": "Invalid contract status"
     },
     {
       "code": 6001,
-      "name": "insufficientFunds",
-      "msg": "Insufficient funds or mismatch with required investment."
+      "name": "invalidTokenMint",
+      "msg": "Invalid token mint"
     },
     {
       "code": 6002,
+      "name": "insufficientFunds",
+      "msg": "Insufficient funds"
+    },
+    {
+      "code": 6003,
       "name": "insufficientBuyback",
-      "msg": "Insufficient buyback amount."
+      "msg": "Insufficient buyback"
+    },
+    {
+      "code": 6004,
+      "name": "contractNotMatured",
+      "msg": "Contract not matured"
+    },
+    {
+      "code": 6005,
+      "name": "unauthorized",
+      "msg": "Unauthorized admin"
+    },
+    {
+      "code": 6006,
+      "name": "adminWindowExpired",
+      "msg": "Admin window expired"
+    },
+    {
+      "code": 6007,
+      "name": "settlementWindowExpired",
+      "msg": "Settlement window expired"
+    },
+    {
+      "code": 6008,
+      "name": "fundingWindowExpired",
+      "msg": "Funding window expired"
+    },
+    {
+      "code": 6009,
+      "name": "exceedsContractNeed",
+      "msg": "Exceeds total needed"
+    },
+    {
+      "code": 6010,
+      "name": "fundingNotExpiredYet",
+      "msg": "Funding not expired yet"
+    },
+    {
+      "code": 6011,
+      "name": "alreadyFullyFunded",
+      "msg": "Already fully funded"
+    },
+    {
+      "code": 6012,
+      "name": "invalidStateForProlongOrDefault",
+      "msg": "Cannot default or prolong in this state"
     }
   ],
   "types": [
@@ -481,17 +877,15 @@ export type GrasschainContractSpl = {
         "kind": "struct",
         "fields": [
           {
-            "name": "farmer",
+            "name": "admin",
             "type": "pubkey"
           },
           {
-            "name": "investor",
-            "type": {
-              "option": "pubkey"
-            }
+            "name": "tokenMint",
+            "type": "pubkey"
           },
           {
-            "name": "tokenMint",
+            "name": "nftMint",
             "type": "pubkey"
           },
           {
@@ -499,12 +893,24 @@ export type GrasschainContractSpl = {
             "type": "pubkey"
           },
           {
-            "name": "investmentAmount",
+            "name": "totalInvestmentNeeded",
             "type": "i64"
+          },
+          {
+            "name": "amountFundedSoFar",
+            "type": "u64"
           },
           {
             "name": "yieldPercentage",
             "type": "i64"
+          },
+          {
+            "name": "duration",
+            "type": "i64"
+          },
+          {
+            "name": "contractId",
+            "type": "u64"
           },
           {
             "name": "status",
@@ -513,6 +919,42 @@ export type GrasschainContractSpl = {
                 "name": "contractStatus"
               }
             }
+          },
+          {
+            "name": "uploadDate",
+            "type": "i64"
+          },
+          {
+            "name": "fundingDeadline",
+            "type": "i64"
+          },
+          {
+            "name": "startTime",
+            "type": "i64"
+          },
+          {
+            "name": "fundedTime",
+            "type": "i64"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "buybackDeadline",
+            "type": "i64"
+          },
+          {
+            "name": "prolongedDeadline",
+            "type": "i64"
+          },
+          {
+            "name": "farmName",
+            "type": "string"
+          },
+          {
+            "name": "farmAddress",
+            "type": "string"
           }
         ]
       }
@@ -526,10 +968,52 @@ export type GrasschainContractSpl = {
             "name": "created"
           },
           {
-            "name": "funded"
+            "name": "funding"
+          },
+          {
+            "name": "fundedPendingVerification"
+          },
+          {
+            "name": "active"
+          },
+          {
+            "name": "pendingBuyback"
+          },
+          {
+            "name": "prolonged"
           },
           {
             "name": "settled"
+          },
+          {
+            "name": "defaulted"
+          },
+          {
+            "name": "cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "investorRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "contract",
+            "type": "pubkey"
+          },
+          {
+            "name": "investor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
