@@ -1,38 +1,33 @@
 {
-  "address": "coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF",
+  "address": "2AW1LTvcsdXkUWU1WortvtdMARMXiCBDe1VVNSUHh333",
   "metadata": {
     "name": "grasschain_contract_spl",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
+  "docs": [
+    "The main program"
+  ],
   "instructions": [
     {
-      "name": "create_contract",
+      "name": "admin_cancel",
       "docs": [
-        "(B) Create the contract => status = Created"
+        "(4) Admin cancels => refunds all invests"
       ],
       "discriminator": [
-        244,
-        48,
-        244,
-        178,
-        216,
-        88,
-        122,
-        52
+        34,
+        225,
+        37,
+        131,
+        38,
+        121,
+        43,
+        237
       ],
       "accounts": [
         {
-          "name": "farmer",
-          "writable": true,
-          "signer": true
-        },
-        {
           "name": "contract",
-          "docs": [
-            "The Contract data"
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -51,82 +46,50 @@
               },
               {
                 "kind": "account",
-                "path": "farmer"
+                "path": "contract.admin",
+                "account": "Contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "Contract"
               }
             ]
           }
         },
         {
-          "name": "mint",
-          "docs": [
-            "The Mint (already created by init_mint)"
-          ]
-        },
-        {
-          "name": "escrow_vault",
-          "docs": [
-            "The escrow vault (already created by init_mint)"
-          ],
-          "writable": true
-        },
-        {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "associated_token_program",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
-        },
-        {
-          "name": "system_program",
-          "address": "11111111111111111111111111111111"
-        }
-      ],
-      "args": [
-        {
-          "name": "investment_amount",
-          "type": "u64"
-        },
-        {
-          "name": "yield_percentage",
-          "type": "i64"
-        }
-      ]
-    },
-    {
-      "name": "fund_contract",
-      "docs": [
-        "(C) The investor funds => status = Funded"
-      ],
-      "discriminator": [
-        223,
-        48,
-        201,
-        90,
-        160,
-        45,
-        47,
-        118
-      ],
-      "accounts": [
-        {
-          "name": "contract",
-          "writable": true
-        },
-        {
-          "name": "investor",
+          "name": "admin",
           "writable": true,
           "signer": true
         },
         {
-          "name": "mint"
-        },
-        {
           "name": "escrow_vault",
-          "docs": [
-            "The escrow from init_mint or from create_contract"
-          ],
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
         },
         {
           "name": "investor_token_account",
@@ -141,52 +104,209 @@
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
+      "args": []
     },
     {
-      "name": "init_mint",
+      "name": "admin_withdraw",
       "docs": [
-        "(A) Initialize a new Mint + its \"escrow vault\" token account",
-        "on chain. Similar to \"init_bank\" in your lending code."
+        "(3) Admin withdraw => contract => Active",
+        "Admin has 1 month from `funded_time` to do this"
       ],
       "discriminator": [
-        126,
-        176,
-        233,
-        16,
-        66,
-        117,
-        209,
-        125
+        160,
+        166,
+        147,
+        222,
+        46,
+        220,
+        75,
+        224
       ],
       "accounts": [
         {
-          "name": "signer",
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "mint_account",
+          "name": "contract",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "const",
                 "value": [
-                  109,
-                  105,
+                  99,
+                  111,
                   110,
+                  116,
+                  114,
+                  97,
+                  99,
                   116
                 ]
               },
               {
                 "kind": "account",
-                "path": "signer"
+                "path": "contract.admin",
+                "account": "Contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "Contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "check_maturity",
+      "docs": [
+        "(5) Once contract => Active, after `start_time + duration`, we go => PendingBuyback",
+        "This can happen automatically or in a \"check_update\" instruction"
+      ],
+      "discriminator": [
+        221,
+        167,
+        57,
+        208,
+        206,
+        210,
+        34,
+        215
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "Contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "Contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_contract",
+      "docs": [
+        "(1) Admin creates a contract => status=Created => 1 month to fill"
+      ],
+      "discriminator": [
+        244,
+        48,
+        244,
+        178,
+        216,
+        88,
+        122,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "admin"
+              },
+              {
+                "kind": "arg",
+                "path": "contract_id"
               }
             ]
           }
@@ -204,12 +324,18 @@
                   99,
                   114,
                   111,
-                  119
+                  119,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
                 ]
               },
               {
                 "kind": "account",
-                "path": "mint_account"
+                "path": "contract"
               }
             ]
           }
@@ -229,147 +355,271 @@
       ],
       "args": [
         {
-          "name": "_decimals",
-          "type": "u8"
+          "name": "total_investment_needed",
+          "type": "u64"
+        },
+        {
+          "name": "yield_percentage",
+          "type": "i64"
+        },
+        {
+          "name": "duration_in_seconds",
+          "type": "i64"
+        },
+        {
+          "name": "contract_id",
+          "type": "u64"
+        },
+        {
+          "name": "nft_mint",
+          "type": "pubkey"
+        },
+        {
+          "name": "farm_name",
+          "type": "string"
+        },
+        {
+          "name": "farm_address",
+          "type": "string"
         }
       ]
     },
     {
-      "name": "mint_tokens_to_user",
+      "name": "default_contract",
+      "docs": [
+        "(8) If admin/farmer fails to repay after prolongation => default"
+      ],
       "discriminator": [
-        85,
-        150,
-        103,
-        133,
-        240,
-        87,
-        44,
-        73
+        213,
+        78,
+        242,
+        37,
+        116,
+        191,
+        111,
+        33
       ],
       "accounts": [
         {
-          "name": "signer",
-          "docs": [
-            "The authority that can mint new tokens. If that's the farmer,",
-            "this must match the authority in your initMint instruction."
-          ],
-          "writable": true,
-          "signer": true
-        },
-        {
-          "name": "mint_account",
-          "docs": [
-            "The mint we created with initMint. Must have authority == `signer`."
-          ],
-          "writable": true
-        },
-        {
-          "name": "recipient",
-          "docs": [
-            "We will create an ATA for `recipient` if needed",
-            "(just a SystemAccount or Signer if you prefer)"
-          ]
-        },
-        {
-          "name": "recipient_ata",
-          "docs": [
-            "The ATA for `recipient`. We'll do `init_if_needed` so ephemeral ledger sees it."
-          ],
+          "name": "contract",
           "writable": true,
           "pda": {
             "seeds": [
               {
-                "kind": "account",
-                "path": "recipient"
-              },
-              {
                 "kind": "const",
                 "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
                 ]
               },
               {
                 "kind": "account",
-                "path": "mint_account"
+                "path": "contract.admin",
+                "account": "Contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "Contract"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "expire_funding",
+      "docs": [
+        "(2b) Expire funding if not fully funded by the 1-month deadline => refunds each investor",
+        "This is optional, only if you want to forcibly end the contract if not enough invests"
+      ],
+      "discriminator": [
+        244,
+        210,
+        25,
+        185,
+        1,
+        167,
+        7,
+        89
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "Contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "Contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "invest_contract",
+      "docs": [
+        "(2) Investor invests any partial amount => track in separate `InvestorRecord` or in contract"
+      ],
+      "discriminator": [
+        185,
+        77,
+        47,
+        16,
+        164,
+        138,
+        118,
+        159
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "Contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "Contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investor",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_mint"
+        },
+        {
+          "name": "escrow_vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119,
+                  45,
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investor_token_account",
+          "writable": true
+        },
+        {
+          "name": "investor_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  118,
+                  101,
+                  115,
+                  116,
+                  111,
+                  114,
+                  45,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "investor"
+              }
+            ]
           }
         },
         {
           "name": "token_program",
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "associated_token_program",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
           "name": "system_program",
@@ -384,9 +634,68 @@
       ]
     },
     {
+      "name": "prolong_contract",
+      "docs": [
+        "(7) Admin can request a 2-week prolongation"
+      ],
+      "discriminator": [
+        77,
+        119,
+        29,
+        191,
+        10,
+        140,
+        123,
+        24
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "Contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "Contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "settle_contract",
       "docs": [
-        "(D) Farmer settles => status = Settled"
+        "(6) If within buyback window, admin repays => contract => Settled"
       ],
       "discriminator": [
         158,
@@ -401,22 +710,46 @@
       "accounts": [
         {
           "name": "contract",
-          "writable": true
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "Contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "Contract"
+              }
+            ]
+          }
         },
         {
-          "name": "farmer",
+          "name": "admin",
           "writable": true,
           "signer": true
         },
         {
-          "name": "mint"
-        },
-        {
-          "name": "investor_token_account",
+          "name": "admin_token_account",
           "writable": true
         },
         {
-          "name": "farmer_token_account",
+          "name": "investor_token_account",
           "writable": true
         },
         {
@@ -430,7 +763,7 @@
       ],
       "args": [
         {
-          "name": "buyback_amount",
+          "name": "amount",
           "type": "u64"
         }
       ]
@@ -449,23 +782,86 @@
         183,
         26
       ]
+    },
+    {
+      "name": "InvestorRecord",
+      "discriminator": [
+        170,
+        144,
+        39,
+        68,
+        178,
+        31,
+        194,
+        117
+      ]
     }
   ],
   "errors": [
     {
       "code": 6000,
       "name": "InvalidContractStatus",
-      "msg": "Invalid contract status for this operation."
+      "msg": "Invalid contract status"
     },
     {
       "code": 6001,
-      "name": "InsufficientFunds",
-      "msg": "Insufficient funds or mismatch with required investment."
+      "name": "InvalidTokenMint",
+      "msg": "Invalid token mint"
     },
     {
       "code": 6002,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds"
+    },
+    {
+      "code": 6003,
       "name": "InsufficientBuyback",
-      "msg": "Insufficient buyback amount."
+      "msg": "Insufficient buyback"
+    },
+    {
+      "code": 6004,
+      "name": "ContractNotMatured",
+      "msg": "Contract not matured"
+    },
+    {
+      "code": 6005,
+      "name": "Unauthorized",
+      "msg": "Unauthorized admin"
+    },
+    {
+      "code": 6006,
+      "name": "AdminWindowExpired",
+      "msg": "Admin window expired"
+    },
+    {
+      "code": 6007,
+      "name": "SettlementWindowExpired",
+      "msg": "Settlement window expired"
+    },
+    {
+      "code": 6008,
+      "name": "FundingWindowExpired",
+      "msg": "Funding window expired"
+    },
+    {
+      "code": 6009,
+      "name": "ExceedsContractNeed",
+      "msg": "Exceeds total needed"
+    },
+    {
+      "code": 6010,
+      "name": "FundingNotExpiredYet",
+      "msg": "Funding not expired yet"
+    },
+    {
+      "code": 6011,
+      "name": "AlreadyFullyFunded",
+      "msg": "Already fully funded"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidStateForProlongOrDefault",
+      "msg": "Cannot default or prolong in this state"
     }
   ],
   "types": [
@@ -475,17 +871,15 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "farmer",
+            "name": "admin",
             "type": "pubkey"
           },
           {
-            "name": "investor",
-            "type": {
-              "option": "pubkey"
-            }
+            "name": "token_mint",
+            "type": "pubkey"
           },
           {
-            "name": "token_mint",
+            "name": "nft_mint",
             "type": "pubkey"
           },
           {
@@ -493,12 +887,24 @@
             "type": "pubkey"
           },
           {
-            "name": "investment_amount",
+            "name": "total_investment_needed",
             "type": "i64"
+          },
+          {
+            "name": "amount_funded_so_far",
+            "type": "u64"
           },
           {
             "name": "yield_percentage",
             "type": "i64"
+          },
+          {
+            "name": "duration",
+            "type": "i64"
+          },
+          {
+            "name": "contract_id",
+            "type": "u64"
           },
           {
             "name": "status",
@@ -507,6 +913,42 @@
                 "name": "ContractStatus"
               }
             }
+          },
+          {
+            "name": "upload_date",
+            "type": "i64"
+          },
+          {
+            "name": "funding_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "start_time",
+            "type": "i64"
+          },
+          {
+            "name": "funded_time",
+            "type": "i64"
+          },
+          {
+            "name": "verified",
+            "type": "bool"
+          },
+          {
+            "name": "buyback_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "prolonged_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "farm_name",
+            "type": "string"
+          },
+          {
+            "name": "farm_address",
+            "type": "string"
           }
         ]
       }
@@ -520,10 +962,52 @@
             "name": "Created"
           },
           {
-            "name": "Funded"
+            "name": "Funding"
+          },
+          {
+            "name": "FundedPendingVerification"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "PendingBuyback"
+          },
+          {
+            "name": "Prolonged"
           },
           {
             "name": "Settled"
+          },
+          {
+            "name": "Defaulted"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InvestorRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "contract",
+            "type": "pubkey"
+          },
+          {
+            "name": "investor",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

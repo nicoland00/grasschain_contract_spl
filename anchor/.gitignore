@@ -1,12 +1,37 @@
-.anchor
+# -------------------------
+# OS & Editor Artifacts
+# -------------------------
 .DS_Store
-target/debug
-target/deploy
-target/release
-target/sbf-solana-solana
-target/test-ledger
-target/.rustc_info.json
+.idea/
+.vscode/
+
+# -------------------------
+# Anchor / Rust Artifacts
+# -------------------------
+.anchor
+target/
 **/*.rs.bk
-node_modules
+# If you prefer to keep `Cargo.lock` for reproducible builds, don't ignore it.
+# If you want to ignore it, uncomment:
+# Cargo.lock
+
+# -------------------------
+# Node / JavaScript / React Artifacts
+# -------------------------
+node_modules/
+.yarn/
+build/
+dist/
+.next/
+*.log
+
+# -------------------------
+# Test-ledger / Local Data
+# -------------------------
 test-ledger
-.yarn
+
+# -------------------------
+# Environment Files
+# -------------------------
+.env
+.env.*

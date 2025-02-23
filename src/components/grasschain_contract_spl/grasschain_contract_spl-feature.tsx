@@ -1,38 +1,32 @@
-'use client'
+"use client";
 
-import { useWallet } from '@solana/wallet-adapter-react'
-import { WalletButton } from '../solana/solana-provider'
-import { AppHero, ellipsify } from '../ui/ui-layout'
-import { ExplorerLink } from '../cluster/cluster-ui'
-import { useGrasschainContractSplProgram } from './grasschain_contract_spl-data-access'
-import { GrasschainContractSplCreate, GrasschainContractSplList } from './grasschain_contract_spl-ui'
+import React from "react";
+import {
+  GrasschainCreateContractForm,
+  GrasschainContractsList,
+} from "./grasschain_contract_spl-ui";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 export default function GrasschainContractSplFeature() {
-  const { publicKey } = useWallet()
-  const { programId } = useGrasschainContractSplProgram()
+  const { publicKey } = useWallet();
 
-  return publicKey ? (
-    <div>
-      <AppHero
-        title="GrasschainContractSpl"
-        subtitle={
-          'Create a new account by clicking the "Create" button. The state of a account is stored on-chain and can be manipulated by calling the program\'s methods (increment, decrement, set, and close).'
-        }
-      >
-        <p className="mb-6">
-          <ExplorerLink path={`account/${programId}`} label={ellipsify(programId.toString())} />
-        </p>
-        <GrasschainContractSplCreate />
-      </AppHero>
-      <GrasschainContractSplList />
-    </div>
-  ) : (
-    <div className="max-w-4xl mx-auto">
-      <div className="hero py-[64px]">
-        <div className="hero-content text-center">
-          <WalletButton />
+  return (
+    <div className="max-w-3xl mx-auto p-4 space-y-6">
+      {publicKey ? (
+        <>
+          <h1 className="text-3xl font-bold text-center">
+            Grasschain Contract SPL Example
+          </h1>
+          <GrasschainCreateContractForm />
+          <hr />
+          <h2 className="text-xl font-semibold">Available Contracts</h2>
+          <GrasschainContractsList />
+        </>
+      ) : (
+        <div className="p-4 text-center text-gray-600">
+          Please connect your wallet.
         </div>
-      </div>
+      )}
     </div>
-  )
+  );
 }
