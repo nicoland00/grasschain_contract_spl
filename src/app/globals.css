@@ -17,3 +17,14 @@ body {
 .wallet-adapter-button {
     font-family: inherit !important;
 }
+
+.btn-primary {
+    margin-top: 10px;
+}
+
+.btn-secondary {
+    background-color: #7ac78e;
+    border:0;
+    
+
+}

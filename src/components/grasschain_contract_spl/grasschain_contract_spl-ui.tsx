@@ -257,7 +257,7 @@ export function GrasschainContractCard({
     }
     // Validar que no exceda lo que falta
     if (partialAmount > (remaining * 1_000_000)) {
-      alert(`No puedes invertir más de lo que falta (${remaining} USDC).`);
+      alert(`You cant invest more than the amount asked: (${remaining} USDC).`);
       return;
     }
 
@@ -362,7 +362,7 @@ export function GrasschainContractCard({
 
       {(status === "Created" || status === "Funding") && (
         <div className="mt-4 space-y-2">
-          <label>Cantidad a invertir (USDC)</label>
+          <label>Amount to buy (USDC)</label>
           <input
             type="number"
             className="input input-bordered w-full bg-white"
@@ -370,7 +370,7 @@ export function GrasschainContractCard({
             onChange={(e) => setInvestInput(e.target.value)}
           />
           <button className="btn btn-secondary w-full" onClick={handleInvest}>
-            Invertir
+            Buy
           </button>
         </div>
       )}

@@ -1,46 +1,45 @@
 "use client";
 
-import Link from "next/link";
-import { ReactNode, Suspense } from "react";
+import React, { ReactNode, Suspense } from "react";
 import { Toaster } from "react-hot-toast";
 import { usePathname } from "next/navigation";
 import { WalletButton } from "../solana/solana-provider";
+import Link from "next/link";
+import Image from "next/image";
 
-export function UiLayout({ children }: { children: ReactNode }) {
+export function UiLayout({ children }: { children: ReactNode }): JSX.Element {
   const pathname = usePathname();
 
   return (
     <div className="min-h-screen flex flex-col bg-white text-black font-sans">
       {/* Navbar */}
-      <header className="w-full border-b border-gray-200 h-16">
-        <div className="container mx-auto px-1 h-full flex items-center justify-between">
-          {/* Left side: Logo */}
-          <div className="flex items-center">
-            <Link href="https://pastora.io">
-              <img
-                src="/logo1.png"
-                alt="Pastora Logo"
-                className="h-[34px]"
-              />
-            </Link>
-          </div>
-          {/* Right side: Navigation links and wallet button */}
-          <nav className="flex items-center space-x-6">
-            <Link
-              href="https://pastora.io/blog"
-              className="text-[#666666] no-underline hover:text-[#7AC78E]"
-            >
-              Blog
-            </Link>
-            <Link
-              href="https://pastora.io/contactus"
-              className="text-[#666666] no-underline hover:text-[#7AC78E]"
-            >
-              Contact Us
-            </Link>
-            <WalletButton className="btn btn-sm" />
-          </nav>
+      <header className="w-full h-16 border-b border-gray-200 flex items-center justify-between px-14">
+        <div className="flex items-center">
+          <Link href="https://pastora.io">
+            <Image
+              src="/logo1.png"
+              alt="Pastora Logo"
+              width={173} // approximate
+              height={36}
+              priority // if you want to optimize LCP
+            />
+          </Link>
         </div>
+        <nav className="flex items-center space-x-6">
+          <a
+            href="https://pastora.io/blog"
+            className="text-[#666666] no-underline hover:text-[#7AC78E]"
+          >
+            Blog
+          </a>
+          <a
+            href="https://pastora.io/contactus"
+            className="text-[#666666] no-underline hover:text-[#7AC78E]"
+          >
+            Contact Us
+          </a>
+          <WalletButton className="btn btn-sm" />
+        </nav>
       </header>
 
       <main className="flex-grow container mx-auto px-4 py-8">
