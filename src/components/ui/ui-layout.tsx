@@ -22,15 +22,6 @@ export function UiLayout({ children }: { children: ReactNode }) {
                 <li>
                 <Link href="https://app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
               </li>
-              <li>
-                <Link href="https://www.pastora.io/blog">Blog</Link>
-              </li>
-              <li>
-                <Link href="https://www.pastora.io/medium">Medium</Link>
-              </li>
-              <li>
-                <Link href="https://www.pastora.io/contactus">Contact Us</Link>
-              </li>
             </ul>
           </div>
           <div className="navbar-start">
@@ -40,16 +31,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
           <li>
-                <Link href="https://app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
-              </li>
-              <li>
-                <Link href="https://www.pastora.io/blog">Blog</Link>
-              </li>
-              <li>
-                <Link href="https://www.pastora.io/medium">Medium</Link>
-              </li>
-              <li>
-                <Link href="https://www.pastora.io/contactus">Contact Us</Link>
+                <Link href="https://app.pastora.io" style={{ color: "#7AC78E" }}>Welcome to our App</Link>
               </li>
           </ul>
         </div>
