@@ -27,3 +27,14 @@ body {
     border:0;
 }
 
+.navbar-center {
+    padding-right: 50px;
+    font-weight: 600;
+}
+
+.menu-compact {
+    @media screen and (min-width:620px) {
+        display: none;
+
+    }
+}

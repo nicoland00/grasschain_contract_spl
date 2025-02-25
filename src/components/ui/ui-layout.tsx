@@ -12,24 +12,24 @@ export function UiLayout({ children }: { children: ReactNode }) {
         
           {/* Mobile hamburger (hidden on lg) */}
           <div className="dropdown">
-            <label tabIndex={0} className="">
-            <img src="/favicon.png" alt="Pastora" className="h-12 w-auto" />
+            <label tabIndex={0} className="now">
+            <img src="/favicon.png" alt="Pastora" className="h-11 w-20" />
             </label>
             <ul
               tabIndex={0}
               className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-white rounded-box w-52"
             >
                 <li>
-                <Link href="app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
+                <Link href="https://app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
               </li>
               <li>
-                <Link href="pastora.io/blog">Blog</Link>
+                <Link href="https://www.pastora.io/blog">Blog</Link>
               </li>
               <li>
-                <Link href="pastora.io/medium">Medium</Link>
+                <Link href="https://www.pastora.io/medium">Medium</Link>
               </li>
               <li>
-                <Link href="pastora.io/contactus">Contact Us</Link>
+                <Link href="https://www.pastora.io/contactus">Contact Us</Link>
               </li>
             </ul>
           </div>
@@ -40,16 +40,16 @@ export function UiLayout({ children }: { children: ReactNode }) {
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
           <li>
-                <Link href="app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
+                <Link href="https://app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
               </li>
               <li>
-                <Link href="pastora.io/blog">Blog</Link>
+                <Link href="https://www.pastora.io/blog">Blog</Link>
               </li>
               <li>
-                <Link href="pastora.io/medium">Medium</Link>
+                <Link href="https://www.pastora.io/medium">Medium</Link>
               </li>
               <li>
-                <Link href="pastora.io/contactus">Contact Us</Link>
+                <Link href="https://www.pastora.io/contactus">Contact Us</Link>
               </li>
           </ul>
         </div>
