@@ -357,7 +357,7 @@ pub struct Contract {
     pub token_mint: Pubkey,         // USDC
     pub nft_mint: Pubkey,           // optional NFT collection or reference
     pub escrow_token_account: Pubkey,
-
+    
     // Funding
     pub total_investment_needed: i64,
     pub amount_funded_so_far: u64,
