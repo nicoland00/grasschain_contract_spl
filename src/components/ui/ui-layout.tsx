@@ -1,62 +1,81 @@
 "use client";
 
-import React, { ReactNode, Suspense } from "react";
-import { Toaster } from "react-hot-toast";
-import { usePathname } from "next/navigation";
-import { WalletButton } from "../solana/solana-provider";
 import Link from "next/link";
-import Image from "next/image";
+import { ReactNode, Suspense } from "react";
+import { WalletButton } from "../solana/solana-provider"; // Adjust import if needed
 
-export function UiLayout({ children }: { children: ReactNode }): JSX.Element {
-  const pathname = usePathname();
-
+export function UiLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col bg-white text-black font-sans">
+    <div className="flex flex-col min-h-screen bg-white text-gray-800">
       {/* Navbar */}
-      <header className="w-full h-16 border-b border-gray-200 flex items-center justify-between px-14">
-        <div className="flex items-center">
-          <Link href="https://pastora.io">
-            <Image
-              src="/logo1.png"
-              alt="Pastora Logo"
-              width={173} // approximate
-              height={36}
-              priority // if you want to optimize LCP
-            />
-          </Link>
+      <nav className="navbar bg-white px-4 shadow">
+        
+          {/* Mobile hamburger (hidden on lg) */}
+          <div className="dropdown">
+            <label tabIndex={0} className="">
+            <img src="/favicon.png" alt="Pastora" className="h-12 w-auto" />
+            </label>
+            <ul
+              tabIndex={0}
+              className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-white rounded-box w-52"
+            >
+                <li>
+                <Link href="app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
+              </li>
+              <li>
+                <Link href="pastora.io/blog">Blog</Link>
+              </li>
+              <li>
+                <Link href="pastora.io/medium">Medium</Link>
+              </li>
+              <li>
+                <Link href="pastora.io/contactus">Contact Us</Link>
+              </li>
+            </ul>
+          </div>
+          <div className="navbar-start">
         </div>
-        <nav className="flex items-center space-x-6">
-          <a
-            href="https://pastora.io/blog"
-            className="text-[#666666] no-underline hover:text-[#7AC78E]"
-          >
-            Blog
-          </a>
-          <a
-            href="https://pastora.io/contactus"
-            className="text-[#666666] no-underline hover:text-[#7AC78E]"
-          >
-            Contact Us
-          </a>
-          <WalletButton className="btn btn-sm" />
-        </nav>
-      </header>
 
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <Suspense
-          fallback={
-            <div className="my-32 text-center">
-              <span className="loading loading-spinner loading-lg"></span>
-            </div>
-          }
-        >
-          {children}
-        </Suspense>
-        <Toaster position="bottom-right" />
-      </main>
+        {/* Desktop Nav (hidden on mobile) */}
+        <div className="navbar-center hidden lg:flex">
+          <ul className="menu menu-horizontal px-1">
+          <li>
+                <Link href="app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
+              </li>
+              <li>
+                <Link href="pastora.io/blog">Blog</Link>
+              </li>
+              <li>
+                <Link href="pastora.io/medium">Medium</Link>
+              </li>
+              <li>
+                <Link href="pastora.io/contactus">Contact Us</Link>
+              </li>
+          </ul>
+        </div>
 
-      <footer className="border-t border-gray-200 p-4 text-center text-sm text-gray-500">
-        <p>© 2025 Pastora. All rights reserved.</p>
+        {/* Wallet Button on the right */}
+        <div className="navbar-end space-x-2">
+          <WalletButton />
+        </div>
+      </nav>
+
+      {/* Page content */}
+      <Suspense
+        fallback={
+          <div className="flex-grow flex items-center justify-center">
+            <div className="loading loading-spinner loading-lg" />
+          </div>
+        }
+      >
+        <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
+      </Suspense>
+
+      {/* Footer */}
+      <footer className="footer items-center p-4 bg-white border-t">
+        <div className="items-center grid-flow-col mx-auto">
+          <p>© 2025 Pastora. All rights reserved.</p>
+        </div>
       </footer>
     </div>
   );
