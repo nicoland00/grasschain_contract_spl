@@ -1,5 +1,5 @@
-import DashboardFeature from '@/components/dashboard/dashboard-feature'
+import GrasschainContractSplFeature from '@/components/grasschain_contract_spl/grasschain_contract_spl-feature'
 
 export default function Page() {
-  return <DashboardFeature />
+  return <GrasschainContractSplFeature />
 }

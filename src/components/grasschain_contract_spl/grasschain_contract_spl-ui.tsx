@@ -105,39 +105,39 @@ export function GrasschainCreateContractForm() {
   }
 
   return (
-    <div className="space-y-3 max-w-md border p-4 rounded">
+    <div className="max-w-md mx-auto bg-white shadow p-6 rounded mb-8">
       <h3 className="text-xl font-semibold">Create Contract (Admin Only)</h3>
-      <label>Investment Amount (USDC)</label>
+      <label >Investment Amount (USDC)</label>
       <input
-        className="input input-bordered w-full"
+        className="input input-bordered w-full bg-white"
         type="number"
         value={investment}
         onChange={(e) => setInvestment(e.target.value)}
       />
       <label>Yield Percentage (%)</label>
       <input
-        className="input input-bordered w-full"
+        className="input input-bordered w-full bg-white"
         type="number"
         value={yieldPerc}
         onChange={(e) => setYieldPerc(e.target.value)}
       />
       <label>Funding Period (days)</label>
       <input
-        className="input input-bordered w-full"
+        className="input input-bordered w-full bg-white"
         type="number"
         value={periodDays}
         onChange={(e) => setPeriodDays(e.target.value)}
       />
       <label>Farm Name</label>
       <input
-        className="input input-bordered w-full"
+        className="input input-bordered w-full bg-white"
         type="text"
         value={farmName}
         onChange={(e) => setFarmName(e.target.value)}
       />
       <label>Farm Address</label>
       <input
-        className="input input-bordered w-full"
+        className="input input-bordered w-full bg-white"
         type="text"
         value={farmAddress}
         onChange={(e) => setFarmAddress(e.target.value)}
@@ -335,7 +335,7 @@ export function GrasschainContractCard({
   // Render
   // -------------------------------------------------------------------------
   return (
-    <div className="border p-4 bg-base-200 rounded">
+    <div className="p-4 bg-white shadow-md rounded border">
       <h4 className="font-bold break-all">Contract: {contractPk.toBase58()}</h4>
       <p>
         <strong>Farm Name:</strong> {farmName}
@@ -365,7 +365,7 @@ export function GrasschainContractCard({
           <label>Cantidad a invertir (USDC)</label>
           <input
             type="number"
-            className="input input-bordered w-full"
+            className="input input-bordered w-full bg-white"
             value={investInput}
             onChange={(e) => setInvestInput(e.target.value)}
           />
@@ -388,7 +388,7 @@ export function GrasschainContractCard({
 
       {status === "Active" && publicKey?.toBase58() === ADMIN_PUBKEY && (
         <div className="mt-4">
-          <button className="btn btn-warning w-full" onClick={handleCheckMaturity}>
+          <button className="btn btn-warning w-full mt-2" onClick={handleCheckMaturity}>
             Check Maturity
           </button>
         </div>
