@@ -102,6 +102,7 @@ export function GrasschainCreateContractForm() {
       contractId: nowSec,
       farmName,
       farmAddress,
+      farmImageUrl,
     });
 
     // Optionally do something with farmImageUrl in memory,
@@ -159,12 +160,11 @@ export function GrasschainCreateContractForm() {
         onChange={(e) => setFarmAddress(e.target.value)}
       />
 
-      {/* If you do want to let admin type an image URL for reference only: */}
-      <label className="block mb-1">Farm Image URL (Optional)</label>
+      <label>Farm Image URL</label>
       <input
-        className="input input-bordered w-full bg-white mb-3"
+        className="input input-bordered w-full"
         type="text"
-        placeholder="https://somewhere.com/farm.jpg"
+        placeholder="https://my-blob-store.public.blob.vercel-storage.com/..."
         value={farmImageUrl}
         onChange={(e) => setFarmImageUrl(e.target.value)}
       />
@@ -272,7 +272,7 @@ export function GrasschainContractCard({
   const farmAddress = contractData.farmAddress || "N/A";
 
   // Instead of localStorage logic, just use a placeholder:
-  const farmImageUrl = "/placeholder.jpg"; // or remove <img> entirely
+  const farmImageUrl = contractData.farmImageUrl; // or remove <img> entirely
 
   // Timestamps
   let endDate: Date | null = null;

@@ -59,6 +59,7 @@ export function useGrasschainContractSplProgram() {
     contractId: number;
     farmName: string;
     farmAddress: string;
+    farmImageUrl: string;
   }
   const createContract = useMutation<string, Error, CreateContractArgs>({
     mutationFn: async ({
@@ -69,6 +70,7 @@ export function useGrasschainContractSplProgram() {
       contractId,
       farmName,
       farmAddress,
+      farmImageUrl,
     }) => {
       if (!publicKey) throw new Error("No wallet connected.");
 
@@ -94,7 +96,8 @@ export function useGrasschainContractSplProgram() {
           new BN(contractId),
           nftMint,
           farmName,
-          farmAddress
+          farmAddress,
+          farmImageUrl,
         )
         .accountsPartial({
           admin: publicKey,
