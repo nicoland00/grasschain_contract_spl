@@ -29,6 +29,7 @@ dist/
 # Test-ledger / Local Data
 # -------------------------
 test-ledger
+test-ledger/**/*
 
 # -------------------------
 # Environment Files
