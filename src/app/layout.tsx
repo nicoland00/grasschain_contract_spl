@@ -3,9 +3,14 @@ import { SolanaProvider } from "@/components/solana/solana-provider";
 import { UiLayout } from "@/components/ui/ui-layout";
 import { ReactQueryProvider } from "./react-query-provider";
 
+
+
 export const metadata = {
   title: "Pastora",
   description: "Empowering Sustainable Farming with Blockchain",
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 <head>
   <link rel="icon" href="/favicon.ico" />
