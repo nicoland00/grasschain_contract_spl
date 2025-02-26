@@ -8,6 +8,9 @@ import { ReactQueryProvider } from "./react-query-provider";
 export const metadata = {
   title: "Pastora",
   description: "Empowering Sustainable Farming with Blockchain",
+  icons: {
+    icon: '../public/favicon.ico',
+  },
 };
 <head>
   <link rel="icon" href="/favicon.ico" />

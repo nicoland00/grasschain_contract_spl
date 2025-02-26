@@ -13,7 +13,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
           {/* Mobile hamburger (hidden on lg) */}
           <div className="dropdown">
             <label tabIndex={0} className="now">
-            <img src="/favicon.png" alt="Pastora" className="h-11 w-20" />
+            <img src="/favicon.ico" alt="Pastora" className="h-11 w-20" />
             </label>
             <ul
               tabIndex={0}
