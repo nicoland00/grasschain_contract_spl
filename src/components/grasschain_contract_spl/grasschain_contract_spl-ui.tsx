@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import {
@@ -15,9 +15,7 @@ import {
   USDC_DEVNET_MINT,
 } from "./grasschain_contract_spl-data-access";
 
-// ---------------------------------------------------------------------------
-// Must match ADMIN_ADDRESS in lib.rs
-// ---------------------------------------------------------------------------
+// Must match your admin in lib.rs
 const ADMIN_PUBKEY = "74bwEVrLxoWtg8ya7gB1KKKuff9wnNADys1Ss1cxsEdd";
 
 // ---------------------------------------------------------------------------
@@ -52,17 +50,20 @@ async function getOrCreateATA(
   tx.feePayer = owner;
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
   tx.recentBlockhash = blockhash;
+
   const signedTx = await signTransaction(tx);
   const sig = await connection.sendRawTransaction(signedTx.serialize());
-  await connection.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight });
+  await connection.confirmTransaction({
+    signature: sig,
+    blockhash,
+    lastValidBlockHeight,
+  });
   return ata;
 }
 
 // ---------------------------------------------------------------------------
-// 1) Admin Create Contract Form – now with an extra "Image URL" field.
-//    (This image is stored off–chain in localStorage.)
-//
-// Note: The on–chain createContract does NOT accept an image URL.
+// 1) Admin Create Contract Form (no localStorage for images).
+// ---------------------------------------------------------------------------
 export function GrasschainCreateContractForm() {
   const { publicKey } = useWallet();
   const { createContract } = useGrasschainContractSplProgram();
@@ -72,7 +73,8 @@ export function GrasschainCreateContractForm() {
   const [periodDays, setPeriodDays] = useState("");
   const [farmName, setFarmName] = useState("");
   const [farmAddress, setFarmAddress] = useState("");
-  const [farmImageUrl, setFarmImageUrl] = useState(""); // New: off–chain image URL
+  // If you do want an off-chain image URL input purely for display, keep a field:
+  const [farmImageUrl, setFarmImageUrl] = useState("");
 
   // Only show if the connected wallet is admin.
   if (publicKey?.toBase58() !== ADMIN_PUBKEY) return null;
@@ -91,8 +93,9 @@ export function GrasschainCreateContractForm() {
     }
     const nowSec = Math.floor(Date.now() / 1000);
 
+    // On-chain call
     await createContract.mutateAsync({
-      nftMint: new PublicKey("11111111111111111111111111111111"), // NFT dummy
+      nftMint: new PublicKey("11111111111111111111111111111111"),
       totalInvestmentNeeded: i,
       yieldPercentage: y,
       durationInSeconds: d,
@@ -101,13 +104,9 @@ export function GrasschainCreateContractForm() {
       farmAddress,
     });
 
-    // Save the image URL off–chain (in localStorage) keyed by contract id.
-    const stored = localStorage.getItem("contractImages");
-    const contractImages = stored ? JSON.parse(stored) : {};
-    contractImages[nowSec] = farmImageUrl;
-    localStorage.setItem("contractImages", JSON.stringify(contractImages));
-
-    // Clear fields
+    // Optionally do something with farmImageUrl in memory,
+    // but we are NOT storing it anywhere (no localStorage).
+    // Clear inputs
     setInvestment("");
     setYieldPerc("");
     setPeriodDays("");
@@ -160,11 +159,12 @@ export function GrasschainCreateContractForm() {
         onChange={(e) => setFarmAddress(e.target.value)}
       />
 
-      <label className="block mb-1">Farm Image URL</label>
+      {/* If you do want to let admin type an image URL for reference only: */}
+      <label className="block mb-1">Farm Image URL (Optional)</label>
       <input
         className="input input-bordered w-full bg-white mb-3"
         type="text"
-        placeholder="https://..."
+        placeholder="https://somewhere.com/farm.jpg"
         value={farmImageUrl}
         onChange={(e) => setFarmImageUrl(e.target.value)}
       />
@@ -177,9 +177,10 @@ export function GrasschainCreateContractForm() {
 }
 
 // ---------------------------------------------------------------------------
-// 2) Contracts List – Only show contracts that are not finished.
+// 2) Filter contracts to show only ones that aren't finished
 // ---------------------------------------------------------------------------
 function isFinished(statusObj: any) {
+  // If the status is one of { settled, cancelled, defaulted } => "finished"
   return (
     "settled" in statusObj ||
     "cancelled" in statusObj ||
@@ -195,10 +196,11 @@ export function GrasschainContractsList() {
   const contracts = allContracts.data || [];
   if (!contracts.length) return <p>No contracts found.</p>;
 
-  // Filter out finished contracts
+  // Filter out finished
   const visible = contracts.filter(({ account }: any) => !isFinished(account.status));
-  if (!visible.length)
+  if (!visible.length) {
     return <p>No active or funding contracts available.</p>;
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -214,23 +216,18 @@ export function GrasschainContractsList() {
 }
 
 // ---------------------------------------------------------------------------
-// 3) Single Contract Card – uses off–chain image from localStorage
+// 3) Single Contract Card
 // ---------------------------------------------------------------------------
 function getStatusStyles(status: string) {
   if (status === "Created" || status === "Funding") {
-    // Green with white text
     return "bg-green-500 text-white";
   } else if (status === "FundedPendingVerification" || status === "Active") {
-    // Yellow with dark text
     return "bg-yellow-400 text-black";
-  } else if (status === "PendingBuyback" || status === "Settled") {
-    // Dark green with white text
+  } else if (status === "PendingBuyback" || status === "Prolonged" || status === "Settled") {
     return "bg-green-800 text-white";
   } else if (status === "Defaulted" || status === "Cancelled") {
-    // Red with white text
     return "bg-red-500 text-white";
   }
-  // Fallback color (gray)
   return "bg-gray-400 text-white";
 }
 
@@ -255,7 +252,7 @@ export function GrasschainContractCard({
 
   const [investInput, setInvestInput] = useState("");
 
-  // Determine status by checking the decoded enum object
+  // Decode status from Anchor's enum
   let status = "Unknown";
   if ("created" in contractData.status) status = "Created";
   else if ("funding" in contractData.status) status = "Funding";
@@ -274,23 +271,10 @@ export function GrasschainContractCard({
   const farmName = contractData.farmName || "N/A";
   const farmAddress = contractData.farmAddress || "N/A";
 
-  // Retrieve off–chain image URL from localStorage
-  let farmImageUrl = "/placeholder.jpg"; // default image
-  const stored = localStorage.getItem("contractImages");
-  if (stored) {
-    try {
-      const images = JSON.parse(stored);
-      // Use contractData.contract_id (as number) converted to string as key
-      const key = contractData.contract_id.toString();
-      if (images[key]) {
-        farmImageUrl = images[key];
-      }
-    } catch (e) {
-      console.error("Error parsing contractImages", e);
-    }
-  }
+  // Instead of localStorage logic, just use a placeholder:
+  const farmImageUrl = "/placeholder.jpg"; // or remove <img> entirely
 
-  // Timestamps and dynamic deadline label
+  // Timestamps
   let endDate: Date | null = null;
   let deadlineLabel = "";
   if ("created" in contractData.status || "funding" in contractData.status) {
@@ -337,7 +321,10 @@ export function GrasschainContractCard({
       return;
     }
     const adminAta = await getOrCreateATA(connection, publicKey, signTransaction, USDC_DEVNET_MINT);
-    await adminWithdraw.mutateAsync({ contractPk, adminTokenAccount: adminAta });
+    await adminWithdraw.mutateAsync({
+      contractPk,
+      adminTokenAccount: adminAta,
+    });
   }
 
   async function handleAdminCancel() {
@@ -345,9 +332,12 @@ export function GrasschainContractCard({
       alert("Connect as admin.");
       return;
     }
-    // For demonstration, use admin's ATA for refund.
+    // For demonstration, we’ll just use admin’s ATA as the “investorTokenAccount”.
     const adminAta = await getOrCreateATA(connection, publicKey, signTransaction, USDC_DEVNET_MINT);
-    await adminCancel.mutateAsync({ contractPk, investorTokenAccount: adminAta });
+    await adminCancel.mutateAsync({
+      contractPk,
+      investorTokenAccount: adminAta,
+    });
   }
 
   async function handleCheckMaturity() {
@@ -360,11 +350,14 @@ export function GrasschainContractCard({
       return;
     }
     const adminAta = await getOrCreateATA(connection, publicKey, signTransaction, USDC_DEVNET_MINT);
+
+    // If you have a “calculateBuyback” on chain, you can do:
     const requiredBuyback = contractData.calculateBuyback
       ? contractData.calculateBuyback.toNumber() / 1_000_000
       : 0;
     const amount = Math.floor(requiredBuyback * 1_000_000);
-    // For demonstration, use admin's ATA as investor ATA.
+
+    // For demonstration, also using admin’s ATA for investor.
     await settleContract.mutateAsync({
       contractPk,
       amount,
@@ -383,6 +376,7 @@ export function GrasschainContractCard({
 
   return (
     <div className="bg-white shadow-md rounded overflow-hidden">
+      {/* Remove or keep an image placeholder */}
       <img src={farmImageUrl} alt="Farm" className="w-full h-40 object-cover" />
 
       <div className="p-4 relative">
@@ -404,7 +398,7 @@ export function GrasschainContractCard({
         <p className="text-sm mb-3">Remaining: {remaining} USDC</p>
 
         {(status === "Created" || status === "Funding") && (
-          <div className="mt-4 space-y-2 text-white-800">
+          <div className="mt-4 space-y-2">
             <label className="block text-sm mb-1">Amount to Buy (USDC)</label>
             <input
               type="number"
@@ -419,7 +413,7 @@ export function GrasschainContractCard({
         )}
 
         {status === "FundedPendingVerification" && publicKey?.toBase58() === ADMIN_PUBKEY && (
-          <div className="mt-4 flex flex-col space-y-2 ">
+          <div className="mt-4 flex flex-col space-y-2">
             <button className="btn btn-success" onClick={handleAdminWithdraw}>
               Withdraw Funds
             </button>
