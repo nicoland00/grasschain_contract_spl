@@ -19,7 +19,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>
+      <body style={{letterSpacing:0.5}}>
         <ReactQueryProvider>
             <SolanaProvider>
               <UiLayout>{children}</UiLayout>
