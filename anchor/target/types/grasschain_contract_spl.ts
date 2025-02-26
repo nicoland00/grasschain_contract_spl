@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/grasschain_contract_spl.json`.
  */
 export type GrasschainContractSpl = {
-  "address": "2AW1LTvcsdXkUWU1WortvtdMARMXiCBDe1VVNSUHh333",
+  "address": "3XwVYUvJCe4Mwzo9JvJTongCubhSnymweyFffs2yxETJ",
   "metadata": {
     "name": "grasschainContractSpl",
     "version": "0.1.0",
@@ -386,6 +386,10 @@ export type GrasschainContractSpl = {
         },
         {
           "name": "farmAddress",
+          "type": "string"
+        },
+        {
+          "name": "farmImageUrl",
           "type": "string"
         }
       ]
@@ -891,6 +895,10 @@ export type GrasschainContractSpl = {
           {
             "name": "escrowTokenAccount",
             "type": "pubkey"
+          },
+          {
+            "name": "farmImageUrl",
+            "type": "string"
           },
           {
             "name": "totalInvestmentNeeded",

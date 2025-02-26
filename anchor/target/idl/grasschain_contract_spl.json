@@ -1,5 +1,5 @@
 {
-  "address": "2AW1LTvcsdXkUWU1WortvtdMARMXiCBDe1VVNSUHh333",
+  "address": "3XwVYUvJCe4Mwzo9JvJTongCubhSnymweyFffs2yxETJ",
   "metadata": {
     "name": "grasschain_contract_spl",
     "version": "0.1.0",
@@ -380,6 +380,10 @@
         },
         {
           "name": "farm_address",
+          "type": "string"
+        },
+        {
+          "name": "farm_image_url",
           "type": "string"
         }
       ]
@@ -885,6 +889,10 @@
           {
             "name": "escrow_token_account",
             "type": "pubkey"
+          },
+          {
+            "name": "farm_image_url",
+            "type": "string"
           },
           {
             "name": "total_investment_needed",

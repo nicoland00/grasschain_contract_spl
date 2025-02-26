@@ -6,7 +6,7 @@ use anchor_spl::{
 use std::str::FromStr;
 
 
-declare_id!("2AW1LTvcsdXkUWU1WortvtdMARMXiCBDe1VVNSUHh333");
+declare_id!("3XwVYUvJCe4Mwzo9JvJTongCubhSnymweyFffs2yxETJ");
 
 // Constants
 const USDC_MINT: &str = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
@@ -24,9 +24,10 @@ pub mod grasschain_contract_spl {
         yield_percentage: i64,
         duration_in_seconds: i64,
         contract_id: u64,
-        nft_mint: Pubkey,     // might be used as a “collection” mint, or unused
+        nft_mint: Pubkey,
         farm_name: String,
         farm_address: String,
+        farm_image_url: String, // <--- NEW
     ) -> Result<()> {
         let contract = &mut ctx.accounts.contract;
 
@@ -58,8 +59,12 @@ pub mod grasschain_contract_spl {
         contract.funded_time = 0;
         contract.verified = false;
 
+        // Farm details
         contract.farm_name = farm_name;
         contract.farm_address = farm_address;
+
+        // **Set the new field**:
+        contract.farm_image_url = farm_image_url;
 
         Ok(())
     }
@@ -357,7 +362,7 @@ pub struct Contract {
     pub token_mint: Pubkey,         // USDC
     pub nft_mint: Pubkey,           // optional NFT collection or reference
     pub escrow_token_account: Pubkey,
-    
+    pub farm_image_url: String,
     // Funding
     pub total_investment_needed: i64,
     pub amount_funded_so_far: u64,
@@ -419,7 +424,7 @@ pub struct InvestorRecord {
 // ---------------------------------------------------------------------
 
 #[derive(Accounts)]
-#[instruction(total_investment_needed: u64, yield_percentage: i64, duration_in_seconds: i64, contract_id: u64, nft_mint: Pubkey, farm_name: String, farm_address: String)]
+#[instruction(total_investment_needed: u64, yield_percentage: i64, duration_in_seconds: i64, contract_id: u64, nft_mint: Pubkey, farm_name: String, farm_address: String, farm_image_url: String)]
 pub struct CreateContract<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
