@@ -1,12 +1,18 @@
 use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
+    metadata::{
+        create_metadata_accounts_v3, create_master_edition_v3,
+        CreateMetadataAccountsV3, CreateMasterEditionV3,
+    },
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
+use mpl_token_metadata::types::DataV2;
+use mpl_token_metadata::ID as token_metadata_program_id; // This is a constant Pubkey
 use std::str::FromStr;
 
 
-declare_id!("3XwVYUvJCe4Mwzo9JvJTongCubhSnymweyFffs2yxETJ");
+declare_id!("DEJZTPLawYKXToniBkuJahA1V2Y2DNNYpXx485hkAeLK");
 
 // Constants
 const USDC_MINT: &str = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
@@ -18,112 +24,170 @@ pub mod grasschain_contract_spl {
     use super::*;
 
     /// (1) Admin creates a contract => status=Created => 1 month to fill
-    pub fn create_contract(
-        ctx: Context<CreateContract>,
-        total_investment_needed: u64,
-        yield_percentage: i64,
-        duration_in_seconds: i64,
-        contract_id: u64,
-        nft_mint: Pubkey,
-        farm_name: String,
-        farm_address: String,
-        farm_image_url: String, // <--- NEW
-    ) -> Result<()> {
-        let contract = &mut ctx.accounts.contract;
+  /// (1) Admin creates a contract (status = Created) with an off–chain image URL.
+  pub fn create_contract(
+    ctx: Context<CreateContract>,
+    total_investment_needed: u64,
+    yield_percentage: i64,
+    duration_in_seconds: i64,
+    contract_id: u64,
+    nft_mint: Pubkey,
+    farm_name: String,
+    farm_address: String,
+    farm_image_url: String, // NEW field – a URL (from Blob)
+) -> Result<()> {
+    let contract = &mut ctx.accounts.contract;
 
-        // Check USDC mint
-        require!(
-            ctx.accounts.token_mint.key() == Pubkey::from_str(USDC_MINT).unwrap(),
-            ErrorCode::InvalidTokenMint
-        );
+    // Check USDC mint
+    require!(
+        ctx.accounts.token_mint.key() == Pubkey::from_str(USDC_MINT).unwrap(),
+        ErrorCode::InvalidTokenMint
+    );
 
-        // Initialize the contract data
-        contract.admin = ctx.accounts.admin.key();
-        contract.token_mint = ctx.accounts.token_mint.key();
-        contract.nft_mint = nft_mint;
-        contract.escrow_token_account = ctx.accounts.escrow_vault.key();
+    // Initialize the contract data
+    contract.admin = ctx.accounts.admin.key();
+    contract.token_mint = ctx.accounts.token_mint.key();
+    contract.nft_mint = nft_mint;
+    contract.escrow_token_account = ctx.accounts.escrow_vault.key();
 
-        contract.total_investment_needed = total_investment_needed as i64;
-        contract.amount_funded_so_far = 0;
-        contract.yield_percentage = yield_percentage;
-        contract.duration = duration_in_seconds;
-        contract.contract_id = contract_id;
-        contract.status = ContractStatus::Created;
+    contract.total_investment_needed = total_investment_needed as i64;
+    contract.amount_funded_so_far = 0;
+    contract.yield_percentage = yield_percentage;
+    contract.duration = duration_in_seconds;
+    contract.contract_id = contract_id;
+    contract.status = ContractStatus::Created;
 
-        let clock = Clock::get()?;
-        contract.upload_date = clock.unix_timestamp;
-        // 1-month window to fill => store this if you want
-        contract.funding_deadline = clock.unix_timestamp + 30 * 86400;
+    let clock = Clock::get()?;
+    contract.upload_date = clock.unix_timestamp;
+    // Funding window: 1 month from upload
+    contract.funding_deadline = clock.unix_timestamp + 30 * 86400;
 
-        contract.start_time = 0;
-        contract.funded_time = 0;
-        contract.verified = false;
+    contract.start_time = 0;
+    contract.funded_time = 0;
+    contract.verified = false;
 
-        // Farm details
-        contract.farm_name = farm_name;
-        contract.farm_address = farm_address;
+    // Set farm details
+    contract.farm_name = farm_name;
+    contract.farm_address = farm_address;
+    contract.farm_image_url = farm_image_url;
 
-        // **Set the new field**:
-        contract.farm_image_url = farm_image_url;
+    Ok(())
+}
 
+/// (2) Investor invests a partial amount.
+pub fn invest_contract(ctx: Context<InvestContract>, amount: u64) -> Result<()> {
+    let contract = &mut ctx.accounts.contract;
+    let clock = Clock::get()?;
+    require!(
+        contract.status == ContractStatus::Created || contract.status == ContractStatus::Funding,
+        ErrorCode::InvalidContractStatus
+    );
+    require!(
+        clock.unix_timestamp <= contract.funding_deadline,
+        ErrorCode::FundingNotExpiredYet
+    );
+    let needed = contract.total_investment_needed as u64;
+    require!(
+        contract.amount_funded_so_far + amount <= needed,
+        ErrorCode::ExceedsContractNeed
+    );
+    let cpi_ctx = CpiContext::new(
+        ctx.accounts.token_program.to_account_info(),
+        Transfer {
+            from: ctx.accounts.investor_token_account.to_account_info(),
+            to: ctx.accounts.escrow_vault.to_account_info(),
+            authority: ctx.accounts.investor.to_account_info(),
+        },
+    );
+    token::transfer(cpi_ctx, amount)?;
+    contract.amount_funded_so_far += amount;
+    let record = &mut ctx.accounts.investor_record;
+    record.contract = contract.key();
+    record.investor = ctx.accounts.investor.key();
+    record.amount += amount;
+    record.bump = ctx.bumps.investor_record;
+
+    if contract.amount_funded_so_far == needed {
+        contract.status = ContractStatus::FundedPendingVerification;
+        contract.funded_time = clock.unix_timestamp;
+    } else {
+        contract.status = ContractStatus::Funding;
+    }
         Ok(())
     }
 
-    /// (2) Investor invests any partial amount => track in separate `InvestorRecord` or in contract
-    pub fn invest_contract(ctx: Context<InvestContract>, amount: u64) -> Result<()> {
-        let contract = &mut ctx.accounts.contract;
-        let clock = Clock::get()?;
-
-        // Must be Created or Funding
-        require!(
-            contract.status == ContractStatus::Created || contract.status == ContractStatus::Funding,
-            ErrorCode::InvalidContractStatus
-        );
-
-        // Check if the funding window is still open
-        require!(
-            clock.unix_timestamp <= contract.funding_deadline,
-            ErrorCode::FundingWindowExpired
-        );
-
-        // Check we won't exceed total_investment_needed
-        let needed = contract.total_investment_needed as u64;
-        require!(
-            contract.amount_funded_so_far + amount <= needed,
-            ErrorCode::ExceedsContractNeed
-        );
-
-        // Transfer from investor to escrow
-        let cpi_ctx = CpiContext::new(
+    pub fn claim_nft(
+        ctx: Context<ClaimNft>,
+        name: String,
+        symbol: String,
+        uri: String,
+    ) -> Result<()> {
+        let investor_record = &mut ctx.accounts.investor_record;
+        
+        // 1) Check that the investor has not already claimed the NFT.
+        if investor_record.nft_minted {
+            return err!(ErrorCode::NftAlreadyClaimed);
+        }
+        
+        // 2) Mint 1 token to the investor's associated token account.
+        let mint_to_ctx = CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
-            Transfer {
-                from: ctx.accounts.investor_token_account.to_account_info(),
-                to: ctx.accounts.escrow_vault.to_account_info(),
+            token::MintTo {
+                mint: ctx.accounts.mint.to_account_info(),
+                to: ctx.accounts.associated_token_account.to_account_info(),
                 authority: ctx.accounts.investor.to_account_info(),
             },
         );
-        token::transfer(cpi_ctx, amount)?;
-
-        // Update contract
-        contract.amount_funded_so_far += amount;
-        // Record the investor's contribution in an InvestorRecord (if needed)
-        let record = &mut ctx.accounts.investor_record;
-        record.contract = contract.key();
-        record.investor = ctx.accounts.investor.key();
-        record.amount += amount;
-        record.bump = ctx.bumps.investor_record;
-
-        // If fully funded => status => FundedPendingVerification
-        // else => status => Funding
-        if contract.amount_funded_so_far == needed {
-            contract.status = ContractStatus::FundedPendingVerification;
-            contract.funded_time = clock.unix_timestamp;
-        } else {
-            contract.status = ContractStatus::Funding;
-        }
-
+        token::mint_to(mint_to_ctx, 1)?;
+        
+        // 3) Create the metadata account via the Metaplex token metadata CPI.
+        let metadata_ctx = CpiContext::new(
+            ctx.accounts.token_metadata_program.to_account_info(),
+            CreateMetadataAccountsV3 {
+                metadata: ctx.accounts.metadata_account.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                mint_authority: ctx.accounts.investor.to_account_info(),
+                update_authority: ctx.accounts.investor.to_account_info(),
+                payer: ctx.accounts.investor.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            },
+        );
+        let data_v2 = DataV2 {
+            name,
+            symbol,
+            uri,
+            seller_fee_basis_points: 0, // Set royalties as needed
+            creators: None,
+            collection: None,
+            uses: None,
+        };
+        create_metadata_accounts_v3(metadata_ctx, data_v2, false, true, None)?;
+        
+        // 4) Create the master edition account (this disables print editions if max_supply is None)
+        let master_edition_ctx = CpiContext::new(
+            ctx.accounts.token_metadata_program.to_account_info(),
+            CreateMasterEditionV3 {
+                edition: ctx.accounts.master_edition_account.to_account_info(),
+                mint: ctx.accounts.mint.to_account_info(),
+                update_authority: ctx.accounts.investor.to_account_info(),
+                mint_authority: ctx.accounts.investor.to_account_info(),
+                payer: ctx.accounts.investor.to_account_info(),
+                metadata: ctx.accounts.metadata_account.to_account_info(),
+                token_program: ctx.accounts.token_program.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            },
+        );
+        create_master_edition_v3(master_edition_ctx, None)?;
+        
+        // 5) Mark that the NFT has been claimed in the investor record.
+        investor_record.nft_minted = true;
+        investor_record.nft_mint = ctx.accounts.mint.key();
+        
         Ok(())
     }
+    
 
     /// (2b) Expire funding if not fully funded by the 1-month deadline => refunds each investor
     /// This is optional, only if you want to forcibly end the contract if not enough invests
@@ -153,7 +217,7 @@ pub mod grasschain_contract_spl {
     }
 
     /// (3) Admin withdraw => contract => Active
-    /// Admin has 1 month from `funded_time` to do this
+    /// Admin has 1 month from funded_time to do this
     pub fn admin_withdraw(ctx: Context<AdminWithdraw>) -> Result<()> {
         let admin_key = Pubkey::from_str(ADMIN_ADDRESS).unwrap();
         require!(ctx.accounts.admin.key() == admin_key, ErrorCode::Unauthorized);
@@ -249,7 +313,7 @@ pub mod grasschain_contract_spl {
         Ok(())
     }
 
-    /// (5) Once contract => Active, after `start_time + duration`, we go => PendingBuyback
+    /// (5) Once contract => Active, after start_time + duration, we go => PendingBuyback
     /// This can happen automatically or in a "check_update" instruction
     pub fn check_maturity(ctx: Context<CheckMaturity>) -> Result<()> {
         let contract = &mut ctx.accounts.contract;
@@ -359,10 +423,11 @@ pub mod grasschain_contract_spl {
 pub struct Contract {
     // Admin / PDAs
     pub admin: Pubkey,
-    pub token_mint: Pubkey,         // USDC
-    pub nft_mint: Pubkey,           // optional NFT collection or reference
+    pub token_mint: Pubkey,
+    pub nft_mint: Pubkey,
     pub escrow_token_account: Pubkey,
-    pub farm_image_url: String,
+    pub farm_image_url: String,  // NEW field
+
     // Funding
     pub total_investment_needed: i64,
     pub amount_funded_so_far: u64,
@@ -373,24 +438,22 @@ pub struct Contract {
 
     // Timestamps
     pub upload_date: i64,
-    pub funding_deadline: i64,      // upload_date + 30 days
+    pub funding_deadline: i64,
     pub start_time: i64,
     pub funded_time: i64,
     pub verified: bool,
 
-    // If you want separate buyback windows
+    // Optional buyback windows
     pub buyback_deadline: i64,
     pub prolonged_deadline: i64,
 
-    // Farm info
+    // Farm details
     pub farm_name: String,
     pub farm_address: String,
 }
 
 impl Contract {
     pub fn calculate_buyback(&self) -> u64 {
-        // For demonstration: principal + (principal * yield/100).
-        // Actually might use total_investment_needed as the principal
         let principal = self.total_investment_needed;
         let yield_amt = (principal * self.yield_percentage) / 100;
         (principal + yield_amt).max(0) as u64
@@ -399,30 +462,30 @@ impl Contract {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, PartialEq, Eq, Debug)]
 pub enum ContractStatus {
-    Created,                  // newly created
-    Funding,                  // partial invests
-    FundedPendingVerification,// fully funded => admin check
-    Active,                   // admin withdrew => main period
-    PendingBuyback,           // main period ended => must repay
-    Prolonged,                // 2-week extension
-    Settled,                  // repaid successfully
-    Defaulted,                // not repaid => default
-    Cancelled,                // admin or forced cancellation
+    Created,
+    Funding,
+    FundedPendingVerification,
+    Active,
+    PendingBuyback,
+    Prolonged,
+    Settled,
+    Defaulted,
+    Cancelled,
 }
 
-// An account to track each investor's partial invests
 #[account]
 pub struct InvestorRecord {
     pub contract: Pubkey,
     pub investor: Pubkey,
     pub amount: u64,
     pub bump: u8,
+    pub nft_minted: bool,
+    pub nft_mint: Pubkey,
 }
 
 // ---------------------------------------------------------------------
-// Contexts
+// Contexts (same as before, but update CreateContract to include farm_image_url)
 // ---------------------------------------------------------------------
-
 #[derive(Accounts)]
 #[instruction(total_investment_needed: u64, yield_percentage: i64, duration_in_seconds: i64, contract_id: u64, nft_mint: Pubkey, farm_name: String, farm_address: String, farm_image_url: String)]
 pub struct CreateContract<'info> {
@@ -430,7 +493,6 @@ pub struct CreateContract<'info> {
     pub admin: Signer<'info>,
     pub token_mint: Account<'info, Mint>,
 
-    // Contract
     #[account(
         init,
         payer = admin,
@@ -440,7 +502,6 @@ pub struct CreateContract<'info> {
     )]
     pub contract: Account<'info, Contract>,
 
-    // Escrow vault
     #[account(
         init,
         payer = admin,
@@ -485,7 +546,7 @@ pub struct InvestContract<'info> {
     #[account(
         init_if_needed,
         payer = investor,
-        space = 8 + 100,
+        space = 8 + 200,
         seeds = [
             b"investor-record",
             contract.key().as_ref(),
@@ -499,6 +560,61 @@ pub struct InvestContract<'info> {
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+pub struct ClaimNft<'info> {
+    #[account(mut)]
+    pub investor: Signer<'info>,
+    
+    #[account(mut)]
+    pub contract: Account<'info, Contract>,
+    
+    // Ensure the investor_record belongs to this investor.
+    #[account(mut, has_one = investor)]
+    pub investor_record: Account<'info, InvestorRecord>,
+    
+    // NEW: The NFT mint account is created on claim.
+    #[account(
+        init,
+        payer = investor,
+        mint::decimals = 0,
+        mint::authority = investor,
+        mint::freeze_authority = investor,
+    )]
+    pub mint: Account<'info, Mint>,
+    
+    // NEW: The investor's associated token account for that mint.
+    #[account(
+        init,
+        payer = investor,
+        associated_token::mint = mint,
+        associated_token::authority = investor,
+    )]
+    pub associated_token_account: Account<'info, TokenAccount>,
+    
+    // NEW: Metadata account PDA – derived off-chain using the seeds:
+    // ["metadata", token_metadata_program_id.as_ref(), mint.key().as_ref()]
+    /// CHECK: This account is created by the token metadata CPI.
+    #[account(mut)]
+    pub metadata_account: AccountInfo<'info>,
+    
+    // NEW: Master edition account PDA – derived with an extra "edition" seed.
+    /// CHECK: This account is created by the token metadata CPI.
+    #[account(mut)]
+    pub master_edition_account: AccountInfo<'info>,
+    
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    
+    /// CHECK: The token metadata program (must equal token_metadata_program_id)
+    #[account(address = token_metadata_program_id)]
+    pub token_metadata_program: AccountInfo<'info>,
+    
+    pub system_program: Program<'info, System>,
+    pub rent: Sysvar<'info, Rent>,
+}
+
+
 
 /// Optionally expire the contract if not fully funded by the deadline
 #[derive(Accounts)]
@@ -665,4 +781,6 @@ pub enum ErrorCode {
     AlreadyFullyFunded,
     #[msg("Cannot default or prolong in this state")]
     InvalidStateForProlongOrDefault,
+    #[msg("NFT already claimed")]
+    NftAlreadyClaimed,
 }

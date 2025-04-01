@@ -14,9 +14,7 @@ export default function GrasschainContractSplFeature() {
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       {publicKey ? (
         <>
-          <h1 className="text-3xl font-bold text-center">
-            Pastora App
-          </h1>
+          <h1 className="text-3xl font-bold text-center">Pastora App</h1>
           <GrasschainCreateContractForm />
           <hr />
           <h2 className="text-xl font-semibold">Available Contracts</h2>

@@ -2,21 +2,33 @@
 
 import { useMemo } from "react";
 import { BN, Program, AnchorProvider } from "@coral-xyz/anchor";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import {
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  Keypair,
+} from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 
-// Importar el IDL actualizado
 import grasschainSplIdl from "../../../anchor/target/idl/grasschain_contract_spl.json";
 import { GrasschainContractSpl } from "../../../anchor/target/types/grasschain_contract_spl";
+
+// Constante para el Token Metadata program ID
+export const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+);
 
 export const USDC_DEVNET_MINT = new PublicKey(
   "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr"
 );
 
-// Creamos el program pasando el provider
+// Crea el objeto Program de Anchor
 function getProgram(provider: AnchorProvider): Program<GrasschainContractSpl> {
   return new Program<GrasschainContractSpl>(
     grasschainSplIdl as GrasschainContractSpl,
@@ -27,7 +39,9 @@ function getProgram(provider: AnchorProvider): Program<GrasschainContractSpl> {
 export function useGrasschainContractSplProgram() {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
+  const queryClient = useQueryClient();
 
+  // Crear el provider
   const provider = useMemo(() => {
     if (typeof window === "undefined") {
       return new AnchorProvider(connection, {} as any, {
@@ -41,8 +55,10 @@ export function useGrasschainContractSplProgram() {
     });
   }, [connection]);
 
+  // Instanciar el Program
   const program = useMemo(() => getProgram(provider), [provider]);
 
+  // Query para obtener todos los contratos
   const allContracts = useQuery({
     queryKey: ["grasschainSplContract", "allContracts"],
     queryFn: async () => {
@@ -51,6 +67,26 @@ export function useGrasschainContractSplProgram() {
     enabled: !!program,
   });
 
+  // HOOK para obtener InvestorRecords de un contrato específico.
+  function useInvestorRecords(contractPk: PublicKey) {
+    return useQuery({
+      queryKey: ["investorRecords", contractPk?.toBase58()],
+      queryFn: async () => {
+        // Ajusta el 'offset' según el layout: 8 bytes de discriminator
+        return program.account.investorRecord.all([
+          {
+            memcmp: {
+              offset: 8, // El campo 'contract' empieza justo después del discriminator
+              bytes: contractPk.toBase58(),
+            },
+          },
+        ]);
+      },
+      enabled: !!program && !!contractPk,
+    });
+  }
+
+  // MUTACIONES
   interface CreateContractArgs {
     nftMint: PublicKey;
     totalInvestmentNeeded: number;
@@ -74,7 +110,6 @@ export function useGrasschainContractSplProgram() {
     }) => {
       if (!publicKey) throw new Error("No wallet connected.");
 
-      // Solo el admin crea el contrato.
       const [contractPda] = PublicKey.findProgramAddressSync(
         [
           Buffer.from("contract"),
@@ -97,7 +132,7 @@ export function useGrasschainContractSplProgram() {
           nftMint,
           farmName,
           farmAddress,
-          farmImageUrl,
+          farmImageUrl
         )
         .accountsPartial({
           admin: publicKey,
@@ -124,12 +159,17 @@ export function useGrasschainContractSplProgram() {
   const investContract = useMutation<string, Error, InvestContractArgs>({
     mutationFn: async ({ contractPk, amount, investorTokenAccount }) => {
       if (!publicKey) throw new Error("No wallet connected.");
+
       const contractData = await program.account.contract.fetch(contractPk);
+      // Usa el campo en camelCase según el IDL
       const escrowVault = contractData.escrowTokenAccount as PublicKey;
 
-      // Derivar el PDA del InvestorRecord
       const [investorRecordPda] = PublicKey.findProgramAddressSync(
-        [Buffer.from("investor-record"), contractPk.toBuffer(), publicKey.toBuffer()],
+        [
+          Buffer.from("investor-record"),
+          contractPk.toBuffer(),
+          publicKey.toBuffer(),
+        ],
         program.programId
       );
 
@@ -153,7 +193,68 @@ export function useGrasschainContractSplProgram() {
     },
   });
 
-  const expireFunding = useMutation<string, Error, { contractPk: PublicKey }>({
+  interface ClaimNftArgs {
+    contractPk: PublicKey;
+    mint: Keypair;
+    associatedTokenAccount: PublicKey;
+    metadataAccount: PublicKey;
+    masterEditionAccount: PublicKey;
+    name: string;
+    symbol: string;
+    uri: string;
+  }
+  const claimNft = useMutation<string, Error, ClaimNftArgs>({
+    mutationFn: async ({
+      contractPk,
+      mint,
+      associatedTokenAccount,
+      metadataAccount,
+      masterEditionAccount,
+      name,
+      symbol,
+      uri,
+    }) => {
+      if (!publicKey) throw new Error("No wallet connected.");
+
+      const [investorRecordPda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("investor-record"),
+          contractPk.toBuffer(),
+          publicKey.toBuffer(),
+        ],
+        program.programId
+      );
+
+      const txSig = await program.methods
+        .claimNft(name, symbol, uri)
+        .accountsPartial({
+          investor: publicKey,
+          contract: contractPk,
+          investorRecord: investorRecordPda,
+          mint: mint.publicKey,
+          associatedTokenAccount,
+          metadataAccount,
+          masterEditionAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
+        })
+        .signers([mint])
+        .rpc();
+
+      toast.success("claimNft success: " + txSig);
+      queryClient.invalidateQueries(["investorRecords", contractPk.toBase58()] as any);
+      allContracts.refetch();
+      return txSig;
+    },
+  });
+
+  interface ExpireFundingArgs {
+    contractPk: PublicKey;
+  }
+  const expireFunding = useMutation<string, Error, ExpireFundingArgs>({
     mutationFn: async ({ contractPk }) => {
       const txSig = await program.methods
         .expireFunding()
@@ -175,6 +276,7 @@ export function useGrasschainContractSplProgram() {
   const adminWithdraw = useMutation<string, Error, AdminWithdrawArgs>({
     mutationFn: async ({ contractPk, adminTokenAccount }) => {
       if (!publicKey) throw new Error("No wallet connected.");
+
       const contractData = await program.account.contract.fetch(contractPk);
       const escrowVault = contractData.escrowTokenAccount as PublicKey;
 
@@ -203,8 +305,10 @@ export function useGrasschainContractSplProgram() {
   const adminCancel = useMutation<string, Error, AdminCancelArgs>({
     mutationFn: async ({ contractPk, investorTokenAccount }) => {
       if (!publicKey) throw new Error("No wallet connected.");
+
       const contractData = await program.account.contract.fetch(contractPk);
       const escrowVault = contractData.escrowTokenAccount as PublicKey;
+
       const txSig = await program.methods
         .adminCancel()
         .accountsPartial({
@@ -222,11 +326,14 @@ export function useGrasschainContractSplProgram() {
     },
   });
 
-  const checkMaturity = useMutation<string, Error, { contractPk: PublicKey }>({
+  interface CheckMaturityArgs {
+    contractPk: PublicKey;
+  }
+  const checkMaturity = useMutation<string, Error, CheckMaturityArgs>({
     mutationFn: async ({ contractPk }) => {
       const txSig = await program.methods
         .checkMaturity()
-        .accountsPartial({
+        .accounts({
           contract: contractPk,
           systemProgram: SystemProgram.programId,
         })
@@ -244,8 +351,14 @@ export function useGrasschainContractSplProgram() {
     investorTokenAccount: PublicKey;
   }
   const settleContract = useMutation<string, Error, SettleContractArgs>({
-    mutationFn: async ({ contractPk, amount, adminTokenAccount, investorTokenAccount }) => {
+    mutationFn: async ({
+      contractPk,
+      amount,
+      adminTokenAccount,
+      investorTokenAccount,
+    }) => {
       if (!publicKey) throw new Error("No wallet connected.");
+
       const txSig = await program.methods
         .settleContract(new BN(amount))
         .accountsPartial({
@@ -263,9 +376,13 @@ export function useGrasschainContractSplProgram() {
     },
   });
 
-  const prolongContract = useMutation<string, Error, { contractPk: PublicKey }>({
+  interface ProlongContractArgs {
+    contractPk: PublicKey;
+  }
+  const prolongContract = useMutation<string, Error, ProlongContractArgs>({
     mutationFn: async ({ contractPk }) => {
       if (!publicKey) throw new Error("No wallet connected.");
+
       const txSig = await program.methods
         .prolongContract()
         .accountsPartial({
@@ -280,11 +397,14 @@ export function useGrasschainContractSplProgram() {
     },
   });
 
-  const defaultContract = useMutation<string, Error, { contractPk: PublicKey }>({
+  interface DefaultContractArgs {
+    contractPk: PublicKey;
+  }
+  const defaultContract = useMutation<string, Error, DefaultContractArgs>({
     mutationFn: async ({ contractPk }) => {
       const txSig = await program.methods
         .defaultContract()
-        .accountsPartial({
+        .accounts({
           contract: contractPk,
           systemProgram: SystemProgram.programId,
         })
@@ -300,6 +420,7 @@ export function useGrasschainContractSplProgram() {
     allContracts,
     createContract,
     investContract,
+    claimNft,
     expireFunding,
     adminWithdraw,
     adminCancel,
@@ -312,5 +433,21 @@ export function useGrasschainContractSplProgram() {
         [Buffer.from("investor-record"), contractPk.toBuffer(), investorPk.toBuffer()],
         program.programId
       ),
+    useInvestorRecords,
+    // Helper para generar CSV usando los nombres correctos (camelCase)
+    generateInvestorRecordsCSV: (records: any): string => {
+      if (!records) return "";
+      const header = "contract_id,investor,nft_mint\n";
+      const rows = records
+        .map((record: any) => {
+          const acc = record.account;
+          const c = acc.contract ? acc.contract.toBase58() : "N/A";
+          const i = acc.investor ? acc.investor.toBase58() : "N/A";
+          const nft = acc.nftMint ? acc.nftMint.toBase58() : "N/A";
+          return `${c},${i},${nft}`;
+        })
+        .join("\n");
+      return header + rows;
+    },
   };
 }

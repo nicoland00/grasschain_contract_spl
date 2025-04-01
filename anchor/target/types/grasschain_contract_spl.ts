@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/grasschain_contract_spl.json`.
  */
 export type GrasschainContractSpl = {
-  "address": "3XwVYUvJCe4Mwzo9JvJTongCubhSnymweyFffs2yxETJ",
+  "address": "DEJZTPLawYKXToniBkuJahA1V2Y2DNNYpXx485hkAeLK",
   "metadata": {
     "name": "grasschainContractSpl",
     "version": "0.1.0",
@@ -116,7 +116,7 @@ export type GrasschainContractSpl = {
       "name": "adminWithdraw",
       "docs": [
         "(3) Admin withdraw => contract => Active",
-        "Admin has 1 month from `funded_time` to do this"
+        "Admin has 1 month from funded_time to do this"
       ],
       "discriminator": [
         160,
@@ -212,7 +212,7 @@ export type GrasschainContractSpl = {
     {
       "name": "checkMaturity",
       "docs": [
-        "(5) Once contract => Active, after `start_time + duration`, we go => PendingBuyback",
+        "(5) Once contract => Active, after start_time + duration, we go => PendingBuyback",
         "This can happen automatically or in a \"check_update\" instruction"
       ],
       "discriminator": [
@@ -265,9 +265,177 @@ export type GrasschainContractSpl = {
       "args": []
     },
     {
+      "name": "claimNft",
+      "discriminator": [
+        6,
+        193,
+        146,
+        120,
+        48,
+        218,
+        69,
+        33
+      ],
+      "accounts": [
+        {
+          "name": "investor",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "investorRecord"
+          ]
+        },
+        {
+          "name": "contract",
+          "writable": true
+        },
+        {
+          "name": "investorRecord",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "associatedTokenAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "investor"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "metadataAccount",
+          "writable": true
+        },
+        {
+          "name": "masterEditionAccount",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associatedTokenProgram",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "tokenMetadataProgram"
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "symbol",
+          "type": "string"
+        },
+        {
+          "name": "uri",
+          "type": "string"
+        }
+      ]
+    },
+    {
       "name": "createContract",
       "docs": [
-        "(1) Admin creates a contract => status=Created => 1 month to fill"
+        "(1) Admin creates a contract => status=Created => 1 month to fill",
+        "(1) Admin creates a contract (status = Created) with an off–chain image URL."
       ],
       "discriminator": [
         244,
@@ -506,7 +674,7 @@ export type GrasschainContractSpl = {
     {
       "name": "investContract",
       "docs": [
-        "(2) Investor invests any partial amount => track in separate `InvestorRecord` or in contract"
+        "(2) Investor invests a partial amount."
       ],
       "discriminator": [
         185,
@@ -872,6 +1040,11 @@ export type GrasschainContractSpl = {
       "code": 6012,
       "name": "invalidStateForProlongOrDefault",
       "msg": "Cannot default or prolong in this state"
+    },
+    {
+      "code": 6013,
+      "name": "nftAlreadyClaimed",
+      "msg": "NFT already claimed"
     }
   ],
   "types": [
@@ -1022,6 +1195,14 @@ export type GrasschainContractSpl = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "nftMinted",
+            "type": "bool"
+          },
+          {
+            "name": "nftMint",
+            "type": "pubkey"
           }
         ]
       }
