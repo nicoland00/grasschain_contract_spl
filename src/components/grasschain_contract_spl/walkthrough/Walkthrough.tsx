@@ -14,7 +14,7 @@ const slides = [
   },
   {
     image: "/2 (1).png",
-    title: "Click Invest on Pastora’s certified published contracts",
+    title: "Click Invest on our certified published contracts",
     description:
       "Available contracts will be published when farmlands are ready",
   },
