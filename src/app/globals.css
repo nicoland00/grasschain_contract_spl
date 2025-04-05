@@ -49,3 +49,132 @@ body {
     font-size: larger;
     color: white;
 }
+
+/* Overlay que cubre toda la pantalla */
+.walkthrough-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background-color: rgba(243, 244, 246, 0.95); /* Color gris claro con opacidad */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  
+  /* Encabezado principal */
+  .walkthrough-header {
+    position: absolute;
+    top: 20px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .walkthrough-header h1 {
+    font-size: 2.5rem; /* Aproximadamente equivalente a text-5xl */
+    font-weight: bold;
+    color: #1F2937; /* Gris oscuro */
+    margin: 0;
+    padding-top: 20px;
+  }
+  
+  /* Botón Skip en la esquina superior derecha */
+  .walkthrough-skip {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 1.125rem; /* Aprox. text-xl */
+    font-weight: 500;
+    color: #4B5563;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .walkthrough-skip:hover {
+    color: #1F2937;
+  }
+  
+  /* Contenedor principal del walkthrough */
+  .walkthrough-container {
+    background-color: #ffffff;
+    border-radius: 20px; /* Border radius 20 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 800px; /* Algo más ancho */
+    height: 500px; /* Altura estática */
+    display: flex;
+    flex-direction: row;
+    padding: 32px;
+  }
+  
+  /* Columna de la imagen */
+  .walkthrough-image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .walkthrough-image img {
+    width: 50%; /* 50% del tamaño original */
+    height: auto;
+  }
+  
+  /* Columna del contenido */
+  .walkthrough-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0 16px;
+  }
+  
+  .walkthrough-content h2 {
+    font-size: 1.875rem; /* Aproximadamente text-3xl */
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  
+  .walkthrough-content p {
+    font-size: 1.125rem; /* Aproximadamente text-lg */
+    color: #4B5563;
+    margin-bottom: 24px;
+  }
+  
+  /* Contenedor de los botones */
+  .walkthrough-buttons {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px; /* Ubicación más baja y separada */
+  }
+  
+  /* Estilos para los botones */
+  .btn-prev,
+  .btn-next {
+    padding: 12px 24px;
+    border-radius: 4px;
+    border: 1px solid #7AC78E;
+    background-color: #7AC78E;
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn-prev:hover,
+  .btn-next:hover {
+    background-color: #66a26a;
+  }
+  
+  .btn-prev:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
