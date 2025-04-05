@@ -290,15 +290,22 @@ export function GrasschainContractCard({
   }
 
   return (
-    <div className="w-full bg-white shadow-lg my-4 p-4 rounded">
-      <div className="flex flex-col md:flex-row">
-        {/* Left Side: Farm Image with Status */}
-        <div className="w-full md:w-1/2 relative">
-          <img src={farmImageUrl} alt="Farm" className="w-full h-64 object-cover rounded" />
-          <span className="absolute top-2 left-2 px-2 py-1 text-xs rounded bg-green-500 text-white">
-            {status}
-          </span>
-        </div>
+ <div className="w-full bg-white shadow-lg my-4 border border-gray-200"> 
+    {/* Removed `rounded` and added a simple border with no rounding */}
+    <div className="flex flex-col md:flex-row items-stretch">
+      {/* Left Side: Farm Image with Status */}
+      <div className="w-full md:w-1/2 relative">
+        <img
+          src={farmImageUrl}
+          alt="Farm"
+          className="w-full h-full object-cover" // fill entire left side
+        />
+        <span
+          className="absolute top-2 left-2 px-2 py-1 text-xs bg-green-500 text-white"
+        >
+          {status}
+        </span>
+      </div>
         {/* Right Side: Contract Details */}
         <div className="w-full md:w-1/2 p-4 flex flex-col justify-center">
           {/* Farm Name as Title */}
