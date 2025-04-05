@@ -53,7 +53,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
   return (
     <div className="walkthrough-overlay">
       <div className="walkthrough-header">
-        <h1>Welcome to pastora Web3 Smart Contracts</h1>
+        <h1>Welcome to Pastora Web3 Smart Contracts</h1>
       </div>
       <button onClick={handleSkip} className="walkthrough-skip">
         Skip

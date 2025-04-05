@@ -31,7 +31,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
           <li>
-                <Link href="https://app.pastora.io" style={{ color: "#7AC78E" }}>Pastora’s Web3 Contracts</Link>
+                <Link href="https://app.pastora.io" style={{ color: "#7AC78E" }}>"Pastora’s Web3 Contracts"</Link>
               </li>
           </ul>
         </div>

@@ -15,7 +15,7 @@ export default function GrasschainContractSplFeature() {
       {publicKey ? (
         <>
           <h1 className="text-4xl font-bold text-center mb-6">
-            Pastora's Web3 Contracts
+            "Pastora's Web3 Contracts"
           </h1>
           <GrasschainCreateContractForm />
           <hr className="border-gray-300 my-6" />
