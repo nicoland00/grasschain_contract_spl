@@ -12,7 +12,7 @@ use mpl_token_metadata::ID as token_metadata_program_id; // This is a constant P
 use std::str::FromStr;
 
 
-declare_id!("DEJZTPLawYKXToniBkuJahA1V2Y2DNNYpXx485hkAeLK");
+declare_id!("Eb8hZ7VD1HoeZaTL79mZKLhk7incW7SHhvpCeDmXVimr");
 
 // Constants
 const USDC_MINT: &str = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
