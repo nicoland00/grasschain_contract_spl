@@ -5,14 +5,14 @@ anchor_version = "0.30.1"
 resolution = true
 skip-lint = false
 
-[programs.devnet]
+[programs.localnet]
 grasschain_contract_spl = "Eb8hZ7VD1HoeZaTL79mZKLhk7incW7SHhvpCeDmXVimr"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

@@ -21,7 +21,7 @@ export function getGrasschainContractSplProgramId(cluster: Cluster) {
     case 'devnet':
     case 'testnet':
       // This is the program ID for the GrasschainContractSpl program on devnet and testnet.
-      return new PublicKey('coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF')
+      return new PublicKey('Eb8hZ7VD1HoeZaTL79mZKLhk7incW7SHhvpCeDmXVimr')
     case 'mainnet-beta':
     default:
       return GRASSCHAIN_CONTRACT_SPL_PROGRAM_ID

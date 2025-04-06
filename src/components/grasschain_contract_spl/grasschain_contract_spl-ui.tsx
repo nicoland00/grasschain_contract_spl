@@ -90,50 +90,50 @@ export function GrasschainCreateContractForm() {
   return (
     <div className="max-w-md mx-auto bg-white shadow p-6 rounded mb-8">
       <h3 className="text-2xl font-bold mb-4 text-center">Create Contract (Admin Only)</h3>
-      <label className="block mb-1">Investment Amount (USDC)</label>
+      <label className="block mb-1 ">Investment Amount (USDC)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 text-white"
         value={investment}
         onChange={(e) => setInvestment(e.target.value)}
       />
       <label className="block mb-1">Yield Percentage (%)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 text-white"
         value={yieldPerc}
         onChange={(e) => setYieldPerc(e.target.value)}
       />
       <label className="block mb-1">Funding Period (days)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 text-white"
         value={periodDays}
         onChange={(e) => setPeriodDays(e.target.value)}
       />
       <label className="block mb-1">Farm Name</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 text-white"
         value={farmName}
         onChange={(e) => setFarmName(e.target.value)}
       />
       <label className="block mb-1">Farm Address</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 text-white"
         value={farmAddress}
         onChange={(e) => setFarmAddress(e.target.value)}
       />
       <label className="block mb-1">Farm Image URL</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 text-white"
         placeholder="https://..."
         value={farmImageUrl}
         onChange={(e) => setFarmImageUrl(e.target.value)}
       />
-      <button className="btn btn-primary w-full mt-4" onClick={handleCreateContract}>
+      <button className="btn btn-primary w-full mt-4 " onClick={handleCreateContract}>
         Create Contract
       </button>
     </div>
@@ -239,9 +239,9 @@ export function GrasschainContractCard({
       associatedTokenAccount: nftAta,
       metadataAccount: metadataPDA,
       masterEditionAccount: masterEditionPDA,
-      name: "My NFT",
-      symbol: "NFT",
-      uri: "https://my-blob-store.public.blob.vercel-storage.com/nft.json",
+      name: "Pastora NFT",
+      symbol: "Tracking Access",
+      uri: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/token%20access-O0ZxFWTyu8qaPja2fzH5quZbYHLLMI.png",
     });
   }
 
@@ -343,7 +343,7 @@ export function GrasschainContractCard({
           <div className="mb-4">
             <input
               type="number"
-              className="input input-bordered w-full mb-2"
+              className="input input-bordered w-full mb-2 text-white"
               placeholder="Investment Amount (USDC)"
               value={investInput}
               onChange={(e) => setInvestInput(e.target.value)}
