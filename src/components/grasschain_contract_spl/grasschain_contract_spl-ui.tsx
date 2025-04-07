@@ -93,42 +93,42 @@ export function GrasschainCreateContractForm() {
       <label className="block mb-1 ">Investment Amount (USDC)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3 text-white"
+        className="input input-bordered w-full mb-3 "
         value={investment}
         onChange={(e) => setInvestment(e.target.value)}
       />
       <label className="block mb-1">Yield Percentage (%)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3 text-white"
+        className="input input-bordered w-full mb-3 "
         value={yieldPerc}
         onChange={(e) => setYieldPerc(e.target.value)}
       />
       <label className="block mb-1">Funding Period (days)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3 text-white"
+        className="input input-bordered w-full mb-3"
         value={periodDays}
         onChange={(e) => setPeriodDays(e.target.value)}
       />
       <label className="block mb-1">Farm Name</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3 text-white"
+        className="input input-bordered w-full mb-3 "
         value={farmName}
         onChange={(e) => setFarmName(e.target.value)}
       />
       <label className="block mb-1">Farm Address</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3 text-white"
+        className="input input-bordered w-full mb-3 "
         value={farmAddress}
         onChange={(e) => setFarmAddress(e.target.value)}
       />
       <label className="block mb-1">Farm Image URL</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3 text-white"
+        className="input input-bordered w-full mb-3 "
         placeholder="https://..."
         value={farmImageUrl}
         onChange={(e) => setFarmImageUrl(e.target.value)}
@@ -240,7 +240,7 @@ export function GrasschainContractCard({
       metadataAccount: metadataPDA,
       masterEditionAccount: masterEditionPDA,
       name: "Pastora NFT",
-      symbol: "Tracking Access",
+      symbol: "Token Access",
       uri: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/token%20access-O0ZxFWTyu8qaPja2fzH5quZbYHLLMI.png",
     });
   }
@@ -299,7 +299,7 @@ export function GrasschainContractCard({
           alt="Farm"
           className="block w-full h-full object-cover"
         />
-        <span className="absolute top-2 left-2 px-2 py-1 text-xs bg-green-500 text-white uppercase rounded">
+        <span className="absolute top-2 left-2 px-2 py-1 text-xs bg-green-500 uppercase rounded">
           {status}
         </span>
       </div>
@@ -343,7 +343,7 @@ export function GrasschainContractCard({
           <div className="mb-4">
             <input
               type="number"
-              className="input input-bordered w-full mb-2 text-white"
+              className="input input-bordered w-full mb-2"
               placeholder="Investment Amount (USDC)"
               value={investInput}
               onChange={(e) => setInvestInput(e.target.value)}
