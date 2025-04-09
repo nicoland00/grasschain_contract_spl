@@ -91,7 +91,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-4 pb-16 md:pt-20"
+      className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-12 pb-16 md:pt-20"
       {...handlers}
     >
       {/* Skip button */}
@@ -103,7 +103,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
       </button>
 
       {/* Main title with extra top and side padding */}
-      <h1 className="px-4 md:px-8 text-3xl md:text-5xl font-extrabold mb-4 text-center">
+      <h1 className="px-4 md:px-8 text-3xl md:text-5xl font-extrabold mb-4 text-center mt-8">
         Welcome to Pastora Web3 Smart Contracts
       </h1>
 
