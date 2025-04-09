@@ -28,7 +28,7 @@ const slides = [
   },
 ];
 
-// A small component to render the step circles
+// Smaller step circles with responsive spacing
 function StepsIndicator({
   currentStep,
   totalSteps,
@@ -36,7 +36,6 @@ function StepsIndicator({
   currentStep: number;
   totalSteps: number;
 }) {
-  // We want the indicator width to match the content square's width (750px on md)
   return (
     <div className="w-11/12 md:w-[750px] mx-auto flex justify-between items-center mb-4">
       {Array.from({ length: totalSteps }).map((_, i) => {
@@ -83,7 +82,6 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
     onFinish();
   };
 
-  // Setup swipeable events
   const handlers = useSwipeable({
     onSwipedLeft: handleNext,
     onSwipedRight: handlePrev,
@@ -96,7 +94,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
       className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-4 pb-16 md:pt-20"
       {...handlers}
     >
-      {/* Skip button with minimal padding on mobile */}
+      {/* Skip button */}
       <button
         onClick={handleSkip}
         className="absolute top-2 right-2 text-sm text-green-600 font-semibold"
@@ -112,17 +110,17 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
       {/* Step circles */}
       <StepsIndicator currentStep={currentSlide} totalSteps={slides.length} />
 
-      {/* Walkthrough content container */}
-      <div className="w-11/12 md:w-[750px] h-[70vh] md:h-[620px] bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8 mb-8">
-        {/* Title inside the white container with reduced spacing */}
+      {/* Walkthrough content container with extra bottom padding for mobile */}
+      <div className="w-11/12 md:w-[750px] md:h-[620px] bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8 pb-12 mb-8">
+        {/* Title inside the white container with extra top padding */}
         <h2 className="text-2xl md:text-4xl font-bold mb-2 text-center">
           {slides[currentSlide].title}
         </h2>
         <p className="text-base md:text-xl text-gray-700 mb-4 text-center">
           {slides[currentSlide].description}
         </p>
-        {/* Video section with a shorter height on mobile */}
-        <div className="flex-grow flex items-center justify-center mb-4">
+        {/* Video section with responsive height */}
+        <div className="flex-grow flex items-center justify-center mb-4 max-h-min">
           <video
             key={slides[currentSlide].video}
             autoPlay
@@ -135,7 +133,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
             Your browser does not support the video tag.
           </video>
         </div>
-        {/* Navigation buttons at the bottom */}
+        {/* Navigation buttons */}
         <div className="flex justify-between">
           <button
             onClick={handlePrev}
@@ -152,8 +150,6 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
           </button>
         </div>
       </div>
-      {/* Extra bottom margin to ensure buttons are not cut off on mobile */}
-      <div className="mb-8"></div>
     </div>
   );
 }
