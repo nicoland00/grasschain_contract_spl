@@ -1,0 +1,17 @@
+{
+    "name": "Pastora NFT",
+    "symbol": "PTORA",
+    "description": "Token Access NFT for Pastora App",
+    "seller_fee_basis_points": 0,
+    "image": "/tokenAccess.png",
+    "attributes": [],
+    "properties": {
+      "files": [
+        {
+          "uri": "/tokenAccess.png",
+          "type": "image/png"
+        }
+      ]
+    }
+  }
+  

@@ -69,6 +69,7 @@ export function GrasschainCreateContractForm() {
       return;
     }
     const nowSec = Math.floor(Date.now() / 1000);
+
     await createContract.mutateAsync({
       nftMint: new PublicKey("11111111111111111111111111111111"), // dummy NFT mint
       totalInvestmentNeeded: i,
@@ -79,6 +80,7 @@ export function GrasschainCreateContractForm() {
       farmAddress,
       farmImageUrl,
     });
+
     setInvestment("");
     setYieldPerc("");
     setPeriodDays("");
@@ -90,17 +92,17 @@ export function GrasschainCreateContractForm() {
   return (
     <div className="max-w-md mx-auto bg-white shadow p-6 rounded mb-8">
       <h3 className="text-2xl font-bold mb-4 text-center">Create Contract (Admin Only)</h3>
-      <label className="block mb-1 ">Investment Amount (USDC)</label>
+      <label className="block mb-1">Investment Amount (USDC)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3 "
+        className="input input-bordered w-full mb-3"
         value={investment}
         onChange={(e) => setInvestment(e.target.value)}
       />
       <label className="block mb-1">Yield Percentage (%)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3 "
+        className="input input-bordered w-full mb-3"
         value={yieldPerc}
         onChange={(e) => setYieldPerc(e.target.value)}
       />
@@ -114,26 +116,26 @@ export function GrasschainCreateContractForm() {
       <label className="block mb-1">Farm Name</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3 "
+        className="input input-bordered w-full mb-3"
         value={farmName}
         onChange={(e) => setFarmName(e.target.value)}
       />
       <label className="block mb-1">Farm Address</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3 "
+        className="input input-bordered w-full mb-3"
         value={farmAddress}
         onChange={(e) => setFarmAddress(e.target.value)}
       />
       <label className="block mb-1">Farm Image URL</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3 "
+        className="input input-bordered w-full mb-3"
         placeholder="https://..."
         value={farmImageUrl}
         onChange={(e) => setFarmImageUrl(e.target.value)}
       />
-      <button className="btn btn-primary w-full mt-4 " onClick={handleCreateContract}>
+      <button className="btn btn-primary w-full mt-4" onClick={handleCreateContract}>
         Create Contract
       </button>
     </div>
@@ -163,7 +165,7 @@ export function GrasschainContractCard({
   const [investInput, setInvestInput] = useState("");
   const [hasInvested, setHasInvested] = useState(false);
 
-  // Determine status text
+  // Determine the human-readable status
   let status = "Unknown";
   if ("created" in contractData.status) status = "Created";
   else if ("funding" in contractData.status) status = "Funding";
@@ -224,6 +226,7 @@ export function GrasschainContractCard({
     setHasInvested(true);
   }
 
+  // Fix: Shorten the NFT symbol to avoid "Symbol too long" error (e.g., "PTORA")
   async function handleClaimNft() {
     if (!publicKey || !signTransaction) {
       alert("Connect your wallet first.");
@@ -240,8 +243,8 @@ export function GrasschainContractCard({
       metadataAccount: metadataPDA,
       masterEditionAccount: masterEditionPDA,
       name: "Pastora NFT",
-      symbol: "Token Access",
-      uri: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/token%20access-O0ZxFWTyu8qaPja2fzH5quZbYHLLMI.png",
+      symbol: "PTORA", // Short symbol to avoid the error
+      uri: "https://app.pastora.io/tokenMetadata.json",
     });
   }
 
@@ -282,6 +285,10 @@ export function GrasschainContractCard({
   }
 
   async function handleProlong() {
+    if (!publicKey || !signTransaction) {
+      alert("Connect as admin.");
+      return;
+    }
     await prolongContract.mutateAsync({ contractPk });
   }
 
@@ -291,114 +298,116 @@ export function GrasschainContractCard({
 
   return (
     <div className="w-full rounded-xl bg-white shadow-lg my-4 border border-gray-200 overflow-hidden">
-    <div className="flex flex-col md:flex-row items-stretch">
-      {/* Left Side: Farm Image + Status */}
-      <div className="relative w-full md:w-1/2">
-        <img
-          src={farmImageUrl}
-          alt="Farm"
-          className="block w-full h-full object-cover"
-        />
-        <span className="absolute top-2 left-2 px-2 py-1 text-xs bg-green-500 uppercase rounded">
-          {status}
-        </span>
-      </div>
-  
-      {/* Right Side: Contract Details */}
-      <div className="w-full md:w-1/2 p-4 flex flex-col justify-center">
-        <h3 className="text-4xl font-bold mb-4 text-center">{farmNameText}</h3>
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="space-y-2 text-left text-lg">
-            <p>
-              <strong>Farm Address:</strong>{" "}
-              <span className="font-normal">{farmAddressText}</span>
-            </p>
-            <p>
-              <strong>{deadlineLabel}:</strong>{" "}
-              <span className="font-normal">
-                {endDate ? endDate.toLocaleString() : "N/A"}
-              </span>
-            </p>
-            <p>
-              <strong>Total Asked:</strong>{" "}
-              <span className="font-normal">{totalNeeded} USDC</span>
-            </p>
-            <p>
-              <strong>Funded:</strong>{" "}
-              <span className="font-normal">{(fundedSoFar / 1_000_000).toFixed(2)} USDC</span>
-            </p>
-            <p>
-              <strong>Remaining:</strong>{" "}
-              <span className="font-normal">{remaining} USDC</span>
-            </p>
-          </div>
-          <div className="flex items-center justify-center">
-            <div className="text-7xl font-extrabold text-gray-800">
-              {contractData.yieldPercentage.toString()}%
+      <div className="flex flex-col md:flex-row">
+        {/* Left Side: Farm Image + Status (overlay in top-left) */}
+        <div className="relative w-full md:w-1/2">
+          <img
+            src={farmImageUrl}
+            alt="Farm"
+            className="block w-full h-full object-cover"
+          />
+          <span className="absolute top-2 left-2 px-2 py-1 text-xs bg-green-500 uppercase rounded text-white font-bold">
+            {status}
+          </span>
+        </div>
+        {/* Right Side: Contract Details */}
+        <div className="w-full md:w-1/2 p-4 flex flex-col justify-center">
+          {/* Farm Name as title */}
+          <h3 className="text-4xl font-bold mb-4 text-center">{farmNameText}</h3>
+          {/* Two-column layout: Characteristics and Yield Percentage */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            {/* Left Column: Characteristics */}
+            <div className="space-y-2 text-left text-lg">
+              <p>
+                <strong>Farm Address:</strong>{" "}
+                <span className="font-normal">{farmAddressText}</span>
+              </p>
+              <p>
+                <strong>{deadlineLabel}:</strong>{" "}
+                <span className="font-normal">
+                  {endDate ? endDate.toLocaleString() : "N/A"}
+                </span>
+              </p>
+              <p>
+                <strong>Total Asked:</strong>{" "}
+                <span className="font-normal">{totalNeeded} USDC</span>
+              </p>
+              <p>
+                <strong>Funded:</strong>{" "}
+                <span className="font-normal">{(fundedSoFar / 1_000_000).toFixed(2)} USDC</span>
+              </p>
+              <p>
+                <strong>Remaining:</strong>{" "}
+                <span className="font-normal">{remaining} USDC</span>
+              </p>
+            </div>
+            {/* Right Column: Yield Percentage */}
+            <div className="flex items-center justify-center md:justify-end">
+              <div className="text-7xl font-extrabold text-gray-800">
+                {contractData.yieldPercentage.toString()}%
+              </div>
             </div>
           </div>
+          {/* Full width area for Invest and Claim NFT buttons */}
+          {["Created", "Funding"].includes(status) && (
+            <div className="mb-4">
+              <input
+                type="number"
+                className="input input-bordered w-full mb-2 "
+                placeholder="Investment Amount (USDC)"
+                value={investInput}
+                onChange={(e) => setInvestInput(e.target.value)}
+              />
+              <button className="btn btn-success w-full mb-2" onClick={handleInvest}>
+                Invest
+              </button>
+              {hasInvested && (
+                <button className="btn btn-primary w-full" onClick={handleClaimNft}>
+                  Mint NFT
+                </button>
+              )}
+            </div>
+          )}
         </div>
-  
-        {(["Created", "Funding"].includes(status)) && (
-          <div className="mb-4">
-            <input
-              type="number"
-              className="input input-bordered w-full mb-2"
-              placeholder="Investment Amount (USDC)"
-              value={investInput}
-              onChange={(e) => setInvestInput(e.target.value)}
-            />
-            <button className="btn btn-success w-full mb-2" onClick={handleInvest}>
-              Invest
-            </button>
-            {hasInvested && (
-              <button className="btn btn-primary w-full" onClick={handleClaimNft}>
-                Mint NFT
-              </button>
-            )}
-          </div>
-        )}
       </div>
+      {/* Admin Actions */}
+      {publicKey?.toBase58() === ADMIN_PUBKEY && (
+        <div className="mt-4 flex flex-col space-y-2 px-4 pb-4">
+          {status === "Funded Pending Verification" && (
+            <>
+              <button className="btn btn-success" onClick={handleAdminWithdraw}>
+                Withdraw Funds
+              </button>
+              <button className="btn btn-error" onClick={handleAdminCancel}>
+                Cancel Contract
+              </button>
+            </>
+          )}
+          {status === "Active" && (
+            <button className="btn btn-warning w-full" onClick={handleCheckMaturity}>
+              Check Maturity
+            </button>
+          )}
+          {(status === "Pending Buyback" || status === "Prolonged") && (
+            <div className="flex flex-col space-y-2">
+              <button className="btn btn-accent" onClick={handleSettle}>
+                Settle Contract
+              </button>
+              {status === "Pending Buyback" && (
+                <button className="btn btn-info" onClick={handleProlong}>
+                  Request 2-Week Extension
+                </button>
+              )}
+              {status === "Prolonged" && (
+                <button className="btn btn-danger" onClick={handleDefault}>
+                  Mark as Defaulted
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
-  
-    {/* Admin Actions (if needed) */}
-    {publicKey?.toBase58() === ADMIN_PUBKEY && (
-      <div className="mt-4 flex flex-col space-y-2 px-4 pb-4">
-        {status === "Funded Pending Verification" && (
-          <>
-            <button className="btn btn-success" onClick={handleAdminWithdraw}>
-              Withdraw Funds
-            </button>
-            <button className="btn btn-error" onClick={handleAdminCancel}>
-              Cancel Contract
-            </button>
-          </>
-        )}
-        {status === "Active" && (
-          <button className="btn btn-warning w-full" onClick={handleCheckMaturity}>
-            Check Maturity
-          </button>
-        )}
-        {(status === "Pending Buyback" || status === "Prolonged") && (
-          <div className="flex flex-col space-y-2">
-            <button className="btn btn-accent" onClick={handleSettle}>
-              Settle Contract
-            </button>
-            {status === "Pending Buyback" && (
-              <button className="btn btn-info" onClick={handleProlong}>
-                Request 2-Week Extension
-              </button>
-            )}
-            {status === "Prolonged" && (
-              <button className="btn btn-danger" onClick={handleDefault}>
-                Mark as Defaulted
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-    )}
-  </div>  
   );
 }
 
