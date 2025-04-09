@@ -34,6 +34,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
+    "react-swipeable": "^7.0.2",
     "solana-bankrun": "^0.3.0",
     "spl-token-bankrun": "^0.2.5"
   },

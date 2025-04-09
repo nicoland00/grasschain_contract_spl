@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSwipeable } from "react-swipeable";
 
 interface WalkthroughProps {
   onFinish: () => void;
@@ -15,7 +16,7 @@ const slides = [
   },
   {
     video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/invest-LCVq88doJZdIQY5QRvrO46HZyhYFLo.mov",
-    title: "Invest in Pastora’s Published Contracts",
+    title: "Invest in Pastora's Published Contracts",
     description:
       "Available contracts will be published when farmlands are ready.",
   },
@@ -27,7 +28,7 @@ const slides = [
   },
 ];
 
-// Smaller step circles with responsive spacing
+// A small component to render the step circles
 function StepsIndicator({
   currentStep,
   totalSteps,
@@ -35,8 +36,9 @@ function StepsIndicator({
   currentStep: number;
   totalSteps: number;
 }) {
+  // We want the indicator width to match the content square's width (750px on md)
   return (
-    <div className="w-11/12 md:w-[750px] mx-auto flex justify-between items-center mb-2">
+    <div className="w-11/12 md:w-[750px] mx-auto flex justify-between items-center mb-4">
       {Array.from({ length: totalSteps }).map((_, i) => {
         const isActive = i === currentStep;
         return (
@@ -64,7 +66,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      // Last slide: “Get Started” goes to contracts layout (or call onFinish)
+      // Last slide: "Get Started"
       onFinish();
     }
   };
@@ -81,9 +83,20 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
     onFinish();
   };
 
+  // Setup swipeable events
+  const handlers = useSwipeable({
+    onSwipedLeft: handleNext,
+    onSwipedRight: handlePrev,
+    preventScrollOnSwipe: true,
+    trackMouse: true,
+  });
+
   return (
-    <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-4 pb-16 md:pt-20">
-      {/* Skip button (minimal padding on mobile) */}
+    <div
+      className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-4 pb-16 md:pt-20"
+      {...handlers}
+    >
+      {/* Skip button with minimal padding on mobile */}
       <button
         onClick={handleSkip}
         className="absolute top-2 right-2 text-sm text-green-600 font-semibold"
@@ -92,7 +105,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
       </button>
 
       {/* Main title with extra top and side padding */}
-      <h1 className="px-4 md:px-8 text-3xl md:text-5xl font-extrabold mb-4 text-center pt-8">
+      <h1 className="px-4 md:px-8 text-3xl md:text-5xl font-extrabold mb-4 text-center">
         Welcome to Pastora Web3 Smart Contracts
       </h1>
 
@@ -100,30 +113,29 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
       <StepsIndicator currentStep={currentSlide} totalSteps={slides.length} />
 
       {/* Walkthrough content container */}
-      <div className="w-11/12 md:w-[750px] h-[80vh] md:h-[620px] bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8 mb-12">
-        {/* Title inside the square with responsive text sizes */}
-        <h2 className="text-2xl md:text-4xl font-bold mb-4 text-center">
+      <div className="w-11/12 md:w-[750px] h-[70vh] md:h-[620px] bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8 mb-8">
+        {/* Title inside the white container with reduced spacing */}
+        <h2 className="text-2xl md:text-4xl font-bold mb-2 text-center">
           {slides[currentSlide].title}
         </h2>
-        {/* Description text with responsive size */}
         <p className="text-base md:text-xl text-gray-700 mb-4 text-center">
           {slides[currentSlide].description}
         </p>
-        {/* Video section */}
+        {/* Video section with a shorter height on mobile */}
         <div className="flex-grow flex items-center justify-center mb-4">
           <video
-            key={slides[currentSlide].video} // key forces reload on slide change
+            key={slides[currentSlide].video}
             autoPlay
             loop
             muted
             playsInline
-            className="w-full h-full object-cover rounded-md"
+            className="w-full h-[200px] md:h-full object-cover rounded-md"
           >
             <source src={slides[currentSlide].video} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
-        {/* Navigation buttons */}
+        {/* Navigation buttons at the bottom */}
         <div className="flex justify-between">
           <button
             onClick={handlePrev}
@@ -140,6 +152,8 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
           </button>
         </div>
       </div>
+      {/* Extra bottom margin to ensure buttons are not cut off on mobile */}
+      <div className="mb-8"></div>
     </div>
   );
 }
