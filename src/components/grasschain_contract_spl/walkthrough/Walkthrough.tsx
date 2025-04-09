@@ -100,7 +100,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
       <StepsIndicator currentStep={currentSlide} totalSteps={slides.length} />
 
       {/* Walkthrough content container */}
-      <div className="w-11/12 md:w-[750px] h-[80vh] md:h-[620px] bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8">
+      <div className="w-11/12 md:w-[750px] h-[80vh] md:h-[620px] bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8 mb-12">
         {/* Title inside the square with responsive text sizes */}
         <h2 className="text-2xl md:text-4xl font-bold mb-4 text-center">
           {slides[currentSlide].title}
