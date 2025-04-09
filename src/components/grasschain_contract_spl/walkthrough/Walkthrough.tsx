@@ -27,7 +27,7 @@ const slides = [
   },
 ];
 
-// Smaller step circles
+// StepsIndicator with 'justify-between' instead of 'justify-center'
 function StepsIndicator({
   currentStep,
   totalSteps,
@@ -36,15 +36,19 @@ function StepsIndicator({
   totalSteps: number;
 }) {
   return (
-    <div className="flex justify-center space-x-4 mb-6">
+    <div className="w-[750px] mx-auto flex justify-between items-center mb-6">
       {Array.from({ length: totalSteps }).map((_, i) => {
         const isActive = i === currentStep;
         return (
           <div
             key={i}
-            className={`flex items-center justify-center w-10 h-10 rounded-full 
-              text-xl font-bold transition-colors
-              ${isActive ? "bg-[#7AC78E] text-white" : "bg-gray-400 text-gray-100"}`}
+            className={`flex items-center justify-center w-8 h-8 rounded-full
+              text-lg font-bold transition-colors
+              ${
+                isActive
+                  ? "bg-[#7AC78E] text-white"
+                  : "bg-gray-400 text-gray-100"
+              }`}
           >
             {i + 1}
           </div>
@@ -54,6 +58,7 @@ function StepsIndicator({
   );
 }
 
+
 export default function Walkthrough({ onFinish }: WalkthroughProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const router = useRouter();
@@ -62,7 +67,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
     } else {
-      // last slide => "Get Started"
+      // Last slide => "Get Started"
       onFinish();
     }
   };
@@ -81,7 +86,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
   return (
     <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-20">
-      {/* Skip button in top-right with bigger padding */}
+      {/* Skip button in top-right with extra padding */}
       <button
         onClick={handleSkip}
         className="absolute top-6 right-6 text-sm text-green-600 font-semibold pt-20 pr-10"
@@ -89,15 +94,15 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
         Skip
       </button>
 
-      {/* Title with bigger top margin */}
+      {/* Title */}
       <h1 className="text-5xl font-extrabold mb-8 text-center">
         Welcome to Pastora Web3 Smart Contracts
       </h1>
 
-      {/* Step circles (outside the white container) */}
+      {/* Step indicators (1, 2, 3) inside a 750px wide container */}
       <StepsIndicator currentStep={currentSlide} totalSteps={slides.length} />
 
-      {/* Main container for the walkthrough content */}
+      {/* Main container for walkthrough content */}
       <div className="w-[750px] h-[620px] bg-white rounded-2xl shadow-lg flex flex-col p-8">
         <h2 className="text-4xl font-bold mb-4 text-center">
           {slides[currentSlide].title}
@@ -121,7 +126,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
           </video>
         </div>
 
-        {/* Navigation buttons at the bottom */}
+        {/* Navigation buttons */}
         <div className="flex justify-between">
           <button
             onClick={handlePrev}
