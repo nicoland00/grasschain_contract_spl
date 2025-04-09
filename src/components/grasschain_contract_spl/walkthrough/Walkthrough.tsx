@@ -82,7 +82,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-4 md:pt-20">
+    <div className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-4 pb-16 md:pt-20">
       {/* Skip button (minimal padding on mobile) */}
       <button
         onClick={handleSkip}
