@@ -1,17 +1,16 @@
 {
-    "name": "Pastora NFT",
-    "symbol": "PTORA",
-    "description": "Token Access NFT for Pastora App",
-    "seller_fee_basis_points": 0,
-    "image": "/tokenAccess.png",
-    "attributes": [],
-    "properties": {
-      "files": [
-        {
-          "uri": "/tokenAccess.png",
-          "type": "image/png"
-        }
-      ]
-    }
+  "name": "Pastora NFT",
+  "symbol": "PTA",
+  "description": "Token Access NFT for Pastora App",
+  "seller_fee_basis_points": 0,
+  "image": "https://xdymta7eafcscakr.public.blob.vercel-storage.com/token%20access-O0ZxFWTyu8qaPja2fzH5quZbYHLLMI.png",
+  "attributes": [],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://xdymta7eafcscakr.public.blob.vercel-storage.com/token%20access-O0ZxFWTyu8qaPja2fzH5quZbYHLLMI.png",
+        "type": "image/png"
+      }
+    ]
   }
-  
+}
