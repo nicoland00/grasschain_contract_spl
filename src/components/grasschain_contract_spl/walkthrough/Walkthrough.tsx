@@ -124,10 +124,15 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
         Skip
       </button>
 
-      {/* Main title */}
-      <h1 className="px-4 md:px-8 text-3xl md:text-5xl font-extrabold mb-4 text-center pt-8">
+      {/* Main title with fade in animation */}
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="px-4 md:px-8 text-3xl md:text-5xl font-extrabold mb-4 text-center pt-8"
+      >
         Welcome to Pastora Web3 Smart Contracts
-      </h1>
+      </motion.h1>
 
       {/* Step indicators */}
       <StepsIndicator currentStep={currentSlide} totalSteps={slides.length} />
