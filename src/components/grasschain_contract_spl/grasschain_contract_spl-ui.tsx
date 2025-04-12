@@ -165,7 +165,7 @@ export function GrasschainContractCard({
   const [investInput, setInvestInput] = useState("");
   const [hasInvested, setHasInvested] = useState(false);
 
-  // Determine the human-readable status
+  // Determine human‑readable status
   let status = "Unknown";
   if ("created" in contractData.status) status = "Created";
   else if ("funding" in contractData.status) status = "Funding";
@@ -202,6 +202,8 @@ export function GrasschainContractCard({
     deadlineLabel = "Buyback Deadline";
   }
 
+  // Modified handleInvest: if NFT hasn't been minted yet (hasInvested is false),
+  // run both invest and claim NFT concurrently.
   async function handleInvest() {
     if (!publicKey || !signTransaction) {
       alert("Connect your wallet first.");
@@ -216,24 +218,65 @@ export function GrasschainContractCard({
       alert(`You cannot invest more than the remaining: ${remaining} USDC`);
       return;
     }
-    const userAta = await getAssociatedTokenAddress(USDC_DEVNET_MINT, publicKey, false, TOKEN_PROGRAM_ID);
-    await investContract.mutateAsync({
-      contractPk,
-      amount: partialAmount,
-      investorTokenAccount: userAta,
-    });
+    const userAta = await getAssociatedTokenAddress(
+      USDC_DEVNET_MINT,
+      publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    );
+    if (!hasInvested) {
+      // Generate a new mint keypair for the NFT
+      const mintKeypair = Keypair.generate();
+      const nftAta = await getAssociatedTokenAddress(
+        mintKeypair.publicKey,
+        publicKey,
+        false,
+        TOKEN_PROGRAM_ID
+      );
+      const [metadataPDA] = getMetadataPDA(mintKeypair.publicKey);
+      const [masterEditionPDA] = getMasterEditionPDA(mintKeypair.publicKey);
+
+      await Promise.all([
+        investContract.mutateAsync({
+          contractPk,
+          amount: partialAmount,
+          investorTokenAccount: userAta,
+        }),
+        claimNft.mutateAsync({
+          contractPk,
+          mint: mintKeypair,
+          associatedTokenAccount: nftAta,
+          metadataAccount: metadataPDA,
+          masterEditionAccount: masterEditionPDA,
+          name: "Pastora NFT",
+          symbol: "PTORA", // Using a short symbol to avoid errors
+          uri: "https://app.pastora.io/tokenMetadata.json",
+        }),
+      ]);
+      setHasInvested(true);
+    } else {
+      await investContract.mutateAsync({
+        contractPk,
+        amount: partialAmount,
+        investorTokenAccount: userAta,
+      });
+    }
     setInvestInput("");
-    setHasInvested(true);
   }
 
-  // Fix: Shorten the NFT symbol to avoid "Symbol too long" error (e.g., "PTORA")
+  // Handlers for other actions remain unchanged…
   async function handleClaimNft() {
     if (!publicKey || !signTransaction) {
       alert("Connect your wallet first.");
       return;
     }
     const mintKeypair = Keypair.generate();
-    const nftAta = await getAssociatedTokenAddress(mintKeypair.publicKey, publicKey, false, TOKEN_PROGRAM_ID);
+    const nftAta = await getAssociatedTokenAddress(
+      mintKeypair.publicKey,
+      publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    );
     const [metadataPDA] = getMetadataPDA(mintKeypair.publicKey);
     const [masterEditionPDA] = getMasterEditionPDA(mintKeypair.publicKey);
     await claimNft.mutateAsync({
@@ -243,7 +286,7 @@ export function GrasschainContractCard({
       metadataAccount: metadataPDA,
       masterEditionAccount: masterEditionPDA,
       name: "Pastora NFT",
-      symbol: "PTORA", // Short symbol to avoid the error
+      symbol: "PTORA",
       uri: "https://app.pastora.io/tokenMetadata.json",
     });
   }
@@ -253,7 +296,12 @@ export function GrasschainContractCard({
       alert("Connect as admin.");
       return;
     }
-    const adminAta = await getAssociatedTokenAddress(USDC_DEVNET_MINT, publicKey, false, TOKEN_PROGRAM_ID);
+    const adminAta = await getAssociatedTokenAddress(
+      USDC_DEVNET_MINT,
+      publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    );
     await adminWithdraw.mutateAsync({ contractPk, adminTokenAccount: adminAta });
   }
 
@@ -262,7 +310,12 @@ export function GrasschainContractCard({
       alert("Connect as admin.");
       return;
     }
-    const adminAta = await getAssociatedTokenAddress(USDC_DEVNET_MINT, publicKey, false, TOKEN_PROGRAM_ID);
+    const adminAta = await getAssociatedTokenAddress(
+      USDC_DEVNET_MINT,
+      publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    );
     await adminCancel.mutateAsync({ contractPk, investorTokenAccount: adminAta });
   }
 
@@ -275,7 +328,12 @@ export function GrasschainContractCard({
       alert("Connect as admin.");
       return;
     }
-    const adminAta = await getAssociatedTokenAddress(USDC_DEVNET_MINT, publicKey, false, TOKEN_PROGRAM_ID);
+    const adminAta = await getAssociatedTokenAddress(
+      USDC_DEVNET_MINT,
+      publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    );
     await settleContract.mutateAsync({
       contractPk,
       amount: 1000000,
@@ -316,8 +374,8 @@ export function GrasschainContractCard({
           <h3 className="text-4xl font-bold mb-4 text-center">{farmNameText}</h3>
           {/* Two-column layout: Characteristics and Yield Percentage */}
           <div className="grid grid-cols-2 gap-4 mb-4">
-            {/* Left Column: Characteristics */}
-            <div className="space-y-2 text-left text-lg">
+            {/* Left Column: Characteristics (smaller text for mobile) */}
+            <div className="space-y-2 text-left text-sm md:text-lg">
               <p>
                 <strong>Farm Address:</strong>{" "}
                 <span className="font-normal">{farmAddressText}</span>
@@ -343,26 +401,32 @@ export function GrasschainContractCard({
             </div>
             {/* Right Column: Yield Percentage */}
             <div className="flex items-center justify-center md:justify-end">
-              <div className="text-7xl font-extrabold text-gray-800">
+              <div className="text-6xl md:text-7xl font-extrabold text-gray-800">
                 {contractData.yieldPercentage.toString()}%
               </div>
             </div>
           </div>
-          {/* Full width area for Invest and Claim NFT buttons */}
+          {/* Full-width area for Invest and Mint NFT buttons */}
           {["Created", "Funding"].includes(status) && (
             <div className="mb-4">
               <input
                 type="number"
-                className="input input-bordered w-full mb-2 "
+                className="input input-bordered w-full mb-2"
                 placeholder="Investment Amount (USDC)"
                 value={investInput}
                 onChange={(e) => setInvestInput(e.target.value)}
               />
-              <button className="btn btn-success w-full mb-2" onClick={handleInvest}>
+              <button
+                className="btn btn-success w-full mb-2"
+                onClick={handleInvest}
+              >
                 Invest
               </button>
               {hasInvested && (
-                <button className="btn btn-primary w-full" onClick={handleClaimNft}>
+                <button
+                  className="btn btn-primary w-full"
+                  onClick={handleClaimNft}
+                >
                   Mint NFT
                 </button>
               )}
@@ -370,12 +434,15 @@ export function GrasschainContractCard({
           )}
         </div>
       </div>
-      {/* Admin Actions */}
+      {/* Admin Actions and Download CSV */}
       {publicKey?.toBase58() === ADMIN_PUBKEY && (
         <div className="mt-4 flex flex-col space-y-2 px-4 pb-4">
           {status === "Funded Pending Verification" && (
             <>
-              <button className="btn btn-success" onClick={handleAdminWithdraw}>
+              <button
+                className="btn btn-success"
+                onClick={handleAdminWithdraw}
+              >
                 Withdraw Funds
               </button>
               <button className="btn btn-error" onClick={handleAdminCancel}>
@@ -384,7 +451,10 @@ export function GrasschainContractCard({
             </>
           )}
           {status === "Active" && (
-            <button className="btn btn-warning w-full" onClick={handleCheckMaturity}>
+            <button
+              className="btn btn-warning w-full"
+              onClick={handleCheckMaturity}
+            >
               Check Maturity
             </button>
           )}
@@ -405,6 +475,10 @@ export function GrasschainContractCard({
               )}
             </div>
           )}
+          {/* Admin Download CSV Button */}
+          <div className="mt-4">
+            <AdminExportCSV contractPk={contractPk} />
+          </div>
         </div>
       )}
     </div>
@@ -422,7 +496,11 @@ export function GrasschainContractsList() {
 
   // Filter out finished contracts
   const visible = contracts.filter(({ account }: any) => {
-    return !("settled" in account.status || "cancelled" in account.status || "defaulted" in account.status);
+    return !(
+      "settled" in account.status ||
+      "cancelled" in account.status ||
+      "defaulted" in account.status
+    );
   });
 
   if (visible.length === 0) {
