@@ -1,7 +1,7 @@
 {
-  "name": "Pastora NFT",
+  "name": "Pastora Token Access",
   "symbol": "PTA",
-  "description": "Token Access NFT for Pastora App",
+  "description": "This is your token access for the tracking of your animals.",
   "seller_fee_basis_points": 0,
   "image": "https://xdymta7eafcscakr.public.blob.vercel-storage.com/token%20access-O0ZxFWTyu8qaPja2fzH5quZbYHLLMI.png",
   "attributes": [],
@@ -11,6 +11,7 @@
         "uri": "https://xdymta7eafcscakr.public.blob.vercel-storage.com/token%20access-O0ZxFWTyu8qaPja2fzH5quZbYHLLMI.png",
         "type": "image/png"
       }
-    ]
+    ],
+    "category": "image"
   }
 }
