@@ -224,8 +224,19 @@ export function GrasschainContractCard({
       false,
       TOKEN_PROGRAM_ID
     );
+    
     if (!hasInvested) {
-      // Generate a new mint keypair for the NFT
+      // First, send the investment transaction
+      await investContract.mutateAsync({
+        contractPk,
+        amount: partialAmount,
+        investorTokenAccount: userAta,
+      });
+      
+      // Optionally wait a few seconds to ensure the blockchain has processed the investment.
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      
+      // Then, mint the NFT transaction
       const mintKeypair = Keypair.generate();
       const nftAta = await getAssociatedTokenAddress(
         mintKeypair.publicKey,
@@ -235,26 +246,19 @@ export function GrasschainContractCard({
       );
       const [metadataPDA] = getMetadataPDA(mintKeypair.publicKey);
       const [masterEditionPDA] = getMasterEditionPDA(mintKeypair.publicKey);
-
-      await Promise.all([
-        investContract.mutateAsync({
-          contractPk,
-          amount: partialAmount,
-          investorTokenAccount: userAta,
-        }),
-        claimNft.mutateAsync({
-          contractPk,
-          mint: mintKeypair,
-          associatedTokenAccount: nftAta,
-          metadataAccount: metadataPDA,
-          masterEditionAccount: masterEditionPDA,
-          name: "Pastora NFT",
-          symbol: "PTORA", // Using a short symbol to avoid errors
-          uri: "https://app.pastora.io/tokenMetadata.json",
-        }),
-      ]);
+      await claimNft.mutateAsync({
+        contractPk,
+        mint: mintKeypair,
+        associatedTokenAccount: nftAta,
+        metadataAccount: metadataPDA,
+        masterEditionAccount: masterEditionPDA,
+        name: "Pastora NFT",
+        symbol: "PTORA",
+        uri: "https://app.pastora.io/tokenMetadata.json",
+      });
       setHasInvested(true);
     } else {
+      // If the user has already invested, just process the additional investment.
       await investContract.mutateAsync({
         contractPk,
         amount: partialAmount,
@@ -263,6 +267,7 @@ export function GrasschainContractCard({
     }
     setInvestInput("");
   }
+  
 
   // Handlers for other actions remain unchanged…
   async function handleClaimNft() {
