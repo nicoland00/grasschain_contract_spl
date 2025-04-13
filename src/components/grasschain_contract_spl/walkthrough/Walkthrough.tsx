@@ -20,14 +20,14 @@ const slides = [
   },
   {
     video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/invest-LCVq88doJZdIQY5QRvrO46HZyhYFLo.mov",
-    title: "Invest in Pastora's Published Contracts",
+    title: "Invest in Contracts",
     description:
       "Available contracts will be published when farmlands are ready.",
   },
   {
     video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/mint-6RusJQVkAVJzGHEk3xf7HuznS9GS1Q.mov",
-    title: "Click Mint NFT",
-    description: "Click Mint NFT in order to track animals in real time!",
+    title: "You're all set!",
+    description: "Now we wait for Pastora to handle the management of the cattle.",
   },
 ];
 
