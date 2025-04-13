@@ -1,10 +1,10 @@
 "use client";
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSwipeable } from "react-swipeable";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Define a constant for our main green color to ensure consistency
 const mainGreen = "#7AC78E";
 
 interface WalkthroughProps {
@@ -13,28 +13,25 @@ interface WalkthroughProps {
 
 const slides = [
   {
-    video:
-      "https://xdymta7eafcscakr.public.blob.vercel-storage.com/selectwallet-xPnX26TWadSFMpRoQta8JkiLE4QtT0.mov",
+    video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/selectwallet-xPnX26TWadSFMpRoQta8JkiLE4QtT0.mov",
     title: "Connect Solana Wallet",
     description:
       "You need a Solana Wallet in order to invest in the published contracts.",
   },
   {
-    video:
-      "https://xdymta7eafcscakr.public.blob.vercel-storage.com/invest-LCVq88doJZdIQY5QRvrO46HZyhYFLo.mov",
+    video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/invest-LCVq88doJZdIQY5QRvrO46HZyhYFLo.mov",
     title: "Invest in Pastora's Published Contracts",
     description:
       "Available contracts will be published when farmlands are ready.",
   },
   {
-    video:
-      "https://xdymta7eafcscakr.public.blob.vercel-storage.com/mint-6RusJQVkAVJzGHEk3xf7HuznS9GS1Q.mov",
+    video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/mint-6RusJQVkAVJzGHEk3xf7HuznS9GS1Q.mov",
     title: "Click Mint NFT",
     description: "Click Mint NFT in order to track animals in real time!",
   },
 ];
 
-// Updated StepsIndicator component using the same mainGreen for all green references
+// Circles at the top
 function StepsIndicator({
   currentStep,
   totalSteps,
@@ -50,7 +47,11 @@ function StepsIndicator({
           <div
             key={i}
             className={`flex items-center justify-center w-10 h-10 rounded-full text-base font-bold transition-all border 
-              ${isActive ? "bg-[#7AC78E] text-white" : "bg-white text-[#7AC78E] shadow-inner"}`}
+              ${
+                isActive
+                  ? "bg-[#7AC78E] text-white"
+                  : "bg-white text-[#7AC78E] shadow-inner"
+              }`}
             style={isActive ? { boxShadow: `0 0 8px ${mainGreen}` } : {}}
           >
             {i + 1}
@@ -61,16 +62,12 @@ function StepsIndicator({
   );
 }
 
-// Slide animation variants (only x and opacity are animated)
 const slideVariants = {
   initial: (direction: number) => ({
     x: direction > 0 ? "100%" : "-100%",
     opacity: 0,
   }),
-  animate: {
-    x: 0,
-    opacity: 1,
-  },
+  animate: { x: 0, opacity: 1 },
   exit: (direction: number) => ({
     x: direction > 0 ? "-100%" : "100%",
     opacity: 0,
@@ -80,7 +77,6 @@ const slideVariants = {
 export default function Walkthrough({ onFinish }: WalkthroughProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(1);
-  const router = useRouter();
 
   const handleNext = () => {
     setDirection(1);
@@ -93,11 +89,12 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
   const handlePrev = () => {
     setDirection(-1);
+    // If you want to completely disallow going back from the first slide, you can:
+    // if (currentSlide === 0) return;
     if (currentSlide === 0) {
-      setCurrentSlide(slides.length - 1);
-    } else {
-      setCurrentSlide(currentSlide - 1);
+      return; // remove this if you want wrap-around behavior
     }
+    setCurrentSlide(currentSlide - 1);
   };
 
   const handleSkip = () => {
@@ -113,18 +110,18 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-8 pb-16"
+      className="fixed inset-0 z-50 bg-gray-50 flex flex-col items-center pt-8 pb-16 overflow-y-auto"
       {...swipeHandlers}
     >
       {/* Skip button */}
       <button
         onClick={handleSkip}
-        className="absolute top-6 right-8 md:top-20 md:right-30 text-sm text-[#7AC78E] font-semibold underline"
+        className="absolute top-2 right-2 text-sm text-[#7AC78E] font-semibold underline"
       >
         Skip
       </button>
 
-      {/* Main title with fade in animation */}
+      {/* Title */}
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -134,14 +131,10 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
         Welcome to Pastora Web3 Smart Contracts
       </motion.h1>
 
-      {/* Step indicators */}
       <StepsIndicator currentStep={currentSlide} totalSteps={slides.length} />
 
-      {/* Slide container */}
-      <div
-        className="relative w-11/12 md:w-[750px] mb-8"
-        style={{ height: "620px" }}
-      >
+      {/* Slide wrapper: let the content flow (no absolute) */}
+      <div className="w-11/12 md:w-[750px] mb-8">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentSlide}
@@ -151,9 +144,13 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.5 }}
-            className="absolute inset-0 w-full h-full bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8"
-            style={{ boxShadow: "0 4px 20px rgba(122, 199, 142, 0.6)" }}
+            // Use a normal "div" that can grow with content
+            className="bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8"
+            style={{
+              boxShadow: "0 4px 20px rgba(122, 199, 142, 0.6)",
+            }}
           >
+            {/* Slide Title */}
             <h2 className="text-2xl md:text-4xl font-bold mb-2 text-center">
               {slides[currentSlide].title}
             </h2>
@@ -161,29 +158,26 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
               {slides[currentSlide].description}
             </p>
 
-            {/* Video section */}
-            <div
-              className="flex-grow flex items-center justify-center mb-4"
-              style={{ height: "300px" }}
-            >
+            {/* Video container */}
+            <div className="w-full aspect-video mb-4">
               <video
                 key={slides[currentSlide].video}
                 autoPlay
                 loop
                 muted
                 playsInline
-                className="w-full h-full object-cover rounded-md"
+                // "object-contain" or "object-cover"
+                // object-contain => shows entire video with black bars if needed
+                // object-cover => fills area but may crop
+                className="w-full h-full object-contain rounded-md"
               >
-                <source
-                  src={slides[currentSlide].video}
-                  type="video/mp4"
-                />
+                <source src={slides[currentSlide].video} type="video/mp4" />
                 Your browser does not support the video tag.
               </video>
             </div>
 
-            {/* Navigation buttons */}
-            <div className="flex justify-between">
+            {/* Buttons row */}
+            <div className="flex justify-between mt-4">
               <button
                 onClick={handlePrev}
                 className="btn btn-outline px-4 py-2 text-sm"
