@@ -1,10 +1,10 @@
 "use client";
-
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSwipeable } from "react-swipeable";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Define our main green color (used for buttons and glow)
 const mainGreen = "#7AC78E";
 
 interface WalkthroughProps {
@@ -13,25 +13,27 @@ interface WalkthroughProps {
 
 const slides = [
   {
-    video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/selectwallet-xPnX26TWadSFMpRoQta8JkiLE4QtT0.mov",
+    video:
+      "https://xdymta7eafcscakr.public.blob.vercel-storage.com/selectwallet-xPnX26TWadSFMpRoQta8JkiLE4QtT0.mov",
     title: "Connect Solana Wallet",
     description:
       "You need a Solana Wallet in order to invest in the published contracts.",
   },
   {
-    video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/invest-LCVq88doJZdIQY5QRvrO46HZyhYFLo.mov",
-    title: "Invest in Contracts",
+    video:
+      "https://xdymta7eafcscakr.public.blob.vercel-storage.com/invest-LCVq88doJZdIQY5QRvrO46HZyhYFLo.mov",
+    title: "Invest in Pastora's Published Contracts",
     description:
       "Available contracts will be published when farmlands are ready.",
   },
   {
-    video: "https://xdymta7eafcscakr.public.blob.vercel-storage.com/mint-6RusJQVkAVJzGHEk3xf7HuznS9GS1Q.mov",
-    title: "You're all set!",
-    description: "Now we wait for Pastora to handle the management of the cattle.",
+    video:
+      "https://xdymta7eafcscakr.public.blob.vercel-storage.com/mint-6RusJQVkAVJzGHEk3xf7HuznS9GS1Q.mov",
+    title: "Click Mint NFT",
+    description: "Click Mint NFT in order to track animals in real time!",
   },
 ];
 
-// Circles at the top
 function StepsIndicator({
   currentStep,
   totalSteps,
@@ -77,6 +79,7 @@ const slideVariants = {
 export default function Walkthrough({ onFinish }: WalkthroughProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(1);
+  const router = useRouter();
 
   const handleNext = () => {
     setDirection(1);
@@ -89,11 +92,8 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
   const handlePrev = () => {
     setDirection(-1);
-    // If you want to completely disallow going back from the first slide, you can:
-    // if (currentSlide === 0) return;
-    if (currentSlide === 0) {
-      return; // remove this if you want wrap-around behavior
-    }
+    // Prevent going back from the first slide (you can change this behavior if needed)
+    if (currentSlide === 0) return;
     setCurrentSlide(currentSlide - 1);
   };
 
@@ -121,7 +121,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
         Skip
       </button>
 
-      {/* Title */}
+      {/* Main title */}
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -131,9 +131,10 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
         Welcome to Pastora Web3 Smart Contracts
       </motion.h1>
 
+      {/* Step indicators */}
       <StepsIndicator currentStep={currentSlide} totalSteps={slides.length} />
 
-      {/* Slide wrapper: let the content flow (no absolute) */}
+      {/* Slide container (only the part inside changes) */}
       <div className="w-11/12 md:w-[750px] mb-8">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
@@ -144,13 +145,13 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
             animate="animate"
             exit="exit"
             transition={{ duration: 0.5 }}
-            // Use a normal "div" that can grow with content
             className="bg-white rounded-2xl shadow-lg flex flex-col p-4 md:p-8"
             style={{
-              boxShadow: "0 4px 20px rgba(122, 199, 142, 0.6)",
+              boxShadow: `0 4px 20px rgba(122, 199, 142, 0.6)`,
+              // Add extra bottom padding so buttons are never cut off
+              paddingBottom: "2rem",
             }}
           >
-            {/* Slide Title */}
             <h2 className="text-2xl md:text-4xl font-bold mb-2 text-center">
               {slides[currentSlide].title}
             </h2>
@@ -158,7 +159,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
               {slides[currentSlide].description}
             </p>
 
-            {/* Video container */}
+            {/* Video container using an aspect-video box to fix height */}
             <div className="w-full aspect-video mb-4">
               <video
                 key={slides[currentSlide].video}
@@ -166,9 +167,6 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
                 loop
                 muted
                 playsInline
-                // "object-contain" or "object-cover"
-                // object-contain => shows entire video with black bars if needed
-                // object-cover => fills area but may crop
                 className="w-full h-full object-contain rounded-md"
               >
                 <source src={slides[currentSlide].video} type="video/mp4" />
@@ -176,7 +174,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
               </video>
             </div>
 
-            {/* Buttons row */}
+            {/* Navigation buttons */}
             <div className="flex justify-between mt-4">
               <button
                 onClick={handlePrev}
