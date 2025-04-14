@@ -30,7 +30,7 @@ const slides = [
     video:
       "https://xdymta7eafcscakr.public.blob.vercel-storage.com/mint-6RusJQVkAVJzGHEk3xf7HuznS9GS1Q.mov",
       title: "You're all set!",
-      description: "Mint NFT if the invest tran for Pastora to handle the management of the cattle.",
+      description: "Now you have invested, just wait for confirmation from farmlands.",
   },
 ];
 
