@@ -209,6 +209,7 @@ export function GrasschainContractCard({
       alert("Connect your wallet first.");
       return;
     }
+  
     const partialAmount = parseFloat(investInput) * 1_000_000;
     if (isNaN(partialAmount) || partialAmount <= 0) {
       alert("Invalid amount");
@@ -218,53 +219,71 @@ export function GrasschainContractCard({
       alert(`You cannot invest more than the remaining: ${remaining} USDC`);
       return;
     }
+  
     const userAta = await getAssociatedTokenAddress(
       USDC_DEVNET_MINT,
       publicKey,
       false,
       TOKEN_PROGRAM_ID
     );
-    if (!hasInvested) {
-      // Generate a new mint keypair for the NFT
-      const mintKeypair = Keypair.generate();
-      const nftAta = await getAssociatedTokenAddress(
-        mintKeypair.publicKey,
-        publicKey,
-        false,
-        TOKEN_PROGRAM_ID
-      );
-      const [metadataPDA] = getMetadataPDA(mintKeypair.publicKey);
-      const [masterEditionPDA] = getMasterEditionPDA(mintKeypair.publicKey);
-
-      await investContract.mutateAsync({
-        contractPk,
-        amount: partialAmount,
-        investorTokenAccount: userAta,
-      });
-      
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      await claimNft.mutateAsync({
-        contractPk,
-        mint: mintKeypair,
-        associatedTokenAccount: nftAta,
-        metadataAccount: metadataPDA,
-        masterEditionAccount: masterEditionPDA,
-        name: "Pastora NFT",
-        symbol: "PTORA",
-        uri: "https://app.pastora.io/tokenMetadata.json",
-      });
-      
-      setHasInvested(true);
-    } else {
-      await investContract.mutateAsync({
-        contractPk,
-        amount: partialAmount,
-        investorTokenAccount: userAta,
-      });
+  
+    const mintKeypair = Keypair.generate();
+    const nftAta = await getAssociatedTokenAddress(
+      mintKeypair.publicKey,
+      publicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    );
+    const [metadataPDA] = getMetadataPDA(mintKeypair.publicKey);
+    const [masterEditionPDA] = getMasterEditionPDA(mintKeypair.publicKey);
+  
+    await investContract.mutateAsync({
+      contractPk,
+      amount: partialAmount,
+      investorTokenAccount: userAta,
+    });
+  
+    // 🔁 Poll hasta que investor_record exista (máx 5 segundos)
+    const { program } = useGrasschainContractSplProgram();
+    const [investorRecordPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("investor-record"), contractPk.toBuffer(), publicKey.toBuffer()],
+      program.programId
+    );
+  
+    const maxRetries = 10;
+    let retries = 0;
+    let investorRecordExists = false;
+  
+    while (retries < maxRetries && !investorRecordExists) {
+      try {
+        await program.account.investorRecord.fetch(investorRecordPda);
+        investorRecordExists = true;
+      } catch (err) {
+        await new Promise((res) => setTimeout(res, 500));
+        retries++;
+      }
     }
+  
+    if (!investorRecordExists) {
+      toast.error("Investor record not ready. Try claiming NFT later.");
+      return;
+    }
+  
+    await claimNft.mutateAsync({
+      contractPk,
+      mint: mintKeypair,
+      associatedTokenAccount: nftAta,
+      metadataAccount: metadataPDA,
+      masterEditionAccount: masterEditionPDA,
+      name: "Pastora NFT",
+      symbol: "PTORA",
+      uri: "https://app.pastora.io/tokenMetadata.json",
+    });
+  
+    setHasInvested(true);
     setInvestInput("");
   }
+  
 
   // Handlers for other actions remain unchanged…
   async function handleClaimNft() {
