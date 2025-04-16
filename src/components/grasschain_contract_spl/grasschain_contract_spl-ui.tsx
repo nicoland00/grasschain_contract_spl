@@ -236,23 +236,25 @@ export function GrasschainContractCard({
       const [metadataPDA] = getMetadataPDA(mintKeypair.publicKey);
       const [masterEditionPDA] = getMasterEditionPDA(mintKeypair.publicKey);
 
-      await Promise.all([
-        investContract.mutateAsync({
-          contractPk,
-          amount: partialAmount,
-          investorTokenAccount: userAta,
-        }),
-        claimNft.mutateAsync({
-          contractPk,
-          mint: mintKeypair,
-          associatedTokenAccount: nftAta,
-          metadataAccount: metadataPDA,
-          masterEditionAccount: masterEditionPDA,
-          name: "Pastora NFT",
-          symbol: "PTORA", // Using a short symbol to avoid errors
-          uri: "https://app.pastora.io/tokenMetadata.json",
-        }),
-      ]);
+      await investContract.mutateAsync({
+        contractPk,
+        amount: partialAmount,
+        investorTokenAccount: userAta,
+      });
+      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      await claimNft.mutateAsync({
+        contractPk,
+        mint: mintKeypair,
+        associatedTokenAccount: nftAta,
+        metadataAccount: metadataPDA,
+        masterEditionAccount: masterEditionPDA,
+        name: "Pastora NFT",
+        symbol: "PTORA",
+        uri: "https://app.pastora.io/tokenMetadata.json",
+      });
+      
       setHasInvested(true);
     } else {
       await investContract.mutateAsync({
@@ -328,19 +330,38 @@ export function GrasschainContractCard({
       alert("Connect as admin.");
       return;
     }
+    // Get the admin's token account (source of funds)
     const adminAta = await getAssociatedTokenAddress(
       USDC_DEVNET_MINT,
       publicKey,
       false,
       TOKEN_PROGRAM_ID
     );
+  
+    // Get the investor's token account from the stored investor public key in contractData.
+    // (Adjust the field name 'investor' if your contract uses a different name.)
+    const investorPublicKey = new PublicKey(contractData.investor);
+    const investorAta = await getAssociatedTokenAddress(
+      USDC_DEVNET_MINT,
+      investorPublicKey,
+      false,
+      TOKEN_PROGRAM_ID
+    );
+  
+    // Dynamically compute the required buyback amount.
+    const principal = contractData.totalInvestmentNeeded.toNumber();
+    const yieldAmt = Math.floor((principal * contractData.yieldPercentage) / 100);
+    const requiredBuyback = principal + yieldAmt;
+    
     await settleContract.mutateAsync({
       contractPk,
-      amount: 1000000,
+      amount: requiredBuyback,
       adminTokenAccount: adminAta,
-      investorTokenAccount: adminAta,
+      investorTokenAccount: investorAta,
     });
   }
+  
+  
 
   async function handleProlong() {
     if (!publicKey || !signTransaction) {
@@ -411,7 +432,7 @@ export function GrasschainContractCard({
             <div className="mb-4">
               <input
                 type="number"
-                className="input input-bordered w-full mb-2"
+                className="input input-bordered w-full mb-2 text-white"
                 placeholder="Investment Amount (USDC)"
                 value={investInput}
                 onChange={(e) => setInvestInput(e.target.value)}
