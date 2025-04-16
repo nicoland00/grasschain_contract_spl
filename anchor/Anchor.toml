@@ -6,13 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-grasschain_contract_spl = "Eb8hZ7VD1HoeZaTL79mZKLhk7incW7SHhvpCeDmXVimr"
+grasschain_contract_spl = "HeAoUqxjZ2KdZe8361GNxUzCEfVsKmsDBtBBRUn1VBnP"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "devnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
