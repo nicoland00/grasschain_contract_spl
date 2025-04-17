@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-grasschain_contract_spl = "HeAoUqxjZ2KdZe8361GNxUzCEfVsKmsDBtBBRUn1VBnP"
+grasschain_contract_spl = "2JPFAYWC5FMcNsKNgDxMSq5YZuRfJ6RiMjzVKLScQsTD"
 
 [registry]
 url = "https://api.apr.dev"

@@ -12,13 +12,13 @@ use mpl_token_metadata::ID as token_metadata_program_id; // This is a constant P
 use std::str::FromStr;
 
 
-declare_id!("HeAoUqxjZ2KdZe8361GNxUzCEfVsKmsDBtBBRUn1VBnP");
+declare_id!("2JPFAYWC5FMcNsKNgDxMSq5YZuRfJ6RiMjzVKLScQsTD");
 
 // Constants
 const USDC_MINT: &str = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
 const ADMIN_ADDRESS: &str = "74bwEVrLxoWtg8ya7gB1KKKuff9wnNADys1Ss1cxsEdd";
 
-/// The main program
+
 #[program]
 pub mod grasschain_contract_spl {
     use super::*;
@@ -325,57 +325,86 @@ pub fn invest_contract(ctx: Context<InvestContract>, amount: u64) -> Result<()> 
         );
 
         let end_time = contract.start_time + contract.duration;
+
         if clock.unix_timestamp >= end_time {
             contract.status = ContractStatus::PendingBuyback;
-            // store a 1-month buyback window if you like
+            // buyback window = duration segundos
             contract.buyback_deadline = end_time + 30 * 86400;
-        }
+         }
 
         Ok(())
     }
 
-    /// (6) If within buyback window, admin repays => contract => Settled
-    pub fn settle_contract(ctx: Context<SettleContract>, amount: u64) -> Result<()> {
-        let contract = &mut ctx.accounts.contract;
-        let clock = Clock::get()?;
-
+    pub fn settle_investor(ctx: Context<SettleInvestor>) -> Result<()> {
+        let contract = &mut ctx.accounts.contract; 
+        let record   = &mut ctx.accounts.investor_record;
+        let clock    = Clock::get()?;
+    
+        // 1) Sólo PendingBuyback o Prolonged
         require!(
-            contract.status == ContractStatus::PendingBuyback || contract.status == ContractStatus::Prolonged,
+            matches!(contract.status, ContractStatus::PendingBuyback | ContractStatus::Prolonged),
             ErrorCode::InvalidContractStatus
         );
-
-        // If we haven't stored a buyback_deadline, compute from start_time+duration
+    
+        // 2) Chequea que sea el admin correcto
+        require!(
+            ctx.accounts.admin.key() == Pubkey::from_str(ADMIN_ADDRESS).unwrap(),
+            ErrorCode::Unauthorized
+        );
+    
+        // 3) Ventana de buyback
         let deadline = if contract.status == ContractStatus::PendingBuyback {
             contract.buyback_deadline
         } else {
             contract.prolonged_deadline
         };
-
         require!(
             clock.unix_timestamp <= deadline,
             ErrorCode::SettlementWindowExpired
         );
-
-        // On-chain we can check if amount >= required buyback
-        let required = contract.calculate_buyback();
-        require!(amount >= required, ErrorCode::InsufficientBuyback);
-
-        // Transfer from admin => escrow or directly from admin => investor(s).
-        // For simplicity, we do from admin => "some investor's token account."
+    
+        // 4) Calcula cuánto devolver
+        let principal = record.amount;
+        let yield_amt = (principal as i128 * contract.yield_percentage as i128 / 100) as u64;
+        let total     = principal.checked_add(yield_amt).ok_or(ErrorCode::InsufficientBuyback)?;
+    
+        // 5) Haz el transfer SPL
         let cpi_ctx = CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
             Transfer {
                 from: ctx.accounts.admin_token_account.to_account_info(),
-                to: ctx.accounts.investor_token_account.to_account_info(),
+                to:   ctx.accounts.investor_token_account.to_account_info(),
                 authority: ctx.accounts.admin.to_account_info(),
             },
         );
-        token::transfer(cpi_ctx, amount)?;
+        token::transfer(cpi_ctx, total)?;
+    
+        // 6) Marca el record como pagado
+        record.amount = 0;
 
-        // done => Settled
-        contract.status = ContractStatus::Settled;
         Ok(())
     }
+    
+    // (9) Cerrar el contrato una vez se hayan liquidado todos los inversores
+pub fn close_contract(ctx: Context<CloseContract>) -> Result<()> {
+    let contract = &mut ctx.accounts.contract;
+    // 1) Solo el admin puede
+    require!(
+      ctx.accounts.admin.key() == Pubkey::from_str(ADMIN_ADDRESS).unwrap(),
+      ErrorCode::Unauthorized
+    );
+    // 2) Debe estar todavía en PendingBuyback o Prolonged
+    require!(
+      matches!(contract.status, ContractStatus::PendingBuyback | ContractStatus::Prolonged),
+      ErrorCode::InvalidContractStatus
+    );
+    // 3) Marcamos como Settled
+    contract.status = ContractStatus::Settled;
+    Ok(())
+}
+
+
+
 
     /// (7) Admin can request a 2-week prolongation
     pub fn prolong_contract(ctx: Context<ProlongContract>) -> Result<()> {
@@ -391,7 +420,7 @@ pub fn invest_contract(ctx: Context<InvestContract>, amount: u64) -> Result<()> 
         require!(ctx.accounts.admin.key() == admin_key, ErrorCode::Unauthorized);
 
         // add 2 weeks to the buyback_deadline
-        contract.prolonged_deadline = contract.buyback_deadline + 14 * 86400;
+        contract.prolonged_deadline = contract.buyback_deadline + 14 * 86400;;
         contract.status = ContractStatus::Prolonged;
         Ok(())
     }
@@ -696,9 +725,9 @@ pub struct CheckMaturity<'info> {
     pub system_program: Program<'info, System>,
 }
 
-/// Admin repays => Settled
 #[derive(Accounts)]
-pub struct SettleContract<'info> {
+pub struct SettleInvestor<'info> {
+    /// El contrato en sí (PDA)
     #[account(
         mut,
         seeds = [b"contract", contract.admin.as_ref(), &contract.contract_id.to_le_bytes()],
@@ -706,20 +735,49 @@ pub struct SettleContract<'info> {
     )]
     pub contract: Account<'info, Contract>,
 
+    /// El admin que firma (se comprueba en tiempo de ejecución)
     #[account(mut)]
     pub admin: Signer<'info>,
 
+    /// El record del inversor a liquidar (PDA)
+    #[account(
+        mut,
+        seeds = [
+            b"investor-record",
+            contract.key().as_ref(),
+            investor.key().as_ref()
+        ],
+        bump
+    )]
+    pub investor_record: Account<'info, InvestorRecord>,
+
+    /// CHECK: El inversor dueño del record
+    pub investor: AccountInfo<'info>,
+
+    /// La cuenta USDC del admin (source)
     #[account(mut)]
     pub admin_token_account: Account<'info, TokenAccount>,
 
-    // Possibly a single investor's ATA or a "distribution" ATA
+    /// La cuenta USDC del inversor (destino)
     #[account(mut)]
     pub investor_token_account: Account<'info, TokenAccount>,
 
+    /// El programa SPL Token
     #[account(address = anchor_spl::token::ID)]
     pub token_program: Program<'info, Token>,
-    pub system_program: Program<'info, System>,
 }
+
+#[derive(Accounts)]
+pub struct CloseContract<'info> {
+    #[account(
+        mut,
+        seeds = [b"contract", contract.admin.as_ref(), &contract.contract_id.to_le_bytes()],
+        bump
+    )]
+    pub contract: Account<'info, Contract>,
+    pub admin: Signer<'info>,
+}
+
 
 /// Admin prolong => add 2 weeks
 #[derive(Accounts)]

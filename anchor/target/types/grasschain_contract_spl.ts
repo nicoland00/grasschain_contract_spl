@@ -5,16 +5,13 @@
  * IDL can be found at `target/idl/grasschain_contract_spl.json`.
  */
 export type GrasschainContractSpl = {
-  "address": "HeAoUqxjZ2KdZe8361GNxUzCEfVsKmsDBtBBRUn1VBnP",
+  "address": "2JPFAYWC5FMcNsKNgDxMSq5YZuRfJ6RiMjzVKLScQsTD",
   "metadata": {
     "name": "grasschainContractSpl",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
   },
-  "docs": [
-    "The main program"
-  ],
   "instructions": [
     {
       "name": "adminCancel",
@@ -430,6 +427,57 @@ export type GrasschainContractSpl = {
           "type": "string"
         }
       ]
+    },
+    {
+      "name": "closeContract",
+      "discriminator": [
+        37,
+        244,
+        34,
+        168,
+        92,
+        202,
+        80,
+        106
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        }
+      ],
+      "args": []
     },
     {
       "name": "createContract",
@@ -871,23 +919,23 @@ export type GrasschainContractSpl = {
       "args": []
     },
     {
-      "name": "settleContract",
-      "docs": [
-        "(6) If within buyback window, admin repays => contract => Settled"
-      ],
+      "name": "settleInvestor",
       "discriminator": [
-        158,
-        177,
-        168,
-        232,
-        181,
         0,
-        32,
-        220
+        218,
+        182,
+        251,
+        14,
+        103,
+        167,
+        132
       ],
       "accounts": [
         {
           "name": "contract",
+          "docs": [
+            "El contrato en sí (PDA)"
+          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -919,32 +967,77 @@ export type GrasschainContractSpl = {
         },
         {
           "name": "admin",
+          "docs": [
+            "El admin que firma (se comprueba en tiempo de ejecución)"
+          ],
           "writable": true,
           "signer": true
         },
         {
+          "name": "investorRecord",
+          "docs": [
+            "El record del inversor a liquidar (PDA)"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  110,
+                  118,
+                  101,
+                  115,
+                  116,
+                  111,
+                  114,
+                  45,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "investor"
+              }
+            ]
+          }
+        },
+        {
+          "name": "investor"
+        },
+        {
           "name": "adminTokenAccount",
+          "docs": [
+            "La cuenta USDC del admin (source)"
+          ],
           "writable": true
         },
         {
           "name": "investorTokenAccount",
+          "docs": [
+            "La cuenta USDC del inversor (destino)"
+          ],
           "writable": true
         },
         {
           "name": "tokenProgram",
+          "docs": [
+            "El programa SPL Token"
+          ],
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
         }
       ],
-      "args": [
-        {
-          "name": "amount",
-          "type": "u64"
-        }
-      ]
+      "args": []
     }
   ],
   "accounts": [
