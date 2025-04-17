@@ -16,6 +16,7 @@ import {
 import toast from "react-hot-toast";
 import { AdminExportCSV } from "./AdminExportCSV";
 
+
 // Helpers to derive PDA for metadata and master edition
 function getMetadataPDA(mint: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
@@ -160,7 +161,14 @@ export function GrasschainContractCard({
     prolongContract,
     defaultContract,
     claimNft,
+    useInvestorRecords,
   } = useGrasschainContractSplProgram();
+
+  const {
+    data: investorRecords,
+    isLoading: investorsLoading,
+  } = useInvestorRecords(contractPk);
+
 
   const [investInput, setInvestInput] = useState("");
   const [hasInvested, setHasInvested] = useState(false);
@@ -349,6 +357,15 @@ export function GrasschainContractCard({
       alert("Connect as admin.");
       return;
     }
+    if (investorsLoading) {
+      alert("Cargando lista de inversores…");
+      return;
+    }
+    if (!investorRecords || investorRecords.length === 0) {
+      alert("No hay inversores en este contrato.");
+      return;
+    }
+
     // Get the admin's token account (source of funds)
     const adminAta = await getAssociatedTokenAddress(
       USDC_DEVNET_MINT,
@@ -357,27 +374,38 @@ export function GrasschainContractCard({
       TOKEN_PROGRAM_ID
     );
   
-    // Get the investor's token account from the stored investor public key in contractData.
-    // (Adjust the field name 'investor' if your contract uses a different name.)
-    const investorPublicKey = new PublicKey(contractData.investor);
-    const investorAta = await getAssociatedTokenAddress(
-      USDC_DEVNET_MINT,
-      investorPublicKey,
-      false,
-      TOKEN_PROGRAM_ID
-    );
+    for (const rec of investorRecords) {
+      const investorPk = new PublicKey(rec.account.investor);
+      const investorAta = await getAssociatedTokenAddress(
+        USDC_DEVNET_MINT,
+        investorPk,
+        false,
+        TOKEN_PROGRAM_ID
+      );
   
     // Dynamically compute the required buyback amount.
-    const principal = contractData.totalInvestmentNeeded.toNumber();
-    const yieldAmt = Math.floor((principal * contractData.yieldPercentage) / 100);
-    const requiredBuyback = principal + yieldAmt;
-    
-    await settleContract.mutateAsync({
-      contractPk,
-      amount: requiredBuyback,
-      adminTokenAccount: adminAta,
-      investorTokenAccount: investorAta,
-    });
+    const principal = rec.account.amount.toNumber();
+    const yieldAmt = Math.floor(
+      (principal * contractData.yieldPercentage.toNumber()) / 100
+    );
+    const repay = principal + yieldAmt;
+
+  try {
+        await settleContract.mutateAsync({
+          contractPk,
+          amount: repay,
+          adminTokenAccount: adminAta,
+          investorTokenAccount: investorAta,
+        });
+        toast.success(
+          `✅ Pagado ${repay / 1_000_000} USDC a ${investorPk.toBase58()}`
+        );
+      } catch (e: any) {
+        toast.error(
+          `Error pagando a ${investorPk.toBase58()}: ${e.message || e}`
+        );
+      }
+    }
   }
   
   
@@ -500,7 +528,7 @@ export function GrasschainContractCard({
           )}
           {(status === "Pending Buyback" || status === "Prolonged") && (
             <div className="flex flex-col space-y-2">
-              <button className="btn btn-accent" onClick={handleSettle}>
+              <button className="btn btn-accent" onClick={handleSettle} disabled={investorsLoading}>
                 Settle Contract
               </button>
               {status === "Pending Buyback" && (
