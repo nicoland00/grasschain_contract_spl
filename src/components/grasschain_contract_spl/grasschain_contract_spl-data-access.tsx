@@ -350,31 +350,6 @@ export function useGrasschainContractSplProgram() {
     adminTokenAccount: PublicKey;
     investorTokenAccount: PublicKey;
   }
-  const settleContract = useMutation<string, Error, SettleContractArgs>({
-    mutationFn: async ({
-      contractPk,
-      amount,
-      adminTokenAccount,
-      investorTokenAccount,
-    }) => {
-      if (!publicKey) throw new Error("No wallet connected.");
-
-      const txSig = await program.methods
-        .settleContract(new BN(amount))
-        .accountsPartial({
-          contract: contractPk,
-          admin: publicKey,
-          adminTokenAccount,
-          investorTokenAccount,
-          tokenProgram: TOKEN_PROGRAM_ID,
-          systemProgram: SystemProgram.programId,
-        })
-        .rpc();
-      toast.success("settleContract success: " + txSig);
-      allContracts.refetch();
-      return txSig;
-    },
-  });
 
   interface ProlongContractArgs {
     contractPk: PublicKey;
@@ -397,6 +372,44 @@ export function useGrasschainContractSplProgram() {
     },
   });
 
+  interface SettleInvestorArgs {
+    contractPk: PublicKey;
+    investorRecordPk: PublicKey;
+    investorPk: PublicKey;  
+    adminTokenAccount: PublicKey;
+    investorTokenAccount: PublicKey;
+  }
+  const settleInvestor = useMutation<string, Error, SettleInvestorArgs>({
+    mutationFn: async ({
+      contractPk,
+      investorRecordPk,
+      investorPk,
+      adminTokenAccount,
+      investorTokenAccount,
+    }) => {
+      if (!publicKey) throw new Error("No wallet connected.");
+
+      const txSig = await program.methods
+        .settleInvestor() // método recién creado en Rust
+        .accountsPartial({
+          contract: contractPk,
+          admin: publicKey,
+          investorRecord: investorRecordPk,
+          investor: investorPk,      // se ignora: se usa solo para validar PDA
+          adminTokenAccount,
+          investorTokenAccount,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+
+      toast.success("settleInvestor success: " + txSig);
+      allContracts.refetch();
+      queryClient.invalidateQueries(["investorRecords", contractPk.toBase58()] as any);
+      return txSig;
+    },
+  });
+
+
   interface DefaultContractArgs {
     contractPk: PublicKey;
   }
@@ -415,6 +428,24 @@ export function useGrasschainContractSplProgram() {
     },
   });
 
+  interface CloseContractArgs { contractPk: PublicKey }
+const closeContract = useMutation<string, Error, CloseContractArgs>({
+  mutationFn: async ({ contractPk }) => {
+    if (!publicKey) throw new Error("No wallet connected.");
+    const tx = await program.methods
+      .closeContract()
+      .accountsPartial({
+        contract: contractPk,
+        admin: publicKey,
+      })
+      .rpc();
+    toast.success("closeContract success: " + tx);
+    allContracts.refetch();
+    return tx;
+  },
+});
+
+
   return {
     program,
     allContracts,
@@ -425,9 +456,10 @@ export function useGrasschainContractSplProgram() {
     adminWithdraw,
     adminCancel,
     checkMaturity,
-    settleContract,
+    settleInvestor,
     prolongContract,
     defaultContract,
+    closeContract,
     getInvestorRecordPDA: (contractPk: PublicKey, investorPk: PublicKey) =>
       PublicKey.findProgramAddressSync(
         [Buffer.from("investor-record"), contractPk.toBuffer(), investorPk.toBuffer()],

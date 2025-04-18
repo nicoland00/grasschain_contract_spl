@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
-import { PublicKey, Transaction, Keypair } from "@solana/web3.js";
+import React, { useState, useEffect } from "react";
+import { PublicKey, Transaction, Keypair, SystemProgram } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { BN } from "@coral-xyz/anchor";
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -50,7 +51,7 @@ export function GrasschainCreateContractForm() {
 
   const [investment, setInvestment] = useState("");
   const [yieldPerc, setYieldPerc] = useState("");
-  const [periodDays, setPeriodDays] = useState("");
+  const [termMinutes, setTermMinutes] = useState(""); 
   const [farmName, setFarmName] = useState("");
   const [farmAddress, setFarmAddress] = useState("");
   const [farmImageUrl, setFarmImageUrl] = useState("");
@@ -64,8 +65,9 @@ export function GrasschainCreateContractForm() {
     }
     const i = parseFloat(investment) * 1_000_000;
     const y = parseInt(yieldPerc, 10);
-    const d = parseInt(periodDays, 10) * 86400;
-    if (isNaN(i) || isNaN(y) || isNaN(d)) {
+    const minutes = parseInt(termMinutes, 10);
+    const d = minutes * 60; 
+    if (isNaN(i) || isNaN(y) || isNaN(minutes)) {
       alert("Invalid input!");
       return;
     }
@@ -84,7 +86,7 @@ export function GrasschainCreateContractForm() {
 
     setInvestment("");
     setYieldPerc("");
-    setPeriodDays("");
+    setTermMinutes("");
     setFarmName("");
     setFarmAddress("");
     setFarmImageUrl("");
@@ -96,42 +98,42 @@ export function GrasschainCreateContractForm() {
       <label className="block mb-1">Investment Amount (USDC)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 bg-black text-white"
         value={investment}
         onChange={(e) => setInvestment(e.target.value)}
       />
       <label className="block mb-1">Yield Percentage (%)</label>
       <input
         type="number"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 bg-black text-white"
         value={yieldPerc}
         onChange={(e) => setYieldPerc(e.target.value)}
       />
-      <label className="block mb-1">Funding Period (days)</label>
+      <label className="block mb-1">Contract Term (minutes)</label> {/* renombrado */}
       <input
         type="number"
-        className="input input-bordered w-full mb-3"
-        value={periodDays}
-        onChange={(e) => setPeriodDays(e.target.value)}
+        className="input input-bordered w-full mb-3 bg-black text-white"
+        value={termMinutes}
+        onChange={(e) => setTermMinutes(e.target.value)}
       />
       <label className="block mb-1">Farm Name</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 bg-black text-white"
         value={farmName}
         onChange={(e) => setFarmName(e.target.value)}
       />
       <label className="block mb-1">Farm Address</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 bg-black text-white"
         value={farmAddress}
         onChange={(e) => setFarmAddress(e.target.value)}
       />
       <label className="block mb-1">Farm Image URL</label>
       <input
         type="text"
-        className="input input-bordered w-full mb-3"
+        className="input input-bordered w-full mb-3 bg-black text-white"
         placeholder="https://..."
         value={farmImageUrl}
         onChange={(e) => setFarmImageUrl(e.target.value)}
@@ -150,30 +152,46 @@ export function GrasschainContractCard({
   contractPk: PublicKey;
   contractData: any;
 }) {
+  // ─── ALL HOOKS AT TOP LEVEL ───
   const { connection } = useConnection();
   const { publicKey, signTransaction } = useWallet();
   const {
+    program,
     investContract,
+    claimNft,
     adminWithdraw,
     adminCancel,
     checkMaturity,
-    settleContract,
+    settleInvestor,
     prolongContract,
     defaultContract,
-    claimNft,
+    closeContract,
     useInvestorRecords,
   } = useGrasschainContractSplProgram();
 
-  const {
-    data: investorRecords,
-    isLoading: investorsLoading,
-  } = useInvestorRecords(contractPk);
+  // Hook to fetch investor records
+  const { data: investorRecords, isLoading: investorsLoading } =
+    useInvestorRecords(contractPk);
 
+  useEffect(() => {
+    if (!investorsLoading && investorRecords) {
+      console.log(
+        "InvestorRecords for contract",
+        contractPk.toBase58(),
+        investorRecords.map((r) => ({
+          investor: r.account.investor.toBase58(),
+          amount: r.account.amount.toNumber(),
+          nftMint: r.account.nftMint?.toBase58?.() || "none",
+        }))
+      );
+    }
+  }, [investorsLoading, investorRecords, contractPk]);
 
+  // ─── LOCAL STATE ───
   const [investInput, setInvestInput] = useState("");
   const [hasInvested, setHasInvested] = useState(false);
 
-  // Determine human‑readable status
+  // ─── DERIVED DISPLAY DATA ───
   let status = "Unknown";
   if ("created" in contractData.status) status = "Created";
   else if ("funding" in contractData.status) status = "Funding";
@@ -186,13 +204,16 @@ export function GrasschainContractCard({
   else if ("defaulted" in contractData.status) status = "Defaulted";
   else if ("cancelled" in contractData.status) status = "Cancelled";
 
-  const totalNeeded = contractData.totalInvestmentNeeded.toNumber() / 1_000_000;
+  const totalNeeded =
+    contractData.totalInvestmentNeeded.toNumber() / 1_000_000;
   const fundedSoFar = contractData.amountFundedSoFar;
-  const remaining = (contractData.totalInvestmentNeeded.toNumber() - fundedSoFar) / 1_000_000;
+  const remaining =
+    (contractData.totalInvestmentNeeded.toNumber() - fundedSoFar) / 1_000_000;
 
   const farmNameText = contractData.farmName || "N/A";
   const farmAddressText = contractData.farmAddress || "N/A";
-  const farmImageUrl = contractData.farmImageUrl || "https://via.placeholder.com/300";
+  const farmImageUrl =
+    contractData.farmImageUrl || "https://via.placeholder.com/300";
 
   let endDate: Date | null = null;
   let deadlineLabel = "";
@@ -200,41 +221,79 @@ export function GrasschainContractCard({
     endDate = new Date(contractData.fundingDeadline.toNumber() * 1000);
     deadlineLabel = "Funding Deadline";
   } else if ("fundedPendingVerification" in contractData.status) {
-    endDate = new Date((contractData.fundedTime.toNumber() + 30 * 86400) * 1000);
+    endDate = new Date(
+      (contractData.fundedTime.toNumber() + 30 * 86400) * 1000
+    );
     deadlineLabel = "Verification Deadline";
   } else if ("active" in contractData.status) {
-    endDate = new Date((contractData.startTime.toNumber() + contractData.duration.toNumber()) * 1000);
+    endDate = new Date(
+      (contractData.startTime.toNumber() +
+        contractData.duration.toNumber()) *
+        1000
+    );
     deadlineLabel = "Maturity Date";
-  } else if ("pendingBuyback" in contractData.status || "prolonged" in contractData.status) {
+  } else if (
+    "pendingBuyback" in contractData.status ||
+    "prolonged" in contractData.status
+  ) {
     endDate = new Date(contractData.buybackDeadline.toNumber() * 1000);
     deadlineLabel = "Buyback Deadline";
   }
 
-  // Modified handleInvest: if NFT hasn't been minted yet (hasInvested is false),
-  // run both invest and claim NFT concurrently.
+  // ─── EVENT HANDLERS (NO HOOKS HERE!) ───
   async function handleInvest() {
     if (!publicKey || !signTransaction) {
       alert("Connect your wallet first.");
       return;
     }
-  
-    const partialAmount = parseFloat(investInput) * 1_000_000;
-    if (isNaN(partialAmount) || partialAmount <= 0) {
+    const amount = parseFloat(investInput) * 1_000_000;
+    if (isNaN(amount) || amount <= 0) {
       alert("Invalid amount");
       return;
     }
-    if (partialAmount > remaining * 1_000_000) {
-      alert(`You cannot invest more than the remaining: ${remaining} USDC`);
+    if (amount > remaining * 1_000_000) {
+      alert(`Cannot invest more than remaining (${remaining} USDC)`);
       return;
     }
-  
+
+    // 1) Transfer USDC into escrow
     const userAta = await getAssociatedTokenAddress(
       USDC_DEVNET_MINT,
       publicKey,
       false,
       TOKEN_PROGRAM_ID
     );
-  
+    await investContract.mutateAsync({
+      contractPk,
+      amount,
+      investorTokenAccount: userAta,
+    });
+
+    // 2) Wait for the on‑chain InvestorRecord to exist
+    const [recordPda] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("investor-record"),
+        contractPk.toBuffer(),
+        publicKey.toBuffer(),
+      ],
+      program.programId
+    );
+    let found = false;
+    for (let i = 0; i < 10; i++) {
+      try {
+        await program.account.investorRecord.fetch(recordPda);
+        found = true;
+        break;
+      } catch {
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
+    if (!found) {
+      toast.error("Investor record not ready. Try claiming NFT later.");
+      return;
+    }
+
+    // 3) Mint and claim the NFT
     const mintKeypair = Keypair.generate();
     const nftAta = await getAssociatedTokenAddress(
       mintKeypair.publicKey,
@@ -242,52 +301,19 @@ export function GrasschainContractCard({
       false,
       TOKEN_PROGRAM_ID
     );
-    const [metadataPDA] = getMetadataPDA(mintKeypair.publicKey);
-    const [masterEditionPDA] = getMasterEditionPDA(mintKeypair.publicKey);
-  
-    await investContract.mutateAsync({
-      contractPk,
-      amount: partialAmount,
-      investorTokenAccount: userAta,
-    });
-  
-    // 🔁 Poll hasta que investor_record exista (máx 5 segundos)
-    const { program } = useGrasschainContractSplProgram();
-    const [investorRecordPda] = PublicKey.findProgramAddressSync(
-      [Buffer.from("investor-record"), contractPk.toBuffer(), publicKey.toBuffer()],
-      program.programId
-    );
-  
-    const maxRetries = 10;
-    let retries = 0;
-    let investorRecordExists = false;
-  
-    while (retries < maxRetries && !investorRecordExists) {
-      try {
-        await program.account.investorRecord.fetch(investorRecordPda);
-        investorRecordExists = true;
-      } catch (err) {
-        await new Promise((res) => setTimeout(res, 500));
-        retries++;
-      }
-    }
-  
-    if (!investorRecordExists) {
-      toast.error("Investor record not ready. Try claiming NFT later.");
-      return;
-    }
-  
+    const [metaPda] = getMetadataPDA(mintKeypair.publicKey);
+    const [editionPda] = getMasterEditionPDA(mintKeypair.publicKey);
     await claimNft.mutateAsync({
       contractPk,
       mint: mintKeypair,
       associatedTokenAccount: nftAta,
-      metadataAccount: metadataPDA,
-      masterEditionAccount: masterEditionPDA,
+      metadataAccount: metaPda,
+      masterEditionAccount: editionPda,
       name: "Pastora NFT",
       symbol: "PTORA",
       uri: "https://app.pastora.io/tokenMetadata.json",
     });
-  
+
     setHasInvested(true);
     setInvestInput("");
   }
@@ -358,15 +384,15 @@ export function GrasschainContractCard({
       return;
     }
     if (investorsLoading) {
-      alert("Cargando lista de inversores…");
+      alert("Cargando inversores…");
       return;
     }
     if (!investorRecords || investorRecords.length === 0) {
-      alert("No hay inversores en este contrato.");
+      alert("No hay inversores.");
       return;
     }
-
-    // Get the admin's token account (source of funds)
+  
+    // 1) Admin ATA
     const adminAta = await getAssociatedTokenAddress(
       USDC_DEVNET_MINT,
       publicKey,
@@ -374,6 +400,7 @@ export function GrasschainContractCard({
       TOKEN_PROGRAM_ID
     );
   
+    // 2) Para cada inversor, llama settleInvestor
     for (const rec of investorRecords) {
       const investorPk = new PublicKey(rec.account.investor);
       const investorAta = await getAssociatedTokenAddress(
@@ -382,32 +409,38 @@ export function GrasschainContractCard({
         false,
         TOKEN_PROGRAM_ID
       );
+      // PDA del InvestorRecord
+      const [recordPda] = PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("investor-record"),
+          contractPk.toBuffer(),
+          investorPk.toBuffer(),
+        ],
+        program.programId
+      );
   
-    // Dynamically compute the required buyback amount.
-    const principal = rec.account.amount.toNumber();
-    const yieldAmt = Math.floor(
-      (principal * contractData.yieldPercentage.toNumber()) / 100
-    );
-    const repay = principal + yieldAmt;
-
-  try {
-        await settleContract.mutateAsync({
+      try {
+        await settleInvestor.mutateAsync({
           contractPk,
-          amount: repay,
+          investorRecordPk: recordPda,
+          investorPk: investorPk,
           adminTokenAccount: adminAta,
           investorTokenAccount: investorAta,
         });
         toast.success(
-          `✅ Pagado ${repay / 1_000_000} USDC a ${investorPk.toBase58()}`
+          `Pagado ${(
+            rec.account.amount.toNumber() +
+            Math.floor((rec.account.amount.toNumber() * contractData.yieldPercentage.toNumber()) / 100)
+          ) / 1_000_000} USDC a ${investorPk.toBase58()}`
         );
-      } catch (e: any) {
-        toast.error(
-          `Error pagando a ${investorPk.toBase58()}: ${e.message || e}`
-        );
+      } catch (err: any) {
+        toast.error(`Error a ${investorPk.toBase58()}: ${err.message}`);
       }
     }
-  }
-  
+    // 3) Cerrar el contrato de una vez
+    await closeContract.mutateAsync({ contractPk });
+
+  }  
   
 
   async function handleProlong() {
@@ -479,7 +512,7 @@ export function GrasschainContractCard({
             <div className="mb-4">
               <input
                 type="number"
-                className="input input-bordered w-full mb-2 text-white"
+                className="input input-bordered w-full mb-2 bg-black text-white"
                 placeholder="Investment Amount (USDC)"
                 value={investInput}
                 onChange={(e) => setInvestInput(e.target.value)}
@@ -560,30 +593,63 @@ export function GrasschainContractsList() {
   if (allContracts.isError) return <p>Error loading contracts.</p>;
 
   const contracts = allContracts.data || [];
-  if (!contracts.length) return <p>No contracts found.</p>;
 
-  // Filter out finished contracts
-  const visible = contracts.filter(({ account }: any) => {
-    return !(
-      "settled" in account.status ||
-      "cancelled" in account.status ||
-      "defaulted" in account.status
-    );
-  });
+  // Active = not settled or defaulted
+  const active = contracts.filter(
+    ({ account }) =>
+      !("settled" in account.status || "defaulted" in account.status)
+  );
 
-  if (visible.length === 0) {
-    return <p>No active contracts or in funding.</p>;
-  }
+  // Done = settled OR defaulted
+  const done = contracts.filter(
+    ({ account }) =>
+      "settled" in account.status || "defaulted" in account.status
+  );
 
   return (
-    <div className="flex flex-col space-y-6">
-      {visible.map(({ publicKey, account }: any) => (
-        <GrasschainContractCard
-          key={publicKey.toBase58()}
-          contractPk={publicKey}
-          contractData={account}
-        />
-      ))}
+    <div className="flex flex-col space-y-8">
+      {/* Active contracts */}
+      {active.length > 0 ? (
+        active.map(({ publicKey, account }) => (
+          <GrasschainContractCard
+            key={publicKey.toBase58()}
+            contractPk={publicKey}
+            contractData={account}
+          />
+        ))
+      ) : (
+        <p>No active contracts or in funding.</p>
+      )}
+
+      {/* Settled & Defaulted contracts */}
+      {done.length > 0 && (
+        <div className="space-y-4">
+          {done.map(({ publicKey, account }) => {
+            const isSettled = "settled" in account.status;
+            const badgeText = isSettled ? "SETTLED" : "DEFAULTED";
+            const badgeColor = isSettled ? "bg-cyan-600" : "bg-red-600";
+
+            return (
+              <div
+                key={publicKey.toBase58()}
+                className="relative opacity-50"
+              >
+                <GrasschainContractCard
+                  contractPk={publicKey}
+                  contractData={account}
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span
+                    className={`px-3 py-1 text-xl font-bold text-white rounded ${badgeColor}`}
+                  >
+                    {badgeText}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
