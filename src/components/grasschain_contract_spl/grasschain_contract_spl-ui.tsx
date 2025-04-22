@@ -15,6 +15,7 @@ import {
   TOKEN_METADATA_PROGRAM_ID,
 } from "./grasschain_contract_spl-data-access";
 import toast from "react-hot-toast";
+import { useSession } from "next-auth/react";
 import { AdminExportCSV } from "./AdminExportCSV";
 
 
@@ -155,6 +156,7 @@ export function GrasschainContractCard({
   // ─── ALL HOOKS AT TOP LEVEL ───
   const { connection } = useConnection();
   const { publicKey, signTransaction } = useWallet();
+  const { data: session } = useSession();
   const {
     program,
     investContract,
@@ -242,82 +244,88 @@ export function GrasschainContractCard({
 
   // ─── EVENT HANDLERS (NO HOOKS HERE!) ───
   async function handleInvest() {
-    if (!publicKey || !signTransaction) {
-      alert("Connect your wallet first.");
-      return;
-    }
-    const amount = parseFloat(investInput) * 1_000_000;
-    if (isNaN(amount) || amount <= 0) {
-      alert("Invalid amount");
-      return;
-    }
-    if (amount > remaining * 1_000_000) {
-      alert(`Cannot invest more than remaining (${remaining} USDC)`);
-      return;
-    }
-
-    // 1) Transfer USDC into escrow
-    const userAta = await getAssociatedTokenAddress(
-      USDC_DEVNET_MINT,
-      publicKey,
-      false,
-      TOKEN_PROGRAM_ID
-    );
-    await investContract.mutateAsync({
-      contractPk,
-      amount,
-      investorTokenAccount: userAta,
-    });
-
-    // 2) Wait for the on‑chain InvestorRecord to exist
-    const [recordPda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from("investor-record"),
-        contractPk.toBuffer(),
-        publicKey.toBuffer(),
-      ],
-      program.programId
-    );
-    let found = false;
-    for (let i = 0; i < 10; i++) {
-      try {
-        await program.account.investorRecord.fetch(recordPda);
-        found = true;
-        break;
-      } catch {
-        await new Promise((r) => setTimeout(r, 500));
+    // — on‑chain path (wallet connected) —
+    if (publicKey && signTransaction) {
+      const amount = parseFloat(investInput) * 1e6;
+      if (isNaN(amount) || amount <= 0) {
+        toast.error("Invalid amount");
+        return;
       }
-    }
-    if (!found) {
-      toast.error("Investor record not ready. Try claiming NFT later.");
+      if (amount > remaining * 1e6) {
+        toast.error(`Cannot invest more than ${remaining} USDC`);
+        return;
+      }
+
+      // transfer USDC -> escrow
+      const userAta = await getAssociatedTokenAddress(
+        USDC_DEVNET_MINT,
+        publicKey,
+        false,
+        TOKEN_PROGRAM_ID
+      );
+      await investContract.mutateAsync({ contractPk, amount, investorTokenAccount: userAta });
+
+      // wait + mint NFT …
+      const mintKeypair = Keypair.generate();
+      const [metaPda] = getMetadataPDA(mintKeypair.publicKey);
+      const [editionPda] = getMasterEditionPDA(mintKeypair.publicKey);
+      
+      // Create the associated token account for the NFT
+      const nftAta = await getAssociatedTokenAddress(
+        mintKeypair.publicKey,
+        publicKey,
+        false,
+        TOKEN_PROGRAM_ID
+      );
+      
+      await claimNft.mutateAsync({
+        contractPk,
+        mint: mintKeypair,
+        associatedTokenAccount: nftAta,
+        metadataAccount: metaPda,
+        masterEditionAccount: editionPda,
+        name: "Pastora NFT",
+        symbol: "PTORA",
+        uri: "https://app.pastora.io/tokenMetadata.json",
+      });
+
+      setHasInvested(true);
+      setInvestInput("");
       return;
     }
 
-    // 3) Mint and claim the NFT
-    const mintKeypair = Keypair.generate();
-    const nftAta = await getAssociatedTokenAddress(
-      mintKeypair.publicKey,
-      publicKey,
-      false,
-      TOKEN_PROGRAM_ID
-    );
-    const [metaPda] = getMetadataPDA(mintKeypair.publicKey);
-    const [editionPda] = getMasterEditionPDA(mintKeypair.publicKey);
-    await claimNft.mutateAsync({
-      contractPk,
-      mint: mintKeypair,
-      associatedTokenAccount: nftAta,
-      metadataAccount: metaPda,
-      masterEditionAccount: editionPda,
-      name: "Pastora NFT",
-      symbol: "PTORA",
-      uri: "https://app.pastora.io/tokenMetadata.json",
-    });
+    // — off‑chain path (Stripe via NextAuth) —
+    if (session?.user?.email) {
+      const fiatAmount = parseFloat(investInput);
+        if (isNaN(fiatAmount) || fiatAmount <= 0) {
+        toast.error("Invalid amount");
+      return;
+    }
+    if (fiatAmount > remaining) {
+      toast.error(`Cannot invest more than ${remaining} USDC`);
+    return;
+    }
+      const res = await fetch("/api/create-stripe-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contract: contractPk.toBase58(),
+          email: session.user.email,
+          amount: fiatAmount,         // or totalNeeded
+        }),
+      });
+      const { url, error } = await res.json();
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      window.location.href = url;
+      return;
+    }
 
-    setHasInvested(true);
-    setInvestInput("");
-  }
-  
+    // — neither: prompt login —
+    toast.error("Please connect your wallet or sign in to invest.");
+  }  
 
   // Handlers for other actions remain unchanged…
   async function handleClaimNft() {

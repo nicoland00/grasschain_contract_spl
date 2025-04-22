@@ -34,5 +34,5 @@ export async function POST(req: Request) {
     metadata: { contract },
   });
 
-  return NextResponse.json({ sessionId: session.id });
+  return NextResponse.json({ url: session.url });
 }

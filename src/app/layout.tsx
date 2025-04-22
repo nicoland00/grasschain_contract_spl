@@ -1,30 +1,25 @@
+// src/app/layout.tsx
 import "./globals.css";
-import { SolanaProvider } from "@/components/solana/solana-provider";
 import { UiLayout } from "@/components/ui/ui-layout";
-import { ReactQueryProvider } from "./react-query-provider";
-
-
+import { Providers } from "./providers";
 
 export const metadata = {
   title: "Pastora",
   description: "Empowering Sustainable Farming with Blockchain",
-  icons: {
-    icon: '../public/favicon.ico',
-  },
 };
-<head>
-  <link rel="icon" href="/favicon.ico" />
-</head>
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <body style={{letterSpacing:0.5}}>
-        <ReactQueryProvider>
-            <SolanaProvider>
-              <UiLayout>{children}</UiLayout>
-            </SolanaProvider>
-        </ReactQueryProvider>
+      <body style={{ letterSpacing: 0.5 }}>
+        {/* This is a Server Component, but it's rendering our Client-side wrapper */}
+        <Providers>
+          <UiLayout>{children}</UiLayout>
+        </Providers>
       </body>
     </html>
   );

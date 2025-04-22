@@ -2,43 +2,67 @@
 
 import Link from "next/link";
 import { ReactNode, Suspense } from "react";
-import { WalletButton } from "../solana/solana-provider"; // Adjust import if needed
+import { WalletButton, useWallet } from "../solana/solana-provider"; 
+import { useSession, signOut } from "next-auth/react";
 
 export function UiLayout({ children }: { children: ReactNode }) {
+  const { publicKey, disconnect } = useWallet();
+  const { data: session } = useSession();
+  const userEmail = session?.user?.email;
+
   return (
     <div className="flex flex-col min-h-screen bg-white text-gray-800">
       {/* Navbar */}
       <nav className="navbar bg-white px-4 shadow">
-        
-          {/* Mobile hamburger (hidden on lg) */}
-          <div className="dropdown">
-            <label tabIndex={0} className="now">
+        {/* Logo & Links */}
+        <div className="navbar-start">
+          <Link href="/" className="flex items-center">
             <img src="/favicon.ico" alt="Pastora" className="h-11 w-20" />
-            </label>
-            <ul
-              tabIndex={0}
-              className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-white rounded-box w-52"
-            >
-                <li>
-                <Link href="https://app.pastora.io" style={{ color: "#7AC78E" }}>App</Link>
-              </li>
-            </ul>
-          </div>
-          <div className="navbar-start">
+          </Link>
         </div>
 
-        {/* Desktop Nav (hidden on mobile) */}
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal px-1">
-          <li>
-                <Link href="https://track.pastora.io" style={{ color: "#7AC78E" } }>Track your animals here</Link>
-              </li>
+            <li>
+              <Link href="https://track.pastora.io" style={{ color: "#7AC78E" }}>
+                Track your animals here
+              </Link>
+            </li>
           </ul>
         </div>
 
-        {/* Wallet Button on the right */}
+        {/* "Disconnect" or "Sign out" */}
         <div className="navbar-end space-x-2">
-          <WalletButton />
+          {publicKey ? (
+            <button
+              className="btn btn-outline"
+              onClick={() => disconnect()}
+            >
+              {publicKey.toBase58().slice(0,6)}…{publicKey.toBase58().slice(-4)} (Disconnect)
+            </button>
+          ) : userEmail ? (
+            <button
+              className="btn btn-outline"
+              onClick={() => signOut()}
+            >
+              {userEmail} (Sign out)
+            </button>
+          ) : (
+            <>
+              <WalletButton />
+              {userEmail && (
+                <div className="flex items-center space-x-2 ml-4">
+                  <span className="text-sm">{userEmail}</span>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => signOut()}
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </nav>
 
@@ -50,7 +74,9 @@ export function UiLayout({ children }: { children: ReactNode }) {
           </div>
         }
       >
-        <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
+        <main className="flex-grow container mx-auto px-4 py-8">
+          {children}
+        </main>
       </Suspense>
 
       {/* Footer */}
