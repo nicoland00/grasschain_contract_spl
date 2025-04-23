@@ -157,6 +157,15 @@ export function GrasschainContractCard({
   const { connection } = useConnection();
   const { publicKey, signTransaction } = useWallet();
   const { data: session } = useSession();
+  const [fiatFunded, setFiatFunded] = useState(0);
+  
+  useEffect(() => {
+    fetch(`/api/fiat/summary?contract=${contractPk.toBase58()}`)
+      .then((r) => r.json())
+      .then((j) => setFiatFunded(j.fiatFunded || 0))
+      .catch(console.error);
+  }, [contractPk]);
+
   const {
     program,
     investContract,
@@ -206,11 +215,9 @@ export function GrasschainContractCard({
   else if ("defaulted" in contractData.status) status = "Defaulted";
   else if ("cancelled" in contractData.status) status = "Cancelled";
 
-  const totalNeeded =
-    contractData.totalInvestmentNeeded.toNumber() / 1_000_000;
-  const fundedSoFar = contractData.amountFundedSoFar;
-  const remaining =
-    (contractData.totalInvestmentNeeded.toNumber() - fundedSoFar) / 1_000_000;
+  const totalNeeded = contractData.totalInvestmentNeeded.toNumber() / 1_000_000;
+  const onChainFunded = contractData.amountFundedSoFar / 1_000_000;
+  const remaining = totalNeeded - (onChainFunded + fiatFunded);
 
   const farmNameText = contractData.farmName || "N/A";
   const farmAddressText = contractData.farmAddress || "N/A";
@@ -256,37 +263,53 @@ export function GrasschainContractCard({
         return;
       }
 
-      // transfer USDC -> escrow
+      // 1) Generate NFT mint first
+      const mintKeypair = Keypair.generate();
+
+      // 2) transfer USDC -> escrow on-chain
       const userAta = await getAssociatedTokenAddress(
         USDC_DEVNET_MINT,
         publicKey,
         false,
         TOKEN_PROGRAM_ID
       );
-      await investContract.mutateAsync({ contractPk, amount, investorTokenAccount: userAta });
+      const txSig = await investContract.mutateAsync({
+        contractPk,
+        amount,
+        investorTokenAccount: userAta,
+      });
 
-      // wait + mint NFT …
-      const mintKeypair = Keypair.generate();
-      const [metaPda] = getMetadataPDA(mintKeypair.publicKey);
+      // 3) record it off-chain in Mongo
+      await fetch("/api/crypto-investor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contract:    contractPk.toBase58(),
+          investor:    publicKey.toBase58(),
+          nftMint:     mintKeypair.publicKey.toBase58(),
+          txSignature: txSig,
+          amount:      amount / 1e6,                     // store in USDC units
+        }),
+      });
+
+      // 4) now mint & claim NFT…
+      const [metaPda]    = getMetadataPDA(mintKeypair.publicKey);
       const [editionPda] = getMasterEditionPDA(mintKeypair.publicKey);
-      
-      // Create the associated token account for the NFT
-      const nftAta = await getAssociatedTokenAddress(
+      const nftAta       = await getAssociatedTokenAddress(
         mintKeypair.publicKey,
         publicKey,
         false,
         TOKEN_PROGRAM_ID
       );
-      
       await claimNft.mutateAsync({
         contractPk,
-        mint: mintKeypair,
+        mint:                  mintKeypair,
         associatedTokenAccount: nftAta,
-        metadataAccount: metaPda,
-        masterEditionAccount: editionPda,
-        name: "Pastora NFT",
-        symbol: "PTORA",
-        uri: "https://app.pastora.io/tokenMetadata.json",
+        metadataAccount:       metaPda,
+        masterEditionAccount:  editionPda,
+        name:                  "Pastora NFT",
+        symbol:                "PTORA",
+        uri:                   "https://app.pastora.io/tokenMetadata.json",
       });
 
       setHasInvested(true);
@@ -297,21 +320,21 @@ export function GrasschainContractCard({
     // — off‑chain path (Stripe via NextAuth) —
     if (session?.user?.email) {
       const fiatAmount = parseFloat(investInput);
-        if (isNaN(fiatAmount) || fiatAmount <= 0) {
+      if (isNaN(fiatAmount) || fiatAmount <= 0) {
         toast.error("Invalid amount");
-      return;
-    }
-    if (fiatAmount > remaining) {
-      toast.error(`Cannot invest more than ${remaining} USDC`);
-    return;
-    }
+        return;
+      }
+      if (fiatAmount > remaining) {
+        toast.error(`Cannot invest more than ${remaining} USDC`);
+        return;
+      }
       const res = await fetch("/api/create-stripe-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contract: contractPk.toBase58(),
           email: session.user.email,
-          amount: fiatAmount,         // or totalNeeded
+          amount: fiatAmount,
         }),
       });
       const { url, error } = await res.json();
@@ -500,12 +523,16 @@ export function GrasschainContractCard({
                 <span className="font-normal">{totalNeeded} USDC</span>
               </p>
               <p>
-                <strong>Funded:</strong>{" "}
-                <span className="font-normal">{(fundedSoFar / 1_000_000).toFixed(2)} USDC</span>
+                <strong>On-chain Funded:</strong>{" "}
+                <span className="font-normal">{onChainFunded.toFixed(2)} USDC</span>
+              </p>
+              <p>
+                <strong>Off-chain Funded:</strong>{" "}
+                <span className="font-normal">{fiatFunded.toFixed(2)} USDC</span>
               </p>
               <p>
                 <strong>Remaining:</strong>{" "}
-                <span className="font-normal">{remaining} USDC</span>
+                <span className="font-normal">{remaining.toFixed(6)} USDC</span>
               </p>
             </div>
             {/* Right Column: Yield Percentage */}
