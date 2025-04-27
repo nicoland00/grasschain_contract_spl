@@ -107,12 +107,7 @@ pub fn invest_contract(ctx: Context<InvestContract>, amount: u64) -> Result<()> 
     record.amount += amount;
     record.bump = ctx.bumps.investor_record;
 
-    if contract.amount_funded_so_far == needed {
-        contract.status = ContractStatus::FundedPendingVerification;
-        contract.funded_time = clock.unix_timestamp;
-    } else {
-        contract.status = ContractStatus::Funding;
-    }
+    contract.status = ContractStatus::Funding;
         Ok(())
     }
 
@@ -188,6 +183,19 @@ pub fn invest_contract(ctx: Context<InvestContract>, amount: u64) -> Result<()> 
         Ok(())
     }
     
+    pub fn verify_funding(ctx: Context<VerifyFunding>) -> Result<()> {
+        let contract = &mut ctx.accounts.contract;
+        // only allow if fully funded and still in Funding
+            require!(
+                contract.status == ContractStatus::Funding,
+                ErrorCode::InvalidContractStatus
+            );
+        let clock = Clock::get()?;
+        contract.status = ContractStatus::FundedPendingVerification;
+        contract.funded_time = clock.unix_timestamp;
+        Ok(())
+    }
+
 
     /// (2b) Expire funding if not fully funded by the 1-month deadline => refunds each investor
     /// This is optional, only if you want to forcibly end the contract if not enough invests
@@ -643,7 +651,26 @@ pub struct ClaimNft<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
+#[derive(Accounts)]
+pub struct VerifyFunding<'info> {
+    #[account(
+        mut,
+        seeds = [
+            b"contract",
+            contract.admin.as_ref(),
+            &contract.contract_id.to_le_bytes()
+        ],
+        bump
+    )]
+    pub contract: Account<'info, Contract>,
 
+    /// CHECK: must match your ADMIN_ADDRESS constant
+    #[account(signer, 
+              address = Pubkey::from_str(ADMIN_ADDRESS).unwrap())]
+    pub admin: AccountInfo<'info>,
+
+    pub system_program: Program<'info, System>,
+}
 
 /// Optionally expire the contract if not fully funded by the deadline
 #[derive(Accounts)]
