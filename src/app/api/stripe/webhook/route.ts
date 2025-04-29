@@ -4,23 +4,54 @@ import Stripe from "stripe";
 import { dbConnect } from "@/lib/dbConnect";
 import { FiatInvestor } from "@/lib/dbSchemas";
 
+// Server-side only
 export const runtime    = "nodejs";
 export const dynamic    = "force-dynamic";
 export const revalidate = 0;
 export const config     = { api: { bodyParser: false } };
 
-const stripe         = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-03-31.basil",
 });
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
+/**
+ * Stripe Dashboard “Send test webhook” often issues a GET → 200 OK
+ */
+export async function GET() {
+  return new NextResponse("ok", { status: 200 });
+}
+
+/**
+ * Pre-flight CORS (Stripe may OPTIONS before POST)
+ */
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: "GET,POST,OPTIONS",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type,Stripe-Signature",
+    },
+  });
+}
+
+/**
+ * The real webhook handler for checkout.session.completed
+ */
 export async function POST(req: Request) {
+  // raw body buffer
   const buf = await req.arrayBuffer();
   const sig = req.headers.get("stripe-signature")!;
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(Buffer.from(buf), sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(
+      Buffer.from(buf),
+      sig,
+      endpointSecret
+    );
   } catch (e: any) {
     console.error("❌ stripe webhook verify failed:", e.message);
     return new NextResponse(e.message, { status: 400 });
@@ -43,8 +74,9 @@ export async function POST(req: Request) {
       maskedCard: undefined,
     });
 
-    // (Optionally notify admin here)
+    // 2️⃣ (Optional) send admin notification here…
   }
 
+  // always return 200 to Stripe
   return NextResponse.json({ received: true });
 }
