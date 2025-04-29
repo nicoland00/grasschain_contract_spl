@@ -1,10 +1,12 @@
 // src/app/api/ranches/route.ts
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/tracking/dbConnect";
 import FiatInvestor from "@/models/tracking/FiatInvestor";
 import CryptoInvestor from "@/models/tracking/CryptoInvestor";
+
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   // 1) Comprueba sesión

@@ -5,9 +5,11 @@ import Notification, { INotification } from "@/models/Notification";
 import CryptoInvestor from "@/models/tracking/CryptoInvestor";
 import FiatInvestor from "@/models/tracking/FiatInvestor";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 
 const ADMIN_PUBKEY = process.env.NEXT_PUBLIC_ADMIN_PUBKEY;
+
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   await dbConnect();

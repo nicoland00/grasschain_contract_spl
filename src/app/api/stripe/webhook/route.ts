@@ -8,7 +8,6 @@ import { FiatInvestor } from "@/lib/dbSchemas";
 export const runtime    = "nodejs";
 export const dynamic    = "force-dynamic";
 export const revalidate = 0;
-export const bodyParser = false;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-03-31.basil",
@@ -41,10 +40,11 @@ export async function OPTIONS() {
  * The real webhook handler for checkout.session.completed
  */
 export async function POST(req: Request) {
-  // raw body buffer
+  // 1) raw body buffer
   const buf = await req.arrayBuffer();
   const sig = req.headers.get("stripe-signature")!;
 
+  // 2) verify signature
   let event: Stripe.Event;
   try {
     event = stripe.webhooks.constructEvent(
@@ -57,13 +57,14 @@ export async function POST(req: Request) {
     return new NextResponse(e.message, { status: 400 });
   }
 
+  // 3) handle successful checkout
   if (event.type === "checkout.session.completed") {
     const sess       = event.data.object as Stripe.Checkout.Session;
     const contract   = sess.metadata!.contract!;
     const email      = sess.customer_email!;
     const amountPaid = (sess.amount_total! as number) / 100;
 
-    // 1️⃣ Save to Mongo (off-chain)
+    // save to Mongo (off-chain)
     await dbConnect();
     await FiatInvestor.create({
       contract,
@@ -73,8 +74,7 @@ export async function POST(req: Request) {
       paymentIntentId: sess.payment_intent as string,
       maskedCard: undefined,
     });
-
-    // 2️⃣ (Optional) send admin notification here…
+    // (optional) notify admin…
   }
 
   // always return 200 to Stripe

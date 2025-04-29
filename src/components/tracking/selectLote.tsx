@@ -15,7 +15,7 @@ export default function SelectLote() {
       <label htmlFor="loteSelect" className="mr-2 font-semibold">Lote:</label>
       <select
         id="loteSelect"
-        value={selectedLote}
+        value={selectedLote ?? ""}
         onChange={handleChange}
         className="px-2 py-1 rounded-[10px] text-black"
       >

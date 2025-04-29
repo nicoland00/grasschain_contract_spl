@@ -1,4 +1,5 @@
-// Note: **no** "use client" at the top of this file!
+// src/app/tracking/layout.tsx
+// **no** "use client" here
 
 export const metadata = {
   title: "Pastora Tracking",
@@ -13,7 +14,6 @@ export default function TrackingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // This is now a server component, so it can export metadata,
-  // but it must not have "use client".
+  // still a server component: no hooks or "use client"
   return <TrackingWrapper>{children}</TrackingWrapper>;
 }

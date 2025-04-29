@@ -1,19 +1,10 @@
 // src/app/api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
+import NextAuth from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
-export const runtime = "edge"   // (optional, if you want edge)
+// → force Node.js so the built-in 'crypto' module is there
+export const runtime = "nodejs";
 
-const handler = NextAuth({
-  providers: [
-    GoogleProvider({
-      clientId:   process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
-  pages: {
-    signIn: "/auth/signin",
-  },
-})
-
-export { handler as GET, handler as POST }
+// NextAuth handler
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };

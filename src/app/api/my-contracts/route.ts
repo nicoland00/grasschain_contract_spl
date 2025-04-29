@@ -1,7 +1,7 @@
 // src/app/api/my-contracts/route.ts
 import { NextResponse }        from "next/server";
 import { getServerSession }    from "next-auth/next";
-import { authOptions }         from "@/app/api/auth/[...nextauth]/route";
+import { authOptions } from "@/lib/auth";
 import dbConnect               from "@/lib/tracking/dbConnect";
 import FiatInvestor            from "@/models/tracking/FiatInvestor";
 import CryptoInvestor          from "@/models/tracking/CryptoInvestor";
@@ -17,6 +17,8 @@ const PROG = process.env.PROGRAM_ID!;
 const connection = new Connection(RPC, { commitment: "processed" });
 const provider   = new AnchorProvider(connection, {} as any, { commitment: "processed", skipPreflight: false });
 const program    = new Program<GrasschainContractSpl>(idl as any, provider);
+
+export const runtime = "nodejs";
 
 interface ContractEntry {
   contractId: string;
