@@ -1,15 +1,14 @@
-// src/app/api/fiat-investor/route.ts
-import { NextResponse } from "next/server";
-import { dbConnect }    from "@/lib/dbConnect";
-import { FiatInvestor } from "@/lib/dbSchemas";
-
-// Ensure this runs only server‐side on each request
+// 🚨 runtime/dynamic MUST come before any imports
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+import { NextResponse }  from "next/server";
+import { dbConnect }     from "@/lib/dbConnect";
+import { FiatInvestor }  from "@/lib/dbSchemas";
+
 /**
  * GET /api/fiat-investor?contract=…
- * Returns total off‐chain USDC invested for a given contract.
+ * Returns total off-chain USDC invested for a given contract.
  */
 export async function GET(req: Request) {
   try {
@@ -24,7 +23,6 @@ export async function GET(req: Request) {
 
     await dbConnect();
 
-    // Aggregate sum of amountPaid
     const [agg] = await FiatInvestor.aggregate([
       { $match: { contract } },
       { $group: { _id: null, total: { $sum: "$amountPaid" } } },
@@ -32,7 +30,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ fiatFunded: agg?.total ?? 0 });
   } catch (err: any) {
-    console.error("fiat-investor GET error:", err);
+    console.error("❌ /api/fiat-investor GET error:", err);
     return NextResponse.json(
       { error: err.message || "Internal Server Error" },
       { status: 500 }
@@ -42,7 +40,7 @@ export async function GET(req: Request) {
 
 /**
  * POST /api/fiat-investor
- * Records a new off‐chain USDC investment from Stripe.
+ * Records a new off-chain USDC investment from Stripe.
  */
 export async function POST(req: Request) {
   try {
@@ -74,7 +72,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err: any) {
-    console.error("fiat-investor POST error:", err);
+    console.error("❌ /api/fiat-investor POST error:", err);
     return NextResponse.json(
       { error: err.message || "Internal Server Error" },
       { status: 500 }

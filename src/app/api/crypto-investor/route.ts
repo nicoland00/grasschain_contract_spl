@@ -1,4 +1,4 @@
-// src/app/api/crypto-investor/route.ts
+// 🚨 runtime/dynamic MUST come before any imports
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,6 @@ import { CryptoInvestor } from "@/lib/dbSchemas";
 export async function POST(req: Request) {
   try {
     const { contract, investor, nftMint, txSignature, amount } = await req.json();
-
     if (
       !contract ||
       !investor ||
@@ -17,18 +16,15 @@ export async function POST(req: Request) {
       !txSignature ||
       amount == null
     ) {
-      return NextResponse.json(
-        { error: "Missing fields" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
     await dbConnect();
     await CryptoInvestor.create({
       contract,
       investor,
-      nftSignature: txSignature,
       nftMint,
+      txSignature,
       amount,
     });
 
