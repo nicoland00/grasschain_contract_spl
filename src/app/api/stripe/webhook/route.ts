@@ -8,7 +8,7 @@ import { FiatInvestor } from "@/lib/dbSchemas";
 export const runtime    = "nodejs";
 export const dynamic    = "force-dynamic";
 export const revalidate = 0;
-export const config     = { api: { bodyParser: false } };
+export const bodyParser = false;
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-03-31.basil",
