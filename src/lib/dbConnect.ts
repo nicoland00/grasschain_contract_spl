@@ -1,13 +1,22 @@
 // src/lib/dbConnect.ts
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
-let cached: { conn: mongoose.Mongoose | null; promise: Promise<mongoose.Mongoose> | null };
+type Cache = {
+  conn: mongoose.Mongoose | null;
+  promise: Promise<mongoose.Mongoose> | null;
+};
 
-// We don’t grab the URI until runtime:
-export async function dbConnect() {
+let cached: Cache;
+
+// We no longer grab the URI at import time
+export async function dbConnect(): Promise<mongoose.Mongoose> {
   const MONGODB_URI = process.env.MONGODB_URI;
   if (!MONGODB_URI) {
-    throw new Error("⚠️ Define la variable MONGODB_URI en tu .env or in Vercel settings.");
+    // Now we only error if we actually try to connect
+    throw new Error(
+      '⚠️ No se encontró la variable MONGODB_URI. ' +
+      'Por favor defínela en tu .env o en las Variables de Entorno de Vercel (Preview & Production).'
+    );
   }
 
   if (!cached) {
@@ -17,7 +26,7 @@ export async function dbConnect() {
     return cached.conn;
   }
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => mongoose);
+    cached.promise = mongoose.connect(MONGODB_URI).then((m) => m);
   }
   cached.conn = await cached.promise;
   return cached.conn;
