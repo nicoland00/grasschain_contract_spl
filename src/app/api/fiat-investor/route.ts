@@ -1,10 +1,8 @@
-// 🚨 runtime/dynamic MUST come before any imports
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
 
-import { NextResponse }  from "next/server";
-import { dbConnect }     from "@/lib/dbConnect";
-import { FiatInvestor }  from "@/lib/dbSchemas";
+import { NextResponse } from "next/server";
+import { dbConnect }    from "@/lib/dbConnect";
+import { FiatInvestor } from "@/lib/dbSchemas";
 
 /**
  * GET /api/fiat-investor?contract=…
