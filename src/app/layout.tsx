@@ -1,7 +1,8 @@
 // src/app/layout.tsx
 import "./globals.css";
-import { UiLayout } from "@/components/ui/ui-layout";
 import { Providers } from "./providers";
+import AuthGuard from "@/components/auth/AuthGuard";
+import { UiLayout } from "@/components/ui/ui-layout";
 
 export const metadata = {
   title: "Pastora",
@@ -15,10 +16,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body style={{ letterSpacing: 0.5 }}>
-        {/* This is a Server Component, but it's rendering our Client-side wrapper */}
+      <body className="flex flex-col min-h-screen">
         <Providers>
-          <UiLayout>{children}</UiLayout>
+          <AuthGuard>
+            <UiLayout>{children}</UiLayout>
+          </AuthGuard>
         </Providers>
       </body>
     </html>

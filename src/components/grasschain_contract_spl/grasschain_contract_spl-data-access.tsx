@@ -193,6 +193,28 @@ export function useGrasschainContractSplProgram() {
     },
   });
 
+  interface VerifyFundingArgs {
+    contractPk: PublicKey;
+  }
+  
+  const verifyFunding = useMutation<string, Error, VerifyFundingArgs>({
+    mutationFn: async ({ contractPk }) => {
+      if (!publicKey) throw new Error("No wallet connected.");
+      const txSig = await program.methods
+        .verifyFunding()
+        .accountsPartial({
+          contract: contractPk,
+          admin: publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc();
+      toast.success("verifyFunding success: " + txSig);
+      queryClient.invalidateQueries({ queryKey: ["grasschainSplContract", "allContracts"] });
+      return txSig;
+    },
+  });
+  
+
   interface ClaimNftArgs {
     contractPk: PublicKey;
     mint: Keypair;
@@ -452,6 +474,7 @@ const closeContract = useMutation<string, Error, CloseContractArgs>({
     createContract,
     investContract,
     claimNft,
+    verifyFunding,
     expireFunding,
     adminWithdraw,
     adminCancel,

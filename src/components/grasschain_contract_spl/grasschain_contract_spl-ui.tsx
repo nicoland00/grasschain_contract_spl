@@ -173,6 +173,7 @@ export function GrasschainContractCard({
     adminWithdraw,
     adminCancel,
     checkMaturity,
+    verifyFunding,
     settleInvestor,
     prolongContract,
     defaultContract,
@@ -496,7 +497,7 @@ export function GrasschainContractCard({
             alt="Farm"
             className="block w-full h-full object-cover"
           />
-          <span className="absolute top-2 left-2 px-2 py-1 text-xs bg-green-500 uppercase rounded text-white font-bold">
+          <span className="absolute top-3 left-3 px-3 py-2 text-sm bg-green-600 uppercase rounded-lg text-white font-bold">
             {status}
           </span>
         </div>
@@ -573,6 +574,15 @@ export function GrasschainContractCard({
       {/* Admin Actions and Download CSV */}
       {publicKey?.toBase58() === ADMIN_PUBKEY && (
         <div className="mt-4 flex flex-col space-y-2 px-4 pb-4">
+        {status === "Funding" && (onChainFunded + fiatFunded) >= totalNeeded && (
+           <button
+             className="btn btn-primary w-full"
+             onClick={() => verifyFunding.mutate({ contractPk })}
+             disabled={verifyFunding.isPending}
+           >
+             {verifyFunding.isPending ? "Verifying…" : "Verify Funding"}
+           </button>
+         )}
           {status === "Funded Pending Verification" && (
             <>
               <button
@@ -675,7 +685,7 @@ export function GrasschainContractsList() {
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <span
-                    className={`px-3 py-1 text-xl font-bold text-white rounded ${badgeColor}`}
+                    className={`px-4 py-2 text-base font-bold text-white rounded-lg shadow ${badgeColor}`}
                   >
                     {badgeText}
                   </span>
