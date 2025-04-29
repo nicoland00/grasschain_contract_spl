@@ -46,7 +46,7 @@
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
-    "react-leaflet": "^5.0.0",
+    "react-leaflet": "^4.2.1",
     "react-swipeable": "^7.0.2",
     "solana-bankrun": "^0.3.0",
     "spl-token-bankrun": "^0.2.5",
