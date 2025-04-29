@@ -1,25 +1,83 @@
-// /src/app/api/fiat-investor/route.ts
-import { NextResponse }  from "next/server";
-import { dbConnect }     from "@/lib/dbConnect";
-import { FiatInvestor }  from "@/lib/dbSchemas";
+// src/app/api/fiat-investor/route.ts
+import { NextResponse } from "next/server";
+import { dbConnect }    from "@/lib/dbConnect";
+import { FiatInvestor } from "@/lib/dbSchemas";
 
-export async function POST(req: Request) {
-  const { contract, email, amountPaid, paymentMethod, paymentIntentId, maskedCard } =
-    await req.json();
+// Ensure this runs only server‐side on each request
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-  if (!contract || !email || !amountPaid || !paymentMethod) {
-    return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 });
+/**
+ * GET /api/fiat-investor?contract=…
+ * Returns total off‐chain USDC invested for a given contract.
+ */
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const contract = searchParams.get("contract");
+    if (!contract) {
+      return NextResponse.json(
+        { error: "Missing `?contract=` query parameter" },
+        { status: 400 }
+      );
+    }
+
+    await dbConnect();
+
+    // Aggregate sum of amountPaid
+    const [agg] = await FiatInvestor.aggregate([
+      { $match: { contract } },
+      { $group: { _id: null, total: { $sum: "$amountPaid" } } },
+    ]);
+
+    return NextResponse.json({ fiatFunded: agg?.total ?? 0 });
+  } catch (err: any) {
+    console.error("fiat-investor GET error:", err);
+    return NextResponse.json(
+      { error: err.message || "Internal Server Error" },
+      { status: 500 }
+    );
   }
+}
 
-  await dbConnect();
-  await FiatInvestor.create({
-    contract,
-    email,
-    amountPaid,
-    paymentMethod,
-    paymentIntentId,
-    maskedCard,
-  });
+/**
+ * POST /api/fiat-investor
+ * Records a new off‐chain USDC investment from Stripe.
+ */
+export async function POST(req: Request) {
+  try {
+    const {
+      contract,
+      email,
+      amountPaid,
+      paymentMethod,
+      paymentIntentId,
+      maskedCard,
+    } = await req.json();
 
-  return NextResponse.json({ success: true });
+    if (!contract || !email || amountPaid == null || !paymentMethod) {
+      return NextResponse.json(
+        { error: "Faltan campos obligatorios" },
+        { status: 400 }
+      );
+    }
+
+    await dbConnect();
+    await FiatInvestor.create({
+      contract,
+      email,
+      amountPaid,
+      paymentMethod,
+      paymentIntentId,
+      maskedCard,
+    });
+
+    return NextResponse.json({ success: true }, { status: 201 });
+  } catch (err: any) {
+    console.error("fiat-investor POST error:", err);
+    return NextResponse.json(
+      { error: err.message || "Internal Server Error" },
+      { status: 500 }
+    );
+  }
 }
