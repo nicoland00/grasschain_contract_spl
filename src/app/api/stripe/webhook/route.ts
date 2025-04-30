@@ -1,82 +1,76 @@
 // src/app/api/stripe/webhook/route.ts
 import { NextResponse } from "next/server";
-import Stripe from "stripe";
-import { dbConnect } from "@/lib/dbConnect";
+import { dbConnect }    from "@/lib/dbConnect";
 import { FiatInvestor } from "@/lib/dbSchemas";
 
-// Server-side only
+// ⬇️ Only import the Stripe *types* at compile time
+import type Stripe from "stripe";
+
 export const runtime    = "nodejs";
 export const dynamic    = "force-dynamic";
 export const revalidate = 0;
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-03-31.basil",
-});
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!;
-
-/**
- * Stripe Dashboard “Send test webhook” often issues a GET → 200 OK
- */
 export async function GET() {
   return new NextResponse("ok", { status: 200 });
 }
 
-/**
- * Pre-flight CORS (Stripe may OPTIONS before POST)
- */
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      Allow: "GET,POST,OPTIONS",
-      "Access-Control-Allow-Origin": "*",
+      Allow:                        "GET,POST,OPTIONS",
+      "Access-Control-Allow-Origin":  "*",
       "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type,Stripe-Signature",
     },
   });
 }
 
-/**
- * The real webhook handler for checkout.session.completed
- */
 export async function POST(req: Request) {
-  // 1) raw body buffer
-  const buf = await req.arrayBuffer();
-  const sig = req.headers.get("stripe-signature")!;
+  const secret         = process.env.STRIPE_SECRET_KEY;
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!secret || !endpointSecret) {
+    console.error("Missing Stripe secrets");
+    return new NextResponse("Config error", { status: 500 });
+  }
 
-  // 2) verify signature
+  // Lazy‐load the stripe library at runtime only
+  const StripePkg = (await import("stripe")).default;
+  const stripe    = new StripePkg(secret, { apiVersion: "2025-03-31.basil" });
+
+  const buf = await req.arrayBuffer();
+  const sig = req.headers.get("stripe-signature") || "";
   let event: Stripe.Event;
+
   try {
     event = stripe.webhooks.constructEvent(
       Buffer.from(buf),
       sig,
       endpointSecret
-    );
-  } catch (e: any) {
-    console.error("❌ stripe webhook verify failed:", e.message);
-    return new NextResponse(e.message, { status: 400 });
+    ) as Stripe.Event;
+  } catch (err: any) {
+    console.error("Webhook signature verification failed:", err.message);
+    return new NextResponse(err.message, { status: 400 });
   }
 
-  // 3) handle successful checkout
   if (event.type === "checkout.session.completed") {
     const sess       = event.data.object as Stripe.Checkout.Session;
-    const contract   = sess.metadata!.contract!;
-    const email      = sess.customer_email!;
-    const amountPaid = (sess.amount_total! as number) / 100;
+    const contract   = sess.metadata?.contract;
+    const email      = sess.customer_email;
+    const amountPaid = (sess.amount_total ?? 0) / 100;
 
-    // save to Mongo (off-chain)
-    await dbConnect();
-    await FiatInvestor.create({
-      contract,
-      email,
-      amountPaid,
-      paymentMethod: sess.payment_method_types![0],
-      paymentIntentId: sess.payment_intent as string,
-      maskedCard: undefined,
-    });
-    // (optional) notify admin…
+    if (contract && email) {
+      await dbConnect();
+      await FiatInvestor.create({
+        contract,
+        email,
+        amountPaid,
+        paymentMethod: sess.payment_method_types?.[0],
+        paymentIntentId: sess.payment_intent as string,
+        maskedCard: undefined,
+      });
+    }
   }
 
-  // always return 200 to Stripe
   return NextResponse.json({ received: true });
 }
