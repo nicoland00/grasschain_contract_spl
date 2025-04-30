@@ -1038,6 +1038,61 @@ export type GrasschainContractSpl = {
         }
       ],
       "args": []
+    },
+    {
+      "name": "verifyFunding",
+      "discriminator": [
+        231,
+        1,
+        210,
+        10,
+        91,
+        236,
+        233,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "contract",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  116,
+                  114,
+                  97,
+                  99,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "contract.admin",
+                "account": "contract"
+              },
+              {
+                "kind": "account",
+                "path": "contract.contract_id",
+                "account": "contract"
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     }
   ],
   "accounts": [

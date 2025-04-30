@@ -6,12 +6,14 @@ export interface ICryptoInvestor extends Document {
   investor:   string;
   nftMint:    string;
   txSignature:string;
+  amount:      number;
 }
 const CryptoInvestorSchema = new Schema<ICryptoInvestor>({
   contract:    { type: String, required: true },
   investor:    { type: String, required: true },
   nftMint:     { type: String, required: true },
   txSignature: { type: String, required: true },
+  amount:      { type: Number, required: true },
 }, { timestamps: true });
 export const CryptoInvestor =
   models.CryptoInvestor ||

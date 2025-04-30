@@ -12,6 +12,7 @@ import {
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import { ReactNode, useCallback, useMemo } from "react";
+import { clusterApiUrl } from "@solana/web3.js";
 
 // For a minimal wallet adapter, e.g. Phantom:
 import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
@@ -24,10 +25,13 @@ export const WalletButton = dynamic(
   { ssr: false }
 );
 
+// Re-export useWallet
+export { useWallet };
+
 export function SolanaProvider({ children }: { children: ReactNode }) {
   // Instead of cluster logic, define a static endpoint:
   // e.g. devnet or mainnet-beta. Adjust as needed.
-  const endpoint = "https://api.devnet.solana.com";
+  const endpoint = clusterApiUrl("devnet");
 
   // If you want to support Phantom, Torus, etc. in a single array:
   const wallets = useMemo(() => [new PhantomWalletAdapter()], []);
@@ -49,7 +53,11 @@ export function useAnchorProvider() {
   const { connection } = useConnection();
   const wallet = useWallet();
 
-  return new AnchorProvider(connection, wallet as AnchorWallet, {
-    commitment: "confirmed",
-  });
+  return useMemo(() => {
+    return new AnchorProvider(
+      connection,
+      wallet as AnchorWallet,
+      { commitment: "confirmed" }
+    );
+  }, [connection, wallet]);
 }

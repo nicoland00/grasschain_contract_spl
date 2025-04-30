@@ -1,18 +1,10 @@
-// [...nextauth]/route.ts
-import NextAuth from "next-auth";
-import EmailProvider from "next-auth/providers/email";
-import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
-import clientPromise from "@/lib/mongodb";
+// src/app/api/auth/[...nextauth]/route.ts
+import NextAuth from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 
-export const authOptions = {
-  adapter: MongoDBAdapter(clientPromise),
-  providers: [
-    EmailProvider({
-      server: process.env.EMAIL_SERVER!,
-      from:   process.env.EMAIL_FROM!,
-    }),
-  ],
-  secret: process.env.NEXTAUTH_SECRET,
-};
+// → force Node.js so the built-in 'crypto' module is there
+export const runtime = "nodejs";
 
-export default NextAuth(authOptions);
+// NextAuth handler
+const handler = NextAuth(authOptions);
+export { handler as GET, handler as POST };
