@@ -11,6 +11,7 @@ import idl                         from "../../../../anchor/target/idl/grasschai
 import { GrasschainContractSpl }   from "../../../../anchor/target/types/grasschain_contract_spl";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 interface ContractEntry {
   contractId: string;
