@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import dbConnect from "@/lib/tracking/dbConnect";
+import { dbConnect } from "@/lib/dbConnect";
 import FiatInvestor from "@/models/tracking/FiatInvestor";
 import CryptoInvestor from "@/models/tracking/CryptoInvestor";
 

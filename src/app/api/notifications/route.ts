@@ -1,6 +1,6 @@
 // src/app/api/notifications/route.ts
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/tracking/dbConnect";
+import { dbConnect } from "@/lib/dbConnect";
 import Notification, { INotification } from "@/models/Notification";
 import CryptoInvestor from "@/models/tracking/CryptoInvestor";
 import FiatInvestor from "@/models/tracking/FiatInvestor";

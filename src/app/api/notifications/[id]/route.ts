@@ -1,6 +1,6 @@
 // src/app/api/notifications/[id]/route.ts
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/tracking/dbConnect";
+import { dbConnect } from "@/lib/dbConnect";
 import Notification from "@/models/Notification";
 
 const ADMIN_PUBKEY = process.env.NEXT_PUBLIC_ADMIN_PUBKEY;
