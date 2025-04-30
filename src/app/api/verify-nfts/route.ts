@@ -1,6 +1,6 @@
 // src/app/api/verify-nfts/route.ts
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/tracking/dbConnect";
+import { dbConnect } from "@/lib/dbConnect";
 import CryptoInvestor, { ICryptoInvestor } from "@/models/tracking/CryptoInvestor";
 import FiatInvestor, { IFiatInvestor } from "@/models/tracking/FiatInvestor";
 
