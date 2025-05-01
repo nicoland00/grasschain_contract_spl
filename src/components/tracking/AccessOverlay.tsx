@@ -6,7 +6,8 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useLote } from "@/context/tracking/contextLote";
 import { useGrasschainContractSplProgram } from "@/components/grasschain_contract_spl/grasschain_contract_spl-data-access";
 import { PublicKey } from "@solana/web3.js";
@@ -22,6 +23,7 @@ const OVERLAY_Z = 40;
 export default function AccessOverlay() {
   const { data: session } = useSession();
   const { publicKey, connected } = useWallet();
+  const { connection } = useConnection();
   const { setSelectedLote, selectedLote } = useLote();
 
   const [contracts, setContracts] = useState<ContractEntry[] | null>(null);
@@ -83,10 +85,30 @@ export default function AccessOverlay() {
     }
     setVerifyingId(entry.contractId);
     setMessage(null);
-
-    const payload: any = { contractId: entry.contractId };
-    if (session?.user?.email) payload.email = session.user.email;
-    else if (publicKey) payload.wallet = publicKey.toBase58();
+       const payload: any = { contractId: entry.contractId };
+    
+       if (session?.user?.email) {
+         // off-chain path
+         payload.email = session.user.email;
+       } else if (publicKey) {
+         // on-chain path: gather all the user's NFTs (no signature)
+         const resp = await connection.getParsedTokenAccountsByOwner(publicKey, {
+           programId: TOKEN_PROGRAM_ID,
+         });
+         // filter to decimals=0 & amount=1 (typical NFT)
+         const userNFTs = resp.value
+           .filter(({ account }) => {
+             const info = account.data.parsed.info.tokenAmount;
+             return info.uiAmount === 1 && info.decimals === 0;
+           })
+           .map(({ account }) => account.data.parsed.info.mint);
+    
+         payload.userNFTs = userNFTs;
+       } else {
+         setMessage("You must connect a wallet or sign in to verify.");
+         setVerifyingId(null);
+         return;
+       }
 
     try {
       const res = await fetch("/api/verify-nfts", {
