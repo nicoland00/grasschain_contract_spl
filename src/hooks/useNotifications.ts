@@ -1,24 +1,37 @@
-import { useState, useEffect } from 'react';
+// src/hooks/useNotifications.ts
+import useSWR from "swr";
 
-interface Notification {
-  _id: string;
-  title: string;
-  message: string;
+type StageKey = 
+  | "bought"
+  | "verification"
+  | "active"
+  | "settling"
+  | "settled"
+  | "defaulted";
+
+export interface TNotification {
+  _id:      string;
+  title:    string;
+  message:  string;
+  contract: string | null;
+  stage:    StageKey;
   createdAt: string;
-  contract?: string;
 }
 
-export function useNotifications(params?: string) {
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [all, setAll] = useState<Notification[]>([]);
+const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<TNotification[]>);
 
-  useEffect(() => {
-    fetch(`/api/notifications${params}`)
-      .then(res => res.json())
-      .then(data => setAll(data));
-  }, [params]);
+export function useNotifications(contractId?: string) {
+  // if you pass a contractId, add it; otherwise fetch everything your API already knows
+  const url = contractId
+    ? `/api/notifications?contract=${contractId}`
+    : "/api/notifications";
 
-  const markAllRead = () => setUnreadCount(0);
+  const { data, error, mutate } = useSWR<TNotification[]>(url, fetcher);
 
-  return { unreadCount, all, markAllRead };
-} 
+  return {
+    notifications: data ?? [],
+    isLoading:     !error && !data,
+    isError:       !!error,
+    mutate,
+  };
+}

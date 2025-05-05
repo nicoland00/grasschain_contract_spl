@@ -1,3 +1,4 @@
+// src/app/tracking/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -5,14 +6,16 @@ import { useSession } from "next-auth/react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import OverlayLayout from "@/components/tracking/overlayLayout";
 import Select from "@/components/ui/Select";
-// renombramos la importación para no chocar con la constante `dynamic`:
 import dynamicImport from "next/dynamic";
+
+// ← NEW: pull in your NotificationsList
+import { NotificationsList } from "@/components/NotificationsList";
 
 export const dynamic = "force-dynamic";
 
 type Option = { label: string; value: string };
 
-// Cargamos el MapComponent sólo en cliente
+// Carga solo en cliente
 const MapComponent = dynamicImport(
   () => import("@/components/tracking/MapComponent"),
   { ssr: false }
@@ -81,7 +84,18 @@ export default function TrackingPage() {
         </h1>
         <Select options={opts} value={sel!} onChange={(v) => setSel(v)} />
       </div>
-      {sel && <MapComponent sidebarOpen={false} />}
+
+      {sel && (
+        <>
+          <MapComponent sidebarOpen={false} />
+
+          <div className="p-4 bg-white/80">
+           <h2 className="text-2xl font-semibold mb-2">Contract Updates</h2>
+           {/* now pass sel as props */}
+           <NotificationsList contractId={sel} />
+         </div>
+        </>
+      )}
     </OverlayLayout>
   );
 }

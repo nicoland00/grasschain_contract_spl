@@ -1,7 +1,7 @@
 // src/components/tracking/AccessOverlay.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion } from "framer-motion";
@@ -11,6 +11,27 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useLote } from "@/context/tracking/contextLote";
 import { useGrasschainContractSplProgram } from "@/components/grasschain_contract_spl/grasschain_contract_spl-data-access";
 import { PublicKey } from "@solana/web3.js";
+import { TrackingStepper } from "./TrackingStepper";
+import { StageKey } from "@/components/tracking/TrackingStepper"; // wherever you export it
+
+function contractStatusToStage(status: ContractEntry["status"]): StageKey {
+  switch (status) {
+    case "not-started":
+      return "bought";
+    case "active":
+      return "active";
+    case "settled":
+      return "settled";
+    case "defaulted":
+      return "defaulted";
+    // you can add more mappings later:
+    // case "pending-settlement": return "settling";
+    // case "verifying":       return "verification";
+    default:
+      return "bought";
+  }
+}
+
 
 type ContractEntry = {
   contractId: string;
@@ -159,16 +180,20 @@ export default function AccessOverlay() {
       <div className="w-full max-w-3xl mt-16 space-y-8">
         {/* Active contracts first */}
         {active.map((c) => {
-          const meta = metaMap[c.contractId] || { farmName: c.contractId, farmImageUrl: "/cows.gif" };
+          const meta = metaMap[c.contractId] || {
+            farmName: c.contractId,
+            farmImageUrl: "/cows.gif",
+          };
           return (
-            <ContractCard
-              key={c.contractId}
-              entry={c}
-              meta={meta}
-              verifyingId={verifyingId}
-              onVerify={() => handleVerify(c)}
-              session={session}
-            />
+            <div key={c.contractId} className="space-y-4">
+              <ContractCard
+                entry={c}
+                meta={meta}
+                verifyingId={verifyingId}
+                onVerify={() => handleVerify(c)}
+                session={session}
+              />
+            </div>
           );
         })}
 
@@ -177,16 +202,20 @@ export default function AccessOverlay() {
           <>
             <hr className="border-gray-300" />
             {others.map((c) => {
-              const meta = metaMap[c.contractId] || { farmName: c.contractId, farmImageUrl: "/cows.gif" };
+              const meta = metaMap[c.contractId] || {
+                farmName: c.contractId,
+                farmImageUrl: "/cows.gif",
+              };
               return (
-                <ContractCard
-                  key={c.contractId}
-                  entry={c}
-                  meta={meta}
-                  verifyingId={verifyingId}
-                  onVerify={() => handleVerify(c)}
-                  session={session}
-                />
+                <div key={c.contractId} className="space-y-4">
+                  <ContractCard
+                    entry={c}
+                    meta={meta}
+                    verifyingId={verifyingId}
+                    onVerify={() => handleVerify(c)}
+                    session={session}
+                  />
+                </div>
               );
             })}
           </>
@@ -214,41 +243,73 @@ function ContractCard({
   const isActive = entry.status === "active";
   const isVerifying = verifyingId === entry.contractId;
 
-  return (
-    <div className={`flex flex-col md:flex-row bg-white rounded-lg shadow overflow-hidden ${!isActive && "opacity-50"}`}>
-      {/* left: 50% image */}
-      <div className="w-full md:w-1/2 aspect-video relative">
-        <Image src={meta.farmImageUrl} alt={meta.farmName} fill className="object-cover" />
-      </div>
-      {/* right: details & button */}
-      <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
-        <h2 className="text-2xl font-semibold mb-2">{meta.farmName}</h2>
-        <div className="text-sm text-gray-600 space-y-1 mb-4">
-          <div>
-            <strong>Contract #:</strong> {entry.contractId}
+    return (
+        <div
+          className={`
+            flex flex-col            /* stack children vertically */
+            bg-white rounded-lg shadow overflow-hidden
+            ${!isActive ? "opacity-50" : ""}
+          `}
+        >
+          {/** inner two-column area **/}
+          <div className="flex flex-col md:flex-row">
+            {/* left: 50% image */}
+            <div className="w-full md:w-1/2 aspect-video relative">
+              <Image
+                src={meta.farmImageUrl}
+                alt={meta.farmName}
+                fill
+                className="object-cover"
+              />
+            </div>
+    
+            {/* right: details & button */}
+            <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold mb-2">
+                  {meta.farmName}
+                </h2>
+                <div className="text-sm text-gray-600 space-y-1 mb-4">
+                  <div>
+                    <strong>Contract #:</strong> {entry.contractId}
+                  </div>
+                  <div>
+                    <strong>Verify Method:</strong>{" "}
+                    {session?.user?.email
+                      ? "Google Verification"
+                      : "NFT Verification"}
+                  </div>
+                </div>
+              </div>
+    
+              <button
+                onClick={onVerify}
+                disabled={!isActive || isVerifying}
+                className={`
+                  w-full py-3 rounded-lg text-white font-medium
+                  ${isActive
+                    ? "bg-green-500 hover:bg-green-600"
+                    : "bg-gray-300 cursor-not-allowed"
+                  }
+                `}
+              >
+                {isVerifying
+                  ? "Verifying…"
+                  : isActive
+                  ? "Verify"
+                  : entry.status === "not-started"
+                  ? "Not active"
+                  : "Closed"}
+              </button>
+            </div>
           </div>
-          <div>
-            <strong>Verify Method:</strong>{" "}
-            {session?.user?.email ? "Google Verification" : "NFT Verification"}
+    
+          {/** stepper lives *inside* the card, below the two-col area **/}
+          <div className="px-6 pb-6">
+            <TrackingStepper
+              current={contractStatusToStage(entry.status)}
+            />
           </div>
         </div>
-        <button
-          onClick={onVerify}
-          disabled={!isActive || isVerifying}
-          className={`w-full py-3 rounded-lg text-white font-medium
-            ${isActive
-              ? "bg-green-500 hover:bg-green-600"
-              : "bg-gray-300 cursor-not-allowed"}`}
-        >
-          {!isActive
-            ? entry.status === "not-started"
-              ? "Not active"
-              : "Closed"
-            : isVerifying
-            ? "Verifying…"
-            : "Verify"}
-        </button>
-      </div>
-    </div>
-  );
+      );
 }

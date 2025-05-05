@@ -1,43 +1,40 @@
 // src/hooks/useNotifications.ts
-"use client";
+import useSWR from "swr";
+import { useWallet } from "@solana/wallet-adapter-react";
 
-import { useState, useEffect } from "react";
-import Cookies from "js-cookie";
+type StageKey = 
+  | "bought"
+  | "verification"
+  | "active"
+  | "settling"
+  | "settled"
+  | "defaulted";
 
 export interface Notification {
-  _id: string;
-  title: string;
-  message: string;
-  contract?: string;
+  _id:      string;
+  title:    string;
+  message:  string;
+  contract: string | null;
+  stage:    StageKey;
   createdAt: string;
 }
 
-export function useNotifications(params: string /* e.g. "?wallet=..." or "" */) {
-  const [all, setAll] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const SEEN_COOKIE = "seenNotifications";
+const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<Notification[]>);
 
-  useEffect(() => {
-    async function load() {
-      const res = await fetch(`/api/notifications${params}`);
-      const list: Notification[] = await res.json();
-      setAll(list);
+export function useNotifications() {
+  const { publicKey } = useWallet();
 
-      // read seen IDs from cookie
-      const seen = Cookies.get(SEEN_COOKIE)?.split(",") || [];
-      // count how many IDs are not seen
-      const unread = list.filter((n) => !seen.includes(n._id)).length;
-      setUnreadCount(unread);
-    }
-    load();
-  }, [params]);
+  // build the URL: if we have a wallet, pass it
+  const url = publicKey
+    ? `/api/notifications?wallet=${publicKey.toBase58()}`
+    : `/api/notifications`;
 
-  // mark all as read
-  function markAllRead() {
-    const ids = all.map((n) => n._id).join(",");
-    Cookies.set(SEEN_COOKIE, ids, { expires: 365 });
-    setUnreadCount(0);
-  }
+  const { data, error, mutate } = useSWR<Notification[]>(url, fetcher);
 
-  return { all, unreadCount, markAllRead };
+  return {
+    notifications: data ?? [],
+    isLoading:     !error && !data,
+    isError:       !!error,
+    mutate,
+  };
 }

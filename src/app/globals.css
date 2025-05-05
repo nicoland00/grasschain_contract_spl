@@ -178,3 +178,109 @@ body {
     cursor: not-allowed;
   }
   
+/* reset a bit */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: "Poppins", sans-serif;
+}
+
+/* ─────────────────────────────────────────── */
+/*   OVERRIDE STEP-WIZARD (load last!)       */
+/* ─────────────────────────────────────────── */
+
+/* make the UL a horizontal flex row again */
+.step-wizard-list {
+  display: flex !important;
+  list-style: none !important;
+  padding-top: 24px !important;  /* bump this up however much you like */
+  margin: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: flex;
+
+
+  /* divider above the wizard */
+  border-top: 1px solid #e5e7eb;
+  padding-top: 16px;  /* room for that divider */
+  margin-top: 16px;
+  position: relative;
+}
+
+/* each LI fills equally */
+.step-wizard-item {
+  flex: 1;
+  position: relative;
+  text-align: center;
+}
+
+/* thicker green connector between items */
+.step-wizard-item + .step-wizard-item::before {
+  content: "";
+  position: absolute;
+  top: 20px;                    /* center under the 40px dot */
+  left: -50%;                   /* start at midpoint of previous item */
+  width: 100%;
+  height: 4px;                  /* thicker line */
+  background-color: #7ac78e;    /* green for done/current */
+  z-index: -1;
+}
+
+/* grey out the connector if the *next* step is “ready” (future) */
+.step-wizard-item.ready + .step-wizard-item::before {
+  background-color: #d1d5db !important;
+}
+
+.step-wizard-item.wip + .step-wizard-item::before {
+  background-color: #d1d5db !important;
+}
+
+/* the circle itself: always green or grey if future */
+.progress-count {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+  position: relative;
+  border-radius: 50%;
+  background-color: #7ac78e !important; /* green for done & current */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none !important;              /* remove WIP ring */
+  z-index: 1;
+  font-size: 0 !important;       /* kill the “1 2 3…” text inside the circle */
+  line-height: 0;                /* just in case */
+}
+.step-wizard-item.ready .progress-count {
+  background-color: #d1d5db !important; /* grey for future */
+}
+
+/* white checkmark in done & wip circles */
+.step-wizard-item.done  .progress-count::after,
+.step-wizard-item.wip   .progress-count::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 8px;
+  border-left: 3px solid #fff;
+  border-bottom: 3px solid #fff;
+  top: 52%;
+  left: 50%;
+  transform: translate(-50%, -60%) rotate(-45deg);
+  z-index: 2;
+}
+
+/* labels: grey by default, dark for done & current */
+.progress-label {
+  margin-top: 8px;
+  font-weight: 600;
+  color: #6b7280; /* tailwind gray-500 */
+}
+.step-wizard-item.done .progress-label,
+.step-wizard-item.wip  .progress-label {
+  color: #111827 !important; /* tailwind gray-900 */
+}
+

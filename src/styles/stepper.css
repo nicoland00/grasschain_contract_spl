@@ -1,0 +1,75 @@
+/* Stepper container */
+.stepper {
+    display: flex;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+  
+  /* Each step */
+  .stepper li {
+    position: relative;
+    flex: 1;
+  }
+  
+  /* Connector lines between steps */
+  .stepper li + li::before {
+    content: "";
+    position: absolute;
+    top: 16px;          /* half of circle height (32px) + padding */
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: lightgrey;
+    z-index: 0;
+  }
+  
+  /* The “item” wrapper that contains the label */
+  .stepper li .item {
+    position: relative;
+    text-align: center;
+    padding-top: 8px;
+  }
+  
+  /* The circle itself */
+  .stepper li .item::before {
+    content: "";
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    position: absolute;
+    top: -16px;         /* half of circle height */
+    left: 50%;
+    transform: translateX(-50%);
+    background: lightgrey;
+    z-index: 1;
+    box-sizing: border-box;
+  }
+  
+  /* DONE state: filled circle & colored connector */
+  .stepper li.done .item::before {
+    background: lightcoral;
+  }
+  .stepper li.done + li::before {
+    background: lightcoral;
+  }
+  
+  /* WIP (work-in-progress) state: outlined circle */
+  .stepper li.wip .item::before {
+    background: white;
+    border: solid 8px lightcoral;
+  }
+  /* leave connector grey up to the next step */
+  
+  /* READY (not started yet) state: greyed-out circle */
+  .stepper li.ready .item::before {
+    background: lightgrey;
+  }
+  
+  /* reset defaults */
+  .stepper,
+  .stepper li {
+    padding: 0;
+    margin: 0;
+  }
+  
