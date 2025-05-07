@@ -1,21 +1,16 @@
 // src/app/tracking/page.tsx
 "use client";
+import React, { useEffect, useState } from "react";
+import { useSession }    from "next-auth/react";
+import { useWallet }     from "@solana/wallet-adapter-react";
+import OverlayLayout     from "@/components/tracking/overlayLayout";
+import dynamicImport     from "next/dynamic";
 
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import OverlayLayout from "@/components/tracking/overlayLayout";
-import Select from "@/components/ui/Select";
-import dynamicImport from "next/dynamic";
-
-// ← NEW: pull in your NotificationsList
-import { NotificationsList } from "@/components/NotificationsList";
+// import both from the same module:
+import { TrackingStepper, StageKey } from "@/components/tracking/TrackingStepper";
 
 export const dynamic = "force-dynamic";
 
-type Option = { label: string; value: string };
-
-// Carga solo en cliente
 const MapComponent = dynamicImport(
   () => import("@/components/tracking/MapComponent"),
   { ssr: false }
@@ -23,17 +18,13 @@ const MapComponent = dynamicImport(
 
 export default function TrackingPage() {
   const { data: session, status: authStatus } = useSession();
-  const { publicKey, connected } = useWallet();
-  const [stage, setStage] = useState<
-    "loading" | "no-contracts" | "not-started" | "select"
-  >("loading");
-  const [opts, setOpts] = useState<Option[]>([]);
-  const [sel, setSel] = useState<string>();
+  const { publicKey, connected }              = useWallet();
+  const [stage, setStage]                     = useState<StageKey | "loading" | "no-contracts" | "not-started">("loading");
+  const [sel, setSel]                         = useState<string>("");
 
   useEffect(() => {
     async function load() {
       if (authStatus === "loading") return;
-
       let url = `/api/my-contracts`;
       if (!session?.user?.email) {
         if (connected && publicKey) {
@@ -49,22 +40,15 @@ export default function TrackingPage() {
       } catch {
         return setStage("no-contracts");
       }
-
       if (!res.ok) return setStage("no-contracts");
-      const list: { contractId: string; status: string }[] = await res.json();
+      const list: { contractId: string; status: StageKey }[] = await res.json();
 
       if (list.length === 0) return setStage("no-contracts");
+      const active = list.find((c) => c.status === "active");
+      if (!active) return setStage("not-started");
 
-      const active = list.filter((c) => c.status === "active");
-      if (active.length === 0) return setStage("not-started");
-
-      const options = active.map((c) => ({
-        label: c.contractId,
-        value: c.contractId,
-      }));
-      setOpts(options);
-      setSel(options[0].value);
-      setStage("select");
+      setSel(active.contractId);
+      setStage(active.status);
     }
     load();
   }, [session, authStatus, connected, publicKey]);
@@ -78,24 +62,13 @@ export default function TrackingPage() {
 
   return (
     <OverlayLayout>
-      <div className="p-4">
-        <h1 className="text-3xl font-bold mb-4">
-          Select a contract to track
-        </h1>
-        <Select options={opts} value={sel!} onChange={(v) => setSel(v)} />
+      <MapComponent sidebarOpen={false} />
+
+      <div className="p-4 bg-white/80">
+        <h2 className="text-2xl font-semibold mb-2">Contract Updates</h2>
+        {/* now passing both props */}
+        <TrackingStepper current={stage as StageKey} contractId={sel} />
       </div>
-
-      {sel && (
-        <>
-          <MapComponent sidebarOpen={false} />
-
-          <div className="p-4 bg-white/80">
-           <h2 className="text-2xl font-semibold mb-2">Contract Updates</h2>
-           {/* now pass sel as props */}
-           <NotificationsList contractId={sel} />
-         </div>
-        </>
-      )}
     </OverlayLayout>
   );
 }

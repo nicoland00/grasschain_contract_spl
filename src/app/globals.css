@@ -196,7 +196,7 @@ body {
 .step-wizard-list {
   display: flex !important;
   list-style: none !important;
-  padding-top: 24px !important;  /* bump this up however much you like */
+  padding-top: 5px !important;  /* bump this up however much you like */
   margin: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
@@ -204,12 +204,12 @@ body {
 
 
   /* divider above the wizard */
-  border-top: 1px solid #e5e7eb;
-  padding-top: 16px;  /* room for that divider */
-  margin-top: 16px;
+  border-top: none;
+
   position: relative;
 }
 
+/* only apply the transform to the *second* child if it’s _not_ an <hr> */
 /* each LI fills equally */
 .step-wizard-item {
   flex: 1;
@@ -284,3 +284,18 @@ body {
   color: #111827 !important; /* tailwind gray-900 */
 }
 
+.stack > hr {
+  /* cancel any transforms */
+  transform: none !important;
+  opacity: 1      !important;
+  z-index: auto   !important;
+  
+  /* make it truly full-width by negating the container’s padding */
+  width: calc(100% + 3rem); /* if your container has px-6 (1.5rem each side) */
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+
+  /* style the divider */
+  border: 0;
+  border-top: 1px solid #e5e7eb;
+}

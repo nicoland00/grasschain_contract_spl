@@ -1,40 +1,43 @@
 // src/hooks/useNotifications.ts
 import useSWR from "swr";
-import { useWallet } from "@solana/wallet-adapter-react";
 
-type StageKey = 
-  | "bought"
-  | "verification"
-  | "active"
-  | "settling"
-  | "settled"
-  | "defaulted";
-
-export interface Notification {
-  _id:      string;
-  title:    string;
-  message:  string;
-  contract: string | null;
-  stage:    StageKey;
+export interface TNotification {
+  _id:       string;
+  title:     string;
+  message:   string;
+  contract:  string | null;
+  stage:     string;
   createdAt: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<Notification[]>);
+// GET
+const fetcher = (url: string) => fetch(url).then(r => r.json() as Promise<TNotification[]>);
 
-export function useNotifications() {
-  const { publicKey } = useWallet();
+export function useNotifications(query = "") {
+  const url = `/api/notifications${query}`;              // e.g. "?contract=xxxx"
+  const { data, error, mutate } = useSWR<TNotification[]>(url, fetcher);
 
-  // build the URL: if we have a wallet, pass it
-  const url = publicKey
-    ? `/api/notifications?wallet=${publicKey.toBase58()}`
-    : `/api/notifications`;
-
-  const { data, error, mutate } = useSWR<Notification[]>(url, fetcher);
+  // POST + revalidate
+  const createNotification = async (body: {
+    title: string;
+    message: string;
+    contract?: string | null;
+    stage?: string;
+    adminPubkey: string;
+  }) => {
+    await fetch("/api/notifications", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    await mutate();
+  };
 
   return {
-    notifications: data ?? [],
-    isLoading:     !error && !data,
-    isError:       !!error,
-    mutate,
+    all:               data ?? [],
+    isLoading:         !data && !error,
+    isError:           !!error,
+    createNotification,
+    markAllRead:       () => mutate(), // clear badge = revalidate
   };
 }

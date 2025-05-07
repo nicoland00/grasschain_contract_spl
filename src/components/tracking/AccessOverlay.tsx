@@ -304,6 +304,7 @@ function ContractCard({
             </div>
           </div>
     
+          <hr className="border-t border-gray-300 w-full" />
           {/** stepper lives *inside* the card, below the two-col area **/}
           <div className="px-6 pb-6">
             <TrackingStepper

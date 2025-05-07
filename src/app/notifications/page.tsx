@@ -1,47 +1,58 @@
 // src/app/notifications/page.tsx
 "use client";
-
-import React, { useState } from "react";
-import { useSession } from "next-auth/react";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { useNotifications } from "@/hooks/useNotifications";
-
+import React, { useState, useEffect } from "react";
+import { useSession }              from "next-auth/react";
+import { useWallet }               from "@solana/wallet-adapter-react";
+import { useNotifications, TNotification } from "@/hooks/useNotifications";
 
 const ADMIN_PUBKEY = process.env.NEXT_PUBLIC_ADMIN_PUBKEY!;
 
 export default function NotificationsPage() {
   const { data: session } = useSession();
-  const { publicKey } = useWallet();
-  const params = session?.user?.email
+  const { publicKey }     = useWallet();
+  const params            = session?.user?.email
     ? ""
     : publicKey
-    ? `?wallet=${publicKey.toBase58()}`
-    : "";
-  const { all, markAllRead } = useNotifications(params);
-  const [title, setTitle] = useState("");
-  const [message, setMessage] = useState("");
+      ? `?wallet=${publicKey.toBase58()}`
+      : "";
+
+  const {
+    all,
+    isLoading,
+    isError,
+    createNotification,
+    markAllRead,
+  } = useNotifications(params);
+
+  const [title, setTitle]       = useState("");
+  const [message, setMessage]   = useState("");
   const [contract, setContract] = useState<string>("");
 
-  const isAdmin = publicKey?.toBase58() === ADMIN_PUBKEY;
-  const adminParam = publicKey?.toBase58();
+  const isAdmin    = publicKey?.toBase58() === ADMIN_PUBKEY;
+  const adminParam = publicKey?.toBase58() || "";
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    await fetch("/api/notifications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, message, contract: contract || null, adminPubkey: adminParam }),
+    await createNotification({
+      title,
+      message,
+      contract:    contract || null,
+      stage:       "active",      // or let admin pick dynamically
+      adminPubkey: adminParam,
     });
     setTitle("");
     setMessage("");
     setContract("");
-    markAllRead();       // clear badge
+    markAllRead();
   }
 
-  React.useEffect(() => {
-    // once page loads, clear unread badge
+  // clear badge on load
+  useEffect(() => {
     markAllRead();
   }, []);
+
+  if (isLoading) return <p>Loading…</p>;
+  if (isError)   return <p className="text-red-600">Error loading</p>;
 
   return (
     <div className="max-w-2xl mx-auto py-8">
@@ -49,7 +60,9 @@ export default function NotificationsPage() {
 
       {isAdmin && (
         <form onSubmit={handleCreate} className="mb-8 space-y-4">
-          <h2 className="text-xl font-semibold">Create a new notification</h2>
+          <h2 className="text-xl font-semibold">
+            Create a new notification
+          </h2>
           <input
             className="input w-full"
             placeholder="Title"
@@ -75,8 +88,8 @@ export default function NotificationsPage() {
       )}
 
       <ul className="space-y-4">
-        {all.map((n) => (
-          <li key={n._id} className="bg-white p-4 rounded-lg shadow">
+        {all.map((n: TNotification) => (
+          <li key={n._id} className="bg-white p-4 rounded shadow">
             <div className="flex justify-between">
               <h3 className="font-semibold">{n.title}</h3>
               <span className="text-sm text-gray-500">

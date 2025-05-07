@@ -1,37 +1,44 @@
 // src/hooks/useNotifications.ts
 import useSWR from "swr";
 
-type StageKey = 
-  | "bought"
-  | "verification"
-  | "active"
-  | "settling"
-  | "settled"
-  | "defaulted";
-
 export interface TNotification {
-  _id:      string;
-  title:    string;
-  message:  string;
-  contract: string | null;
-  stage:    StageKey;
+  _id:       string;
+  title:     string;
+  message:   string;
+  contract:  string | null;
+  stage:     string;
   createdAt: string;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json() as Promise<TNotification[]>);
+// simple fetcher
+const fetcher = (url: string): Promise<TNotification[]> =>
+  fetch(url).then((r) => r.json());
 
-export function useNotifications(contractId?: string) {
-  // if you pass a contractId, add it; otherwise fetch everything your API already knows
-  const url = contractId
-    ? `/api/notifications?contract=${contractId}`
-    : "/api/notifications";
-
+export function useNotifications(contractQuery = "") {
+  const url = `/api/notifications${contractQuery}`;
   const { data, error, mutate } = useSWR<TNotification[]>(url, fetcher);
 
+  // POST + revalidate
+  const createNotification = async (body: {
+    title:       string;
+    message:     string;
+    contract:    string | null;
+    stage?:      string;
+    adminPubkey: string;
+  }) => {
+    await fetch("/api/notifications", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(body),
+    });
+    await mutate();
+  };
+
   return {
-    notifications: data ?? [],
-    isLoading:     !error && !data,
-    isError:       !!error,
-    mutate,
+    all:              data ?? [],
+    isLoading:        !data && !error,
+    isError:          !!error,
+    createNotification,
+    markAllRead:      () => mutate(),
   };
 }
