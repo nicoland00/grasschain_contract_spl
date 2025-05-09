@@ -160,11 +160,10 @@ export default function AccessOverlay() {
 
   return createPortal(
     <div
-      className="fixed inset-0 flex flex-col items-center p-4 overflow-auto"
+      className="fixed inset-0 flex flex-col overflow-y-auto bg-white"
       style={{
         zIndex: OVERLAY_Z,
         background: "rgba(255,255,255,0.95)",
-        backdropFilter: "blur(6px)",
       }}
     >
       {/* Sticky header */}
@@ -177,7 +176,7 @@ export default function AccessOverlay() {
         {message && <p className="mt-4 text-center text-red-600">{message}</p>}
       </motion.div>
 
-      <div className="w-full max-w-3xl mt-16 space-y-8">
+      <div className="w-full max-w-3xl mt-16 space-y-8 mx-auto">
         {/* Active contracts first */}
         {active.map((c) => {
           const meta = metaMap[c.contractId] || {
@@ -247,7 +246,8 @@ function ContractCard({
         <div
           className={`
             flex flex-col            /* stack children vertically */
-            bg-white rounded-lg shadow overflow-hidden
+            bg-white rounded-lg shadow
+            overflow-hidden
             ${!isActive ? "opacity-50" : ""}
           `}
         >
@@ -304,11 +304,12 @@ function ContractCard({
             </div>
           </div>
     
-          <hr className="border-t border-gray-300 w-full" />
+          <hr className="border-t border-gray-300 mx-6" />
           {/** stepper lives *inside* the card, below the two-col area **/}
-          <div className="px-6 pb-6">
+          <div className="px-6 pb-6 relative overflow-visible">
             <TrackingStepper
               current={contractStatusToStage(entry.status)}
+              contractId={entry.contractId}
             />
           </div>
         </div>

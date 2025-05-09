@@ -8,6 +8,7 @@ export interface TNotification {
   contract:  string | null;
   stage:     string;
   createdAt: string;
+  read?:     boolean;           // ← new
 }
 
 // simple fetcher
@@ -34,8 +35,11 @@ export function useNotifications(contractQuery = "") {
     await mutate();
   };
 
+  const unreadCount = (data ?? []).filter(n => n.read !== true).length;
+
   return {
     all:              data ?? [],
+    unreadCount,             
     isLoading:        !data && !error,
     isError:          !!error,
     createNotification,

@@ -19,8 +19,14 @@ export async function GET(req: Request) {
 
   let filter: any = {};
   if (contractQuery) {
-    filter = { contract: contractQuery };
-  } else if (wallet) {
+    filter = {
+      $or: [
+        { contract: contractQuery },
+        { contract: null }      // include general notices
+      ]
+    };
+  }
+   else if (wallet) {
     filter = { contract: { $in: /* find by wallet logic */ [] } };
   } else if (email) {
     filter = { contract: { $in: /* find by email logic */ [] } };
