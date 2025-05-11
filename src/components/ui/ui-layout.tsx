@@ -4,15 +4,14 @@ import Link from "next/link";
 import { ReactNode, Suspense, useState, useEffect } from "react";
 import { useWallet } from "../solana/solana-provider"; 
 import { useSession, signOut } from "next-auth/react";
-import { useNotifications } from "@/hooks/useNotifications";
 import LoginIsland from "@/components/grasschain_contract_spl/LoginIsland";
+import MobileBottomNav from "@/components/mobile/MobileBottomNav";
 
 export function UiLayout({ children }: { children: ReactNode }) {
   const { publicKey, disconnect } = useWallet();
   const { data: session, status } = useSession();
   const [showLogin, setShowLogin] = useState(false);
   const userEmail = session?.user?.email;
-  const { unreadCount } = useNotifications();
 
   // auto‐close our overlay once they really are signed in
   useEffect(() => {
@@ -25,7 +24,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
       {/* Navbar */}
       <nav className="navbar bg-white px-4 shadow relative z-50">
         {/* Logo & Links */}
-        <div className="navbar-start">
+        <div className="navbar-start ">
           <Link href="/" className="flex items-center">
             <img src="/favicon.ico" alt="Pastora" className="h-11 w-20" />
           </Link>
@@ -44,19 +43,11 @@ export function UiLayout({ children }: { children: ReactNode }) {
                 Tracking
               </Link>
             </li>
-            <li className="relative">
-             <Link href="/notifications">Notifications</Link>
-             {unreadCount > 0 && (
-               <span className="absolute -top-1 -right-2 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
-                 {unreadCount}
-               </span>
-             )}
-           </li>
           </ul>
         </div>
 
         {/* Auth / Wallet controls */}
-        <div className="navbar-end space-x-2">
+        <div className="navbar-end space-x-2 hidden md:flex">
           {publicKey ? (
             <button
               className="btn btn-outline"
@@ -101,6 +92,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
           <p>© 2025 Pastora. All rights reserved.</p>
         </div>
       </footer>
+      <MobileBottomNav />
     </div>
   );
 }

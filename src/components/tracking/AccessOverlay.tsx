@@ -184,7 +184,7 @@ export default function AccessOverlay() {
             farmImageUrl: "/cows.gif",
           };
           return (
-            <div key={c.contractId} className="space-y-4">
+            <div key={c.contractId} className="space-y-4 px-4 py-6">
               <ContractCard
                 entry={c}
                 meta={meta}

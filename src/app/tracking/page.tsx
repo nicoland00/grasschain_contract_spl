@@ -64,7 +64,7 @@ export default function TrackingPage() {
     <OverlayLayout>
       <MapComponent sidebarOpen={false} />
 
-      <div className="p-4 bg-white/80">
+      <div className="px-4 py-6 bg-white/80">
         <h2 className="text-2xl font-semibold mb-2">Contract Updates</h2>
         {/* now passing both props */}
         <TrackingStepper current={stage as StageKey} contractId={sel} />
