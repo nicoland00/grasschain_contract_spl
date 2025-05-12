@@ -13,8 +13,8 @@ export default function LoginIsland() {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-8 max-w-sm w-full space-y-6 text-center">
-        <h2 className="text-2xl font-bold">Welcome to Pastora</h2>
-        <p className="text-sm font !mt-1">In order to buy with crypto login with Solana, in order to buy with fiat login with Google</p>
+        <h2 className="text-3xl font-bold">Welcome to Pastora Trackign and Contracts</h2>
+        <p className="text-m font !mt-1">In order to buy with crypto login with Solana, in order to buy with fiat login with Google</p>
 
         {/* Web3: open the wallet modal */}
         <div className="text-sm uppercase font-semibold mb-1">Web3:</div>
