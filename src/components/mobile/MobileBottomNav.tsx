@@ -24,10 +24,10 @@ export default function MobileBottomNav() {
                 <img
                   src={icon}
                   alt={alt}
-                  className={`h-6 w-6 mb-1 ${isActive ? "opacity-100" : "opacity-50"}`}
+                  className={`h-8 w-8 mb-1 ${isActive ? "opacity-100" : "opacity-50"}`}
                 />
                 <span
-                  className={`text-xs ${
+                  className={`text-sm font-semibold ${
                     isActive ? "text-green-600" : "text-gray-500"
                   }`}
                 >
