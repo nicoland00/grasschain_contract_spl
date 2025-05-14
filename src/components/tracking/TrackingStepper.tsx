@@ -50,9 +50,9 @@ export function TrackingStepper({ current, contractId }: Props) {
 
   return (
     <>
-      <section className="step-wizard relative overflow-visible pb-8">
+      <section className="step-wizard relative overflow-visible">
         {/* 1) Step circles */}
-        <ul className="step-wizard-list mb-4">
+        <ul className="step-wizard-list mb-4 text-xs">
           {STEP_ORDER.map((step, i) => {
             let cls: "ready" | "done" | "wip" = "ready";
             if (i < idx) cls = "done";
@@ -67,7 +67,7 @@ export function TrackingStepper({ current, contractId }: Props) {
         </ul>
 
         {/* 2) Show updates button */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-2">
           <button
             onClick={() => setModalOpen(true)}
             className="relative w-3/4 md:w-1/2 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"

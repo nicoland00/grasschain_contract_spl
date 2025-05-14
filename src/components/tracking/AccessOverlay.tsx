@@ -172,7 +172,7 @@ export default function AccessOverlay() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-4xl font-extrabold text-center">Select Cattle Herd to Visualize</h1>
+        <h1 className="text-4xl font-extrabold text-center">Select Herd to Visualize</h1>
         {message && <p className="mt-4 text-center text-red-600">{message}</p>}
       </motion.div>
 
@@ -184,7 +184,7 @@ export default function AccessOverlay() {
             farmImageUrl: "/cows.gif",
           };
           return (
-            <div key={c.contractId} className="space-y-4 px-4 py-6">
+            <div key={c.contractId} className="space-y-4 px-6 py-6">
               <ContractCard
                 entry={c}
                 meta={meta}
@@ -206,7 +206,7 @@ export default function AccessOverlay() {
                 farmImageUrl: "/cows.gif",
               };
               return (
-                <div key={c.contractId} className="space-y-4">
+                <div key={c.contractId} className="space-y-4 px-6">
                   <ContractCard
                     entry={c}
                     meta={meta}
@@ -245,7 +245,7 @@ function ContractCard({
     return (
         <div
           className={`
-            flex flex-col            /* stack children vertically */
+            flex flex-col            
             bg-white rounded-lg shadow
             overflow-hidden
             ${!isActive ? "opacity-50" : ""}
@@ -269,17 +269,6 @@ function ContractCard({
                 <h2 className="text-2xl font-semibold mb-2">
                   {meta.farmName}
                 </h2>
-                <div className="text-sm text-gray-600 space-y-1 mb-4">
-                  <div>
-                    <strong>Contract #:</strong> {entry.contractId}
-                  </div>
-                  <div>
-                    <strong>Verify Method:</strong>{" "}
-                    {session?.user?.email
-                      ? "Google Verification"
-                      : "NFT Verification"}
-                  </div>
-                </div>
               </div>
     
               <button

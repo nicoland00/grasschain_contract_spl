@@ -21,12 +21,12 @@ export default function GrasschainContractSplFeature() {
 
   // otherwise, render the normal admin/investor UI
   return (
-    <div className="w-full px-4 py-6">
-      <h1 className="text-4xl font-bold text-center mb-6">
+    <div className="w-full px-4">
+      <h1 className="text-3xl font-bold text-center mb-4 md:text-4xl">
         Pastora&apos;s Available Contracts
       </h1>
       <GrasschainCreateContractForm />
-      <hr className="border-gray-300 my-6" />
+      <hr className="border-gray-300" />
       <GrasschainContractsList />
     </div>
   );

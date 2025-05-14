@@ -504,15 +504,11 @@ export function GrasschainContractCard({
         {/* Right Side: Contract Details */}
         <div className="w-full md:w-1/2 p-4 flex flex-col justify-center">
           {/* Farm Name as title */}
-          <h3 className="text-4xl font-bold mb-4 text-center">{farmNameText}</h3>
+          <h3 className="text-3xl font-bold mb-4 text-center md:text-4xl">{farmNameText}</h3>
           {/* Two-column layout: Characteristics and Yield Percentage */}
           <div className="grid grid-cols-2 gap-4 mb-4">
             {/* Left Column: Characteristics (smaller text for mobile) */}
-            <div className="space-y-2 text-left text-sm md:text-lg">
-              <p>
-                <strong>Farm Address:</strong>{" "}
-                <span className="font-normal">{farmAddressText}</span>
-              </p>
+            <div className="md:space-y-2 text-left text-xs md:text-lg">
               <p>
                 <strong>{deadlineLabel}:</strong>{" "}
                 <span className="font-normal">
