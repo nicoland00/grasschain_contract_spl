@@ -19,7 +19,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
     }, [session, status]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-white text-gray-800">
+    <div className="flex flex-col bg-white text-black">
       {showLogin && !session && <LoginIsland />}
       {/* Navbar */}
       <nav className="navbar bg-white px-4 shadow relative z-50">

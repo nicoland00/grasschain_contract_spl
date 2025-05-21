@@ -94,7 +94,7 @@ export function GrasschainCreateContractForm() {
   }
 
   return (
-    <div className="max-w-md mx-auto bg-white shadow p-6 rounded mb-8">
+    <div className="w-full bg-white shadow p-6 rounded mb-8">
       <h3 className="text-2xl font-bold mb-4 text-center">Create Contract (Admin Only)</h3>
       <label className="block mb-1">Investment Amount (USDC)</label>
       <input
@@ -158,6 +158,8 @@ export function GrasschainContractCard({
   const { publicKey, signTransaction } = useWallet();
   const { data: session } = useSession();
   const [fiatFunded, setFiatFunded] = useState(0);
+  const [timeLeft, setTimeLeft] = useState<string>("–");
+  const [expired, setExpired] = useState<boolean>(false);
   
   useEffect(() => {
     fetch(`/api/fiat/summary?contract=${contractPk.toBase58()}`)
@@ -250,6 +252,23 @@ export function GrasschainContractCard({
     deadlineLabel = "Buyback Deadline";
   }
 
+  useEffect(() => {
+    if (status !== "Active" || !endDate) return;
+    const iv = setInterval(() => {
+      const diff = endDate.getTime() - Date.now();
+      if (diff <= 0) {
+        setExpired(true);
+        clearInterval(iv);
+      } else {
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor((diff % 86400000) / 3600000);
+        setTimeLeft(`${d}d ${h}h`);
+      }
+    }, 1000);
+    return () => clearInterval(iv);
+  }, [status, endDate]);
+
+  
   // ─── EVENT HANDLERS (NO HOOKS HERE!) ───
   async function handleInvest() {
     // — on‑chain path (wallet connected) —
@@ -488,21 +507,23 @@ export function GrasschainContractCard({
   }
 
   return (
-    <div className="w-full rounded-xl bg-white shadow-lg my-4 border border-gray-200 overflow-hidden">
+    <div className="relative w-full bg-white rounded-lg shadow my-4 border border-gray-200 overflow-hidden">
+          {status === "Active" && (
+      <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+        <span className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-base">
+          {expired
+            ? "ACTIVE: Pending Management"
+            : `ACTIVE: ${timeLeft}`}
+        </span>
+      </div>
+    )}
+
       <div className="flex flex-col md:flex-row">
-        {/* Left Side: Farm Image + Status (overlay in top-left) */}
-        <div className="relative w-full md:w-1/2">
-          <img
-            src={farmImageUrl}
-            alt="Farm"
-            className="block w-full h-full object-cover"
-          />
-          <span className="absolute top-3 left-3 px-3 py-2 text-sm bg-green-600 uppercase rounded-lg text-white font-bold">
+        {/* Right Side: Contract Details */}
+        <div className="w-full p-6">
+        <span className="absolute top-3 left-3 px-3 py-2 text-sm bg-green-600 uppercase rounded-lg text-white font-bold">
             {status}
           </span>
-        </div>
-        {/* Right Side: Contract Details */}
-        <div className="w-full md:w-1/2 p-4 flex flex-col justify-center">
           {/* Farm Name as title */}
           <h3 className="text-3xl font-bold mb-4 text-center md:text-4xl">{farmNameText}</h3>
           {/* Two-column layout: Characteristics and Yield Percentage */}
@@ -519,18 +540,6 @@ export function GrasschainContractCard({
                 <strong>Total Asked:</strong>{" "}
                 <span className="font-normal">{totalNeeded} USDC</span>
               </p>
-              <p>
-                <strong>On-chain Funded:</strong>{" "}
-                <span className="font-normal">{onChainFunded.toFixed(2)} USDC</span>
-              </p>
-              <p>
-                <strong>Off-chain Funded:</strong>{" "}
-                <span className="font-normal">{fiatFunded.toFixed(2)} USDC</span>
-              </p>
-              <p>
-                <strong>Remaining:</strong>{" "}
-                <span className="font-normal">{remaining.toFixed(6)} USDC</span>
-              </p>
             </div>
             {/* Right Column: Yield Percentage */}
             <div className="flex items-center justify-center md:justify-end">
@@ -539,16 +548,35 @@ export function GrasschainContractCard({
               </div>
             </div>
           </div>
+          <div className="flex items-center mb-4">
+            <span
+              className="text-sm text-gray-700 mr-2"
+              title={`Funded: ${onChainFunded + fiatFunded} USDC`}
+            >
+              Funded: {onChainFunded + fiatFunded}
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={totalNeeded}
+              value={onChainFunded + fiatFunded}
+              disabled
+              className="range range-success flex-1"
+            />
+            <span className="text-sm text-gray-700 ml-2">
+              Total: {totalNeeded}
+            </span>
+          </div>
           {/* Full-width area for Invest and Mint NFT buttons */}
           {["Created", "Funding"].includes(status) && (
             <div className="mb-4">
-              <input
-                type="number"
-                className="input input-bordered w-full mb-2 bg-black text-white"
-                placeholder="Investment Amount (USDC)"
-                value={investInput}
-                onChange={(e) => setInvestInput(e.target.value)}
-              />
+            <input
+              type="number"
+              className="input input-bordered w-full mb-2 bg-gray-100 text-black"
+              placeholder="Investment Amount (USDC)"
+              value={investInput}
+              onChange={(e) => setInvestInput(e.target.value)}
+            />
               <button
                 className="btn btn-success w-full mb-2"
                 onClick={handleInvest}
@@ -631,27 +659,30 @@ export function GrasschainContractsList() {
   const { allContracts } = useGrasschainContractSplProgram();
 
   if (allContracts.isLoading) return <p>Loading contracts...</p>;
-  if (allContracts.isError) return <p>Error loading contracts.</p>;
+  if (allContracts.isError)   return <p>Error loading contracts.</p>;
 
   const contracts = allContracts.data || [];
 
-  // Active = not settled or defaulted
-  const active = contracts.filter(
-    ({ account }) =>
-      !("settled" in account.status || "defaulted" in account.status)
+  // 1) Pendientes de funding / creación
+  const pendingFunding = contracts.filter(({ account }) =>
+    "created" in account.status ||
+    "funding" in account.status ||
+    "fundedPendingVerification" in account.status
   );
-
-  // Done = settled OR defaulted
-  const done = contracts.filter(
-    ({ account }) =>
-      "settled" in account.status || "defaulted" in account.status
+  // 2) Activos
+  const activeContracts = contracts.filter(({ account }) =>
+    "active" in account.status
+  );
+  // 3) Completados (settled/defaulted)
+  const doneContracts = contracts.filter(({ account }) =>
+    "settled" in account.status || "defaulted" in account.status
   );
 
   return (
     <div className="flex flex-col space-y-8">
-      {/* Active contracts */}
-      {active.length > 0 ? (
-        active.map(({ publicKey, account }) => (
+      {/* 1) Pendientes de funding */}
+      {pendingFunding.length > 0 ? (
+        pendingFunding.map(({ publicKey, account }) => (
           <GrasschainContractCard
             key={publicKey.toBase58()}
             contractPk={publicKey}
@@ -659,27 +690,37 @@ export function GrasschainContractsList() {
           />
         ))
       ) : (
-        <p>No active contracts or in funding.</p>
+        <p>No pending contracts.</p>
       )}
 
-      {/* Settled & Defaulted contracts */}
-      {done.length > 0 && (
+      {/* 2) Activos y Completados al final, inaccesibles */}
+      {(activeContracts.length > 0 || doneContracts.length > 0) && (
         <div className="space-y-4">
-          {done.map(({ publicKey, account }) => {
+          {[...activeContracts, ...doneContracts].map(({ publicKey, account }) => {
             const isSettled = "settled" in account.status;
-            const badgeText = isSettled ? "SETTLED" : "DEFAULTED";
-            const badgeColor = isSettled ? "bg-cyan-600" : "bg-red-600";
+            const isActive  = "active" in account.status;
+            const badgeText = isSettled
+              ? "SETTLED"
+              : isActive
+              ? ""
+              : "DEFAULTED";
+            const badgeColor = isSettled
+              ? "bg-cyan-600"
+              : isActive
+              ? ""
+              : "bg-red-600";
 
             return (
               <div
                 key={publicKey.toBase58()}
-                className="relative opacity-50"
+                className="relative opacity-50 pointer-events-none"
               >
                 <GrasschainContractCard
                   contractPk={publicKey}
                   contractData={account}
                 />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {/* wrapper badge igual que Settled */}
+                <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
                   <span
                     className={`px-4 py-2 text-base font-bold text-white rounded-lg shadow ${badgeColor}`}
                   >
