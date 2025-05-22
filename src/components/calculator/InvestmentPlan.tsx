@@ -1,7 +1,6 @@
 
 import React from 'react';
 import InvestmentForm from './InvestmentForm';
-import ETFLogo from './ETFLogo';
 import { ArrowLeft } from "lucide-react";
 
 interface InvestmentPlanProps {
@@ -27,7 +26,6 @@ const InvestmentPlan: React.FC<InvestmentPlanProps> = ({
             <h1 className="text-4xl font-bold mb-1">Investment Plan</h1>
             <p className="text-lg text-gray-300">{ticker} · {name}</p>
           </div>
-          <ETFLogo ticker={ticker} />
         </div>
         
         <InvestmentForm initialMonthlyAmount={150} />

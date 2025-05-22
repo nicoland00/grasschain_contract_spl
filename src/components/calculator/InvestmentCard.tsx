@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/calculator/ui/card";
 
 interface InvestmentCardProps {
   title: string;
