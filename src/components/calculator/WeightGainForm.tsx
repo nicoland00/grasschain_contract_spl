@@ -60,7 +60,7 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
 
   return (
     <>
-      <Card className="bg-appDarkGray border-border w-full max-w-lg mx-auto">
+      <Card className="bg-appDarkGray border-border w-full max-w-lg">
         <CardContent className="p-6">
           <div className="mb-6 animate-fade-in">
             <h2 className="text-2xl font-bold mb-1 text-black">
@@ -116,8 +116,8 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
             />
           </div>
           
-          <div className="mt-12 text-center"> 
-            <p className="text-xs text-muted-foreground mb-8 text-black">
+          <div className="mt-4 text-center"> 
+            <p className="text-xs text-muted-foreground mb-4 text-black">
               Simulated future weight projections are not a reliable indicator of actual results.
               Projected values are estimates based on general weight gain principles and vary based on individual factors.
               All values shown are estimates and individual results may vary.

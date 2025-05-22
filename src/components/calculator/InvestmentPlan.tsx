@@ -13,7 +13,6 @@ const InvestmentPlan: React.FC<InvestmentPlanProps> = ({
   name = "Vanguard S&P 500 UCITS ETF (Acc)",
 }) => {
   return (
-    <div className="min-h-screen bg-appBlack text-white p-4">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center mb-8">
           <button className="p-2">
@@ -30,7 +29,6 @@ const InvestmentPlan: React.FC<InvestmentPlanProps> = ({
         
         <InvestmentForm initialMonthlyAmount={150} />
       </div>
-    </div>
   );
 };
 

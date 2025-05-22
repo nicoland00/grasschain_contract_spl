@@ -22,20 +22,19 @@ export default function GrasschainContractSplFeature() {
 
   // otherwise, render the normal admin/investor UI
     return (
-        <div className="flex flex-col lg:flex-row h-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-6 py-8 bg-appDarkGray min-h-screen">
     
           {/* ── LEFT: Contracts (60%) ── */}
-          <div className="w-full lg:w-3/5 pr-4 overflow-auto">
+          <div className="overflow-auto">
             <h1 className="text-3xl font-bold text-center mb-4 md:text-4xl">
               Pastora&apos;s Available Contracts
             </h1>
             <GrasschainCreateContractForm />
-            <hr className="border-gray-300 my-6" />
             <GrasschainContractsList />
           </div>
     
           {/* ── RIGHT: Calculator (40%) ── */}
-          <div className="w-full lg:w-2/5 pl-4">
+          <div>
             <WeightGainProjection />
           </div>
     

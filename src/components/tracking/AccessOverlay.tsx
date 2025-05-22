@@ -199,7 +199,7 @@ export default function AccessOverlay() {
         {/* Divider & inactive */}
         {others.length > 0 && (
           <>
-            <hr className="border-gray-300" />
+            <hr className="border-border" />
             {others.map((c) => {
               const meta = metaMap[c.contractId] || {
                 farmName: c.contractId,
@@ -293,7 +293,7 @@ function ContractCard({
             </div>
           </div>
     
-          <hr className="border-t border-gray-300 mx-6" />
+          <hr className="border-t border-border mx-6" />
           {/** stepper lives *inside* the card, below the two-col area **/}
           <div className="px-6 pb-6 relative overflow-visible">
             <TrackingStepper

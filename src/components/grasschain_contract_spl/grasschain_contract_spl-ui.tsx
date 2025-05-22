@@ -94,7 +94,7 @@ export function GrasschainCreateContractForm() {
   }
 
   return (
-    <div className="w-full bg-white shadow p-6 rounded mb-8">
+    <div className="w-full bg-appDarkGray border border-border rounded-lg p-6 mb-8">
       <h3 className="text-2xl font-bold mb-4 text-center">Create Contract (Admin Only)</h3>
       <label className="block mb-1">Investment Amount (USDC)</label>
       <input
@@ -507,7 +507,7 @@ export function GrasschainContractCard({
   }
 
   return (
-    <div className="relative w-full bg-white rounded-lg shadow my-4 border border-gray-200 overflow-hidden">
+    <div className="relative w-full bg-appDarkGray border border-border rounded-lg p-6 my-4">
           {status === "Active" && (
       <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
         <span className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-base">

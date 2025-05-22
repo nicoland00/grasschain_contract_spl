@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine } from 'recharts';
 
 interface DataPoint {
   month: number;
@@ -15,10 +14,15 @@ interface WeightGainChartProps {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    
+    if (![12, 18, 24, 36].includes(label)) return null;
     return (
       <div className="bg-card p-3 rounded-md shadow-lg border border-border text-black">
-        <p className="font-semibold">{`Month: ${label}`}</p>
+        <p className="font-semibold">{`Month: ${
+          label === 12 ? '12 months' :
+          label === 18 ? '18 months' :
+          label === 24 ? '24 months' :
+          '36 months'
+        }`}</p>
         <p className="text-projection">
           {`Projected: ${payload[0].value.toFixed(1)} kg`}
         </p>
@@ -26,7 +30,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
          {(() => {
            const contributionKg = payload[1].value;
            const contributionDollar = contributionKg * 2.5;
-           return `Total Contribution: $${contributionDollar.toFixed(2)} (${contributionKg.toFixed(2)} kg)`;
+           return `Initial Contribution: $${contributionDollar.toFixed(2)} (${contributionKg.toFixed(2)} kg)`;
          })()}
        </p>
       </div>
@@ -36,13 +40,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const WeightGainChart: React.FC<WeightGainChartProps> = ({ data, yAxisFormatter }) => {
-  const hoverableMonths = [0, 12, 18, 24, 36]; // Only these months will be shown on the x-axis
-  
-  // Filter data to only include the months we want to show
-  const filteredData = data.filter(item => hoverableMonths.includes(item.month));
+  const ticks = [12, 18, 24, 36];
   
   return (
-    <div className="w-full h-64 mt-4 mb-8">
+    <div className="w-full h-64 mt-4 mb-4">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
@@ -58,25 +59,37 @@ const WeightGainChart: React.FC<WeightGainChartProps> = ({ data, yAxisFormatter 
               <stop offset="95%" stopColor="#3A86FF" stopOpacity={0.2} />
             </linearGradient>
           </defs>
-          <XAxis 
+            <XAxis 
             dataKey="month"
-            axisLine={false}
+            // draw only our four ticks:
+            ticks={ticks}
+            // subtle gray ais line
+            axisLine={{ stroke: '#D1D5DB' }}
             tickLine={false}
             tick={{ fill: '#888', fontSize: 12 }}
-            tickFormatter={(value) => {
-              if (hoverableMonths.includes(value)) {
-                return value === 0 ? '0m' : `${value}m`;
-              }
-              return "";
+            tickFormatter={(m) => {
+              // label them in full:
+              return m === 12
+                ? '12 months'
+                : m === 18
+                ? '18 months'
+                : m === 24
+                ? '24 months'
+                : '36 months';
             }}
           />
-          <YAxis 
+          {/* vertical gray lines at each tick */}
+          {ticks.map((m) => (
+            <ReferenceLine key={m} x={m} stroke="#E5E7EB" strokeDasharray="3 3" />
+          ))} 
+          <YAxis
             tickFormatter={yAxisFormatter}
-            axisLine={false}
+            axisLine={{stroke: '#D1D5DB'}}
             tickLine={false}
             tick={{ fill: '#888', fontSize: 12 }}
             width={60}
           />
+          <ReferenceLine y={0} stroke="#E5E7EB" />
           <Tooltip content={<CustomTooltip />} />
           <Area 
             type="monotone" 

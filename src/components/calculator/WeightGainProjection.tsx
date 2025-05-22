@@ -14,10 +14,8 @@ const WeightGainProjection: React.FC<WeightGainProjectionProps> = ({
   description = "Pastora Weight Gain Program",
 }) => {
   return (
-    <div className="min-h-screen bg-appBlack text-white p-4">
-      <div className="max-w-lg mx-auto">
+    <div className="min-h-screen bg-appBlack text-white mt-[72px]">
         <WeightGainForm initialWeight={200} initialCaloriesAmount={150} />
-      </div>
     </div>
   );
 };
