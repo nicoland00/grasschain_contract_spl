@@ -73,7 +73,7 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
                 color={fillColor} 
               />
               <WeightCard 
-                title="Your today's contributions" 
+                title="Your today&apos;s contributions" 
                 value={`${meatKilograms.toFixed(1)} kg`} 
                 color="#3A86FF" 
               />
