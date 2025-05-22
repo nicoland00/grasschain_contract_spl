@@ -94,7 +94,7 @@ export function GrasschainCreateContractForm() {
   }
 
   return (
-    <div className="w-full bg-appDarkGray border border-border rounded-lg p-6 mb-8">
+    <div className="w-full bg-appDarkGray border border-border rounded-2xl p-6 mb-8">
       <h3 className="text-2xl font-bold mb-4 text-center">Create Contract (Admin Only)</h3>
       <label className="block mb-1">Investment Amount (USDC)</label>
       <input
@@ -507,10 +507,10 @@ export function GrasschainContractCard({
   }
 
   return (
-    <div className="relative w-full bg-appDarkGray border border-border rounded-lg p-6 my-4">
+    <div className="relative w-full bg-appDarkGray border border-border rounded-2xl p-6 my-4">
           {status === "Active" && (
       <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
-        <span className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-base">
+        <span className="bg-green-600 text-white px-4 py-2 rounded-2xl font-bold text-base">
           {expired
             ? "ACTIVE : Pending Management"
             : `ACTIVE : ${timeLeft}`}
@@ -521,7 +521,7 @@ export function GrasschainContractCard({
       <div className="flex flex-col md:flex-row">
         {/* Right Side: Contract Details */}
         <div className="w-full p-6">
-        <span className="absolute top-3 left-3 px-3 py-2 text-sm bg-green-600 uppercase rounded-lg text-white font-bold">
+        <span className="absolute top-3 left-3 px-3 py-2 text-sm bg-green-600 uppercase rounded-2xl text-white font-bold">
             {status}
           </span>
           {/* Farm Name as title */}
@@ -569,7 +569,7 @@ export function GrasschainContractCard({
           </div>
           {/* Full-width area for Invest and Mint NFT buttons */}
           {["Created", "Funding"].includes(status) && (
-            <div className="mb-4">
+            <div>
             <input
               type="number"
               className="input input-bordered w-full mb-2 bg-gray-100 text-black"
@@ -722,7 +722,7 @@ export function GrasschainContractsList() {
                 {/* wrapper badge igual que Settled */}
                 <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
                   <span
-                    className={`px-4 py-2 text-base font-bold text-white rounded-lg shadow ${badgeColor}`}
+                    className={`px-4 py-2 text-base font-bold text-white rounded-2xl shadow ${badgeColor}`}
                   >
                     {badgeText}
                   </span>

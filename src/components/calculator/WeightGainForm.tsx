@@ -63,7 +63,7 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
       <Card className="bg-appDarkGray border-border w-full max-w-lg">
         <CardContent className="p-6">
           <div className="mb-6 animate-fade-in">
-            <h2 className="text-2xl font-bold mb-1 text-black">
+            <h2 className="text-3xl font-bold mb-1 text-black text-center">
               Avg. projected weight gain
             </h2>
             <div className="flex justify-between gap-8 mt-4 text-black">
