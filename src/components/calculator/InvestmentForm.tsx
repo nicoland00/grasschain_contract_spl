@@ -88,8 +88,7 @@ const InvestmentForm: React.FC<InvestmentFormProps> = ({
         <div className="mt-12 text-center">
           <p className="text-xs text-muted-foreground mb-8">
             Simulated future projections are not a reliable indicator or guarantee of future performance.
-            Projected values are forecasts based on actual historical data of ETF you've chosen and are for
-            informational purposes only. All values shown are before taxes and fees.
+            Projected values are forecasts based on actual historical data. All values shown are before taxes and fees.
           </p>
           
           <Button className="w-full py-6 text-lg font-semibold rounded-full bg-white text-black hover:bg-gray-200">
