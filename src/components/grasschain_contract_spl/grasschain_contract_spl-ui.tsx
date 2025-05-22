@@ -512,8 +512,8 @@ export function GrasschainContractCard({
       <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
         <span className="bg-green-600 text-white px-4 py-2 rounded-lg font-bold text-base">
           {expired
-            ? "ACTIVE: Pending Management"
-            : `ACTIVE: ${timeLeft}`}
+            ? "ACTIVE : Pending Management"
+            : `ACTIVE : ${timeLeft}`}
         </span>
       </div>
     )}
