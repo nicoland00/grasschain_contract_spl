@@ -15,10 +15,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "/marker-shadow.png",
 });
 
-// 2) Obtenemos el token de Ixorigue desde las variables de entorno públicas
-const IXORIGUE_TOKEN = process.env.NEXT_PUBLIC_IXORIGUE_TOKEN;
-
-// 3) Tipado para los animales con coordenadas
+// 2) Tipado para los animales con coordenadas
 interface AnimalWithCoords {
   id: string;
   name: string;
@@ -31,7 +28,7 @@ interface MapProps {
   sidebarOpen?: boolean;
 }
 
-// 4) Función para obtener un ícono aleatorio (por ejemplo, para representar una vaca)
+// 3) Función para obtener un ícono aleatorio
 function getRandomCowIcon(): L.Icon {
   const cowImages = ["/cows/2.png", "/cows/5.png", "/cows/8.png", "/cows/11.png"];
   const randomImage = cowImages[Math.floor(Math.random() * cowImages.length)];
@@ -43,11 +40,9 @@ function getRandomCowIcon(): L.Icon {
   });
 }
 
-// 5) Controles de zoom personalizados
+// 4) Controles de zoom personalizados
 function ZoomControls({ shift }: { shift?: boolean }) {
   const map = useMap();
-  const handleZoomIn = () => map.zoomIn();
-  const handleZoomOut = () => map.zoomOut();
   const leftOffset = shift ? "left-[285px]" : "left-[15px]";
 
   return (
@@ -59,48 +54,36 @@ function ZoomControls({ shift }: { shift?: boolean }) {
         ${leftOffset}
       `}
     >
-      <button
-        onClick={handleZoomIn}
-        className="w-10 h-10 flex items-center justify-center rounded-[20px] hover:bg-gray-200"
-      >
+      <button onClick={() => map.zoomIn()} className="w-10 h-10 flex items-center justify-center rounded-[20px] hover:bg-gray-200">
         +
       </button>
-      <button
-        onClick={handleZoomOut}
-        className="w-10 h-10 flex items-center justify-center rounded-[20px] hover:bg-gray-200"
-      >
+      <button onClick={() => map.zoomOut()} className="w-10 h-10 flex items-center justify-center rounded-[20px] hover:bg-gray-200">
         -
       </button>
     </div>
   );
 }
 
-// 6) Componente MapComponent final
+// 5) Componente MapComponent
 export default function MapComponent({ sidebarOpen }: MapProps) {
-  // En este contexto, "selectedLote" se utiliza para almacenar el ranchId dinámico
   const { selectedLote } = useLote();
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [animals, setAnimals] = useState<AnimalWithCoords[]>([]);
 
-  // Si el usuario aún no ha seleccionado un ranchId (o lote), no se ejecuta el fetch.
+  // A) Fetch de ranches para centrar el mapa
   useEffect(() => {
-    if (!selectedLote || selectedLote === "All") {
-      return;
-    }
-    // A) Fetch de ranchos para obtener la ubicación central del mapa
-    fetch("/api/ranches", {
-      headers: { Authorization: `Bearer ${IXORIGUE_TOKEN}` },
-    })
+    if (!selectedLote || selectedLote === "All") return;
+
+    fetch("/api/ixorigue/ranches")
       .then((res) => {
         if (!res.ok) throw new Error(`Error al obtener ranchos: ${res.status}`);
         return res.json();
       })
       .then((data) => {
-        const ranchList = data?.data ?? [];
-        // Busca el rancho cuyo id coincida con el ranchId seleccionado
+        const ranchList = data?.data ?? data;
         const myRanch = ranchList.find((r: any) => r.id === selectedLote);
         if (!myRanch) {
-          console.error("Ranch no encontrado para el ranchId:", selectedLote);
+          console.error("Rancho no encontrado para el ranchId:", selectedLote);
           return;
         }
         setMapCenter([myRanch.location.latitude, myRanch.location.longitude]);
@@ -108,18 +91,17 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
       .catch((err) => console.error("Error al obtener ranchos:", err));
   }, [selectedLote]);
 
-  // B) Fetch de animales, usando el ranchId seleccionado
+  // B) Fetch de animales una vez tenemos el centro
   useEffect(() => {
     if (!mapCenter || !selectedLote || selectedLote === "All") return;
-    fetch(`/api/animals/${selectedLote}`, {
-      headers: { Authorization: `Bearer ${IXORIGUE_TOKEN}` },
-    })
+
+    fetch(`/api/animals/${selectedLote}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Error al obtener animales: ${res.status}`);
         return res.json();
       })
       .then((data) => {
-        const list = data?.data ?? [];
+        const list = data?.data ?? data;
         const coords: AnimalWithCoords[] = list
           .filter((an: any) => an.lastLocation)
           .map((an: any) => ({
@@ -134,7 +116,7 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
       .catch((err) => console.error("Error al obtener animales:", err));
   }, [mapCenter, selectedLote]);
 
-  // Mientras no se obtenga la ubicación, muestra un loading
+  // Mostrar loading mientras no hay centro
   if (!mapCenter) {
     return <div className="absolute top-0 left-0 p-4 text-white">Cargando mapa...</div>;
   }

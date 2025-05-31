@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/grasschain_contract_spl.json`.
  */
 export type GrasschainContractSpl = {
-  "address": "2JPFAYWC5FMcNsKNgDxMSq5YZuRfJ6RiMjzVKLScQsTD",
+  "address": "BfEoJTm7VLRvynukHU2Jjf9gnqWPF7pz9R43MrFNn4cg",
   "metadata": {
     "name": "grasschainContractSpl",
     "version": "0.1.0",

@@ -12,7 +12,7 @@ use mpl_token_metadata::ID as token_metadata_program_id; // This is a constant P
 use std::str::FromStr;
 
 
-declare_id!("2JPFAYWC5FMcNsKNgDxMSq5YZuRfJ6RiMjzVKLScQsTD");
+declare_id!("BfEoJTm7VLRvynukHU2Jjf9gnqWPF7pz9R43MrFNn4cg");
 
 // Constants
 const USDC_MINT: &str = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
@@ -428,7 +428,7 @@ pub fn close_contract(ctx: Context<CloseContract>) -> Result<()> {
         require!(ctx.accounts.admin.key() == admin_key, ErrorCode::Unauthorized);
 
         // add 2 weeks to the buyback_deadline
-        contract.prolonged_deadline = contract.buyback_deadline + 14 * 86400;;
+        contract.prolonged_deadline = contract.buyback_deadline + 14 * 86400;
         contract.status = ContractStatus::Prolonged;
         Ok(())
     }

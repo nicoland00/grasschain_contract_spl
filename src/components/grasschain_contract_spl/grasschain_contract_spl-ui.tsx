@@ -222,6 +222,15 @@ export function GrasschainContractCard({
   const onChainFunded = contractData.amountFundedSoFar / 1_000_000;
   const remaining = totalNeeded - (onChainFunded + fiatFunded);
 
+  // compute fill % for the track
+  const fundedAmount = onChainFunded + fiatFunded;
+  const fillPct = Math.min(100, Math.max(0, (fundedAmount / totalNeeded) * 100));
+
+  // slider colors (same as in WeightGainForm)
+  const fillColor   = '#4ECCA3';
+  const trackColor  = '#E5E7EB';
+  const borderColor = '#D1D5DB';
+
   const farmNameText = contractData.farmName || "N/A";
   const farmAddressText = contractData.farmAddress || "N/A";
   const farmImageUrl =
@@ -559,9 +568,19 @@ export function GrasschainContractCard({
               type="range"
               min={0}
               max={totalNeeded}
-              value={onChainFunded + fiatFunded}
+              value={fundedAmount}
               disabled
-              className="range range-success flex-1"
+              className="w-full h-2 rounded-lg appearance-none slider-static"
+              style={{
+                background: `linear-gradient(
+                  to right,
+                  ${fillColor} 0%,
+                  ${fillColor} ${fillPct}%,
+                  ${trackColor} ${fillPct}%,
+                  ${trackColor} 100%
+                )`,
+                border: `1px solid ${borderColor}`,
+              }}
             />
             <span className="text-sm text-gray-700 ml-2">
               Total: {totalNeeded}
@@ -679,59 +698,77 @@ export function GrasschainContractsList() {
   );
 
   return (
-    <div className="flex flex-col space-y-8">
-      {/* 1) Pendientes de funding */}
-      {pendingFunding.length > 0 ? (
-        pendingFunding.map(({ publicKey, account }) => (
-          <GrasschainContractCard
-            key={publicKey.toBase58()}
-            contractPk={publicKey}
-            contractData={account}
-          />
-        ))
-      ) : (
-        <p>No pending contracts.</p>
-      )}
+    <>
+      <div className="flex flex-col space-y-8">
+        {/* 1) Pendientes de funding */}
+        {pendingFunding.length > 0 ? (
+          pendingFunding.map(({ publicKey, account }) => (
+            <GrasschainContractCard
+              key={publicKey.toBase58()}
+              contractPk={publicKey}
+              contractData={account}
+            />
+          ))
+        ) : (
+          <p>No pending contracts.</p>
+        )}
 
-      {/* 2) Activos y Completados al final, inaccesibles */}
-      {(activeContracts.length > 0 || doneContracts.length > 0) && (
-        <div className="space-y-4">
-          {[...activeContracts, ...doneContracts].map(({ publicKey, account }) => {
-            const isSettled = "settled" in account.status;
-            const isActive  = "active" in account.status;
-            const badgeText = isSettled
-              ? "SETTLED"
-              : isActive
-              ? ""
-              : "DEFAULTED";
-            const badgeColor = isSettled
-              ? "bg-cyan-600"
-              : isActive
-              ? ""
-              : "bg-red-600";
+        {/* 2) Activos y Completados al final, inaccesibles */}
+        {(activeContracts.length > 0 || doneContracts.length > 0) && (
+          <div className="space-y-4">
+            {[...activeContracts, ...doneContracts].map(({ publicKey, account }) => {
+              const isSettled = "settled" in account.status;
+              const isActive  = "active" in account.status;
+              const badgeText = isSettled
+                ? "SETTLED"
+                : isActive
+                ? ""
+                : "DEFAULTED";
+              const badgeColor = isSettled
+                ? "bg-cyan-600"
+                : isActive
+                ? ""
+                : "bg-red-600";
 
-            return (
-              <div
-                key={publicKey.toBase58()}
-                className="relative opacity-50 pointer-events-none"
-              >
-                <GrasschainContractCard
-                  contractPk={publicKey}
-                  contractData={account}
-                />
-                {/* wrapper badge igual que Settled */}
-                <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
-                  <span
-                    className={`px-4 py-2 text-base font-bold text-white rounded-2xl shadow ${badgeColor}`}
-                  >
-                    {badgeText}
-                  </span>
+              return (
+                <div
+                  key={publicKey.toBase58()}
+                  className="relative opacity-50 pointer-events-none"
+                >
+                  <GrasschainContractCard
+                    contractPk={publicKey}
+                    contractData={account}
+                  />
+                  {/* wrapper badge igual que Settled */}
+                  <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+                    <span
+                      className={`px-4 py-2 text-base font-bold text-white rounded-2xl shadow ${badgeColor}`}
+                    >
+                      {badgeText}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <style jsx global>{`
+        input.slider-static:focus {
+          outline: none;
+        }
+        input.slider-static::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 0;
+          height: 0;
+          opacity: 0;
+        }
+        input.slider-static::-moz-range-thumb {
+          width: 0;
+          height: 0;
+          border: none;
+        }
+      `}</style>
+    </>
   );
 }

@@ -23,7 +23,9 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
   const [projectedWeight, setProjectedWeight] = useState(0);
   const [totalCalories, setTotalCalories] = useState(0);
   
+  // price per kilogram
   const costPerKilogram = 2.5;
+  // convert the USD amount into kilograms
   const meatKilograms = caloriesAmount / costPerKilogram;
 
   const formatter = (value: number) => `${value.toFixed(1)} kg`;
@@ -60,7 +62,7 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
 
   return (
     <>
-      <Card className="bg-appDarkGray border-border w-full max-w-lg">
+      <Card className="bg-appDarkGray border-border">
         <CardContent className="p-6">
           <div className="mb-6 animate-fade-in">
             <h2 className="text-3xl font-bold mb-1 text-black text-center">
@@ -73,7 +75,7 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
                 color={fillColor} 
               />
               <WeightCard 
-                title="Your today&apos;s contributions" 
+                title="Your today's contributions" 
                 value={`${meatKilograms.toFixed(1)} kg`} 
                 color="#3A86FF" 
               />
@@ -91,7 +93,8 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
                 Contribution amount
               </h3>
               <span className="text-xl font-bold text-black">
-                ${caloriesAmount.toFixed(2)}
+                {/* Display both kilograms and USD */}
+                {meatKilograms.toFixed(1)} kg (${caloriesAmount.toFixed(2)})
               </span>
             </div>
             

@@ -9,14 +9,16 @@ export default function LoginIsland() {
   const { data: session, status } = useSession();
   const { setVisible } = useWalletModal();
 
+  // If the user is already logged in (or auth status is still loading), don't show this overlay
   if (session || status === "loading") return null;
 
   return (
     <div
       className="
         fixed inset-0
-        bg-gradient-to-b from-green-300 via-green-700 to-black
-        flex items-center justify-center z-50
+        bg-black      /* solid black background */
+        flex items-center justify-center
+        z-50
       "
     >
       <div
@@ -28,7 +30,7 @@ export default function LoginIsland() {
           shadow-2xl
         "
       >
-        {/* logo.png must be placed in /public/logo.png */}
+        {/* Logo (ensure /public/logo.png exists) */}
         <div className="mx-auto w-24 h-24 relative">
           <Image
             src="/logo.png"
@@ -38,15 +40,18 @@ export default function LoginIsland() {
           />
         </div>
 
+        {/* Heading */}
         <h2 className="text-3xl font-bold text-black">
           Welcome to Pastora
         </h2>
-        <p className="text-base text-gray-600">
-          In order to buy cattle with crypto, log in with Solana.<br/>
+
+        {/* Description */}
+        <p className="text-lg text-gray-600 leading-relaxed">
+          In order to buy cattle with crypto, log in with Solana.<br />
           To buy with fiat, log in with Google.
         </p>
 
-        {/* Web3 */}
+        {/* Web3 Section */}
         <div className="text-sm uppercase font-semibold text-gray-500">
           Web3:
         </div>
@@ -56,8 +61,8 @@ export default function LoginIsland() {
             w-full
             bg-gradient-to-r from-purple-600 to-blue-600
             hover:from-purple-700 hover:to-blue-700
-            text-white font-semibold
-            py-4 px-6
+            text-white font-semibold text-lg
+            py-4
             rounded-xl
             shadow-lg
             transform transition-all duration-200
@@ -68,24 +73,27 @@ export default function LoginIsland() {
           Log In with Solana
         </button>
 
+        {/* “or” Divider */}
         <div className="flex items-center justify-center space-x-3">
           <span className="h-px bg-gray-300 flex-1"></span>
           <span className="text-gray-500 uppercase text-sm">or</span>
           <span className="h-px bg-gray-300 flex-1"></span>
         </div>
 
-        {/* Web2 */}
+        {/* Web2 Section */}
         <div className="text-sm uppercase font-semibold text-gray-500">
           Web2:
         </div>
         <button
           onClick={() => signIn("google")}
           className="
-            btn btn-outline
             w-full
+            border-2 border-gray-800
+            text-gray-800 font-semibold text-lg
             py-4
-            text-lg
             rounded-xl
+            hover:bg-gray-100
+            transition-colors duration-200
           "
         >
           Log In with Google

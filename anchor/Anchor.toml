@@ -1,18 +1,18 @@
 [toolchain]
-anchor_version = "0.30.1"
+anchor_version = "0.31.1"
 
 [features]
 resolution = true
 skip-lint = false
 
 [programs.localnet]
-grasschain_contract_spl = "2JPFAYWC5FMcNsKNgDxMSq5YZuRfJ6RiMjzVKLScQsTD"
+grasschain_contract_spl = "BfEoJTm7VLRvynukHU2Jjf9gnqWPF7pz9R43MrFNn4cg"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
