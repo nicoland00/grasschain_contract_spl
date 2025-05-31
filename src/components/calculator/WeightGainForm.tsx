@@ -28,15 +28,15 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
   // ────────────────────────────────────────────────────────────────────────────
   const [duration, setDuration] = useState<number>(36);
   const [caloriesAmount, setCaloriesAmount] = useState<number>(initialCaloriesAmount);
-  const [projectionData, setProjectionData] = useState<
-    Array<{
-      month: number;
-      projectedWeight: number;
-      caloriesContribution: number;
-      lowerBound?: number;
-      range?: number;
-    }>
-  >([]);
+  const [projectionData, setProjectionData] = useState<Array<{
+    month: number;
+    projectedWeight: number;
+    caloriesContribution: number;
+    lower10: number;
+    range10: number;
+    lower20: number;
+    range20: number;
+  }>>([]);
   const [projectedWeight, setProjectedWeight] = useState<number>(0);
   const [totalCalories, setTotalCalories] = useState<number>(0);
 
@@ -56,7 +56,7 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
   };
 
   // ────────────────────────────────────────────────────────────────────────────
-  // Whenever “caloriesAmount” or “duration” changes, re‐compute the projection
+  // Whenever "caloriesAmount" or "duration" changes, re‐compute the projection
   // ────────────────────────────────────────────────────────────────────────────
   useEffect(() => {
     const { data, finalProjectedWeight, finalCaloriesContribution } =
@@ -102,7 +102,7 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
                 <label htmlFor="duration-select" className="font-semibold">Duration:</label>
                 <select
                   id="duration-select"
-                  className="border border-gray-300 rounded-md p-1"
+                  className="border border-gray-300 rounded-md p-1 bg-white"
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
                 >
