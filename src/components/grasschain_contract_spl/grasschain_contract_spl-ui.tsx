@@ -240,7 +240,7 @@ export function GrasschainContractCard({
   let deadlineLabel = "";
   if ("created" in contractData.status || "funding" in contractData.status) {
     endDate = new Date(contractData.fundingDeadline.toNumber() * 1000);
-    deadlineLabel = "Funding Deadline";
+    deadlineLabel = "Deadline";
   } else if ("fundedPendingVerification" in contractData.status) {
     endDate = new Date(
       (contractData.fundedTime.toNumber() + 30 * 86400) * 1000
