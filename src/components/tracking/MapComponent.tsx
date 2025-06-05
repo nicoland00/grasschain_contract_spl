@@ -70,6 +70,9 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [animals, setAnimals] = useState<AnimalWithCoords[]>([]);
 
+  // The current integration only works with one lot
+  const LOT_ID = "88638ee6-9279-415f-8584-5c660a2cd907";
+
   // A) Fetch de ranches para centrar el mapa
   useEffect(() => {
     if (!selectedLote || selectedLote === "All") return;
@@ -95,7 +98,7 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
   useEffect(() => {
     if (!mapCenter || !selectedLote || selectedLote === "All") return;
 
-    fetch(`/api/animals/${selectedLote}`)
+    fetch(`/api/lots/${selectedLote}/${LOT_ID}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Error al obtener animales: ${res.status}`);
         return res.json();
