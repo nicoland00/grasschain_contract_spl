@@ -4,10 +4,12 @@
 import Image from "next/image";
 import { signIn, useSession } from "next-auth/react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function LoginIsland() {
   const { data: session, status } = useSession();
   const { setVisible } = useWalletModal();
+  const isMobile = useIsMobile();
 
   // If the user is already logged in (or auth status is still loading), don't show this overlay
   if (session || status === "loading") return null;
@@ -56,7 +58,14 @@ export default function LoginIsland() {
           Web3:
         </div>
         <button
-          onClick={() => setVisible(true)}
+          onClick={() => {
+            if (isMobile) {
+              const url = `https://phantom.app/ul/browse/${encodeURIComponent(window.location.href)}`;
+              window.location.href = url;
+            } else {
+              setVisible(true);
+            }
+          }}
           className="
             w-full
             bg-gradient-to-r from-purple-600 to-blue-600
