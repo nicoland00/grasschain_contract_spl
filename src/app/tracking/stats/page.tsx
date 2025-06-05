@@ -18,32 +18,32 @@ import { Line } from "react-chartjs-2";
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const RANCH_ID = "89228e7c-6e99-492e-b085-b06edfc731b5";
+const LOT_ID = "88638ee6-9279-415f-8584-5c660a2cd907";
 
 export default function StatsPage() {
   const { selectedLote } = useLote();
   const [animalsData, setAnimalsData] = useState<any[]>([]);
   const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
 
-  // On mount or if user changes "lote," fetch animals
+  // On mount or if user changes "lote," fetch animals for the selected lot
   useEffect(() => {
-    fetch(`/api/animals/${RANCH_ID}`)
+    fetch(`/api/lots/${RANCH_ID}/${LOT_ID}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Error fetching animals: ${res.status}`);
         return res.json();
       })
       .then((data) => {
-        setAnimalsData(data.data ?? []);
+        // The lot endpoint nests animals under `data.animals`
+        const list = data?.data?.animals ?? data?.animals ?? [];
+        setAnimalsData(list);
       })
       .catch((err) => {
         console.error("Stats fetch error", err);
       });
   }, [selectedLote]);
 
-  // Filter by lote if needed
-  const filteredAnimals = animalsData.filter((an) => {
-    if (selectedLote === "All") return true;
-    return an.lot?.name === selectedLote;
-  });
+  // The API already returns animals for the given lot
+  const filteredAnimals = animalsData;
 
   function handleSelectAnimal(name: string) {
     setSelectedAnimal((prev) => (prev === name ? null : name));
