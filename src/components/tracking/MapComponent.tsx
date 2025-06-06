@@ -66,13 +66,13 @@ function ZoomControls({ shift }: { shift?: boolean }) {
 
 // 5) Componente MapComponent
 export default function MapComponent({ sidebarOpen }: MapProps) {
-  const { selectedLote } = useLote();
+  const { selected } = useLote();
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [animals, setAnimals] = useState<AnimalWithCoords[]>([]);
 
   // A) Fetch de ranches para centrar el mapa
   useEffect(() => {
-    if (!selectedLote || selectedLote === "All") return;
+    if (!selected) return;
 
     fetch("/api/ixorigue/ranches")
       .then((res) => {
@@ -81,21 +81,21 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
       })
       .then((data) => {
         const ranchList = data?.data ?? data;
-        const myRanch = ranchList.find((r: any) => r.id === selectedLote);
+        const myRanch = ranchList.find((r: any) => r.id === selected.ranchId);
         if (!myRanch) {
-          console.error("Rancho no encontrado para el ranchId:", selectedLote);
+          console.error("Rancho no encontrado para el ranchId:", selected.ranchId);
           return;
         }
         setMapCenter([myRanch.location.latitude, myRanch.location.longitude]);
       })
       .catch((err) => console.error("Error al obtener ranchos:", err));
-  }, [selectedLote]);
+  }, [selected]);
 
   // B) Fetch de animales una vez tenemos el centro
   useEffect(() => {
-    if (!mapCenter || !selectedLote || selectedLote === "All") return;
+    if (!mapCenter || !selected) return;
 
-    fetch(`/api/animals/${selectedLote}`)
+    fetch(`/api/animals/${selected.ranchId}/${selected.lotId}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Error al obtener animales: ${res.status}`);
         return res.json();
@@ -114,7 +114,7 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
         setAnimals(coords);
       })
       .catch((err) => console.error("Error al obtener animales:", err));
-  }, [mapCenter, selectedLote]);
+  }, [mapCenter, selected]);
 
   // Mostrar loading mientras no hay centro
   if (!mapCenter) {

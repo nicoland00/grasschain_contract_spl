@@ -92,7 +92,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
           <p>© 2025 Pastora. All rights reserved.</p>
         </div>
       </footer>
-      <MobileBottomNav />
+      <MobileBottomNav activeTab="contracts" onTabChange={() => {}} />
     </div>
   );
 }

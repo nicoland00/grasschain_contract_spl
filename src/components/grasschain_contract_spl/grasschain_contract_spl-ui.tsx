@@ -516,7 +516,7 @@ export function GrasschainContractCard({
   }
 
   return (
-    <div className="relative w-full bg-appDarkGray border border-border rounded-2xl p-6 mt-4">
+    <div className="relative w-full bg-appDarkGray border border-border rounded-2xl p-6 mb-4">
           {status === "Active" && (
       <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
         <span className="bg-green-600 text-white px-4 py-2 rounded-2xl font-bold text-base">

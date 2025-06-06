@@ -20,7 +20,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 const RANCH_ID = "89228e7c-6e99-492e-b085-b06edfc731b5";
 
 export default function StatsPage() {
-  const { selectedLote } = useLote();
+  const { selected } = useLote();
   const [animalsData, setAnimalsData] = useState<any[]>([]);
   const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
 
@@ -37,12 +37,12 @@ export default function StatsPage() {
       .catch((err) => {
         console.error("Stats fetch error", err);
       });
-  }, [selectedLote]);
+  }, [selected]);
 
   // Filter by lote if needed
   const filteredAnimals = animalsData.filter((an) => {
-    if (selectedLote === "All") return true;
-    return an.lot?.name === selectedLote;
+    if (!selected) return true;
+    return an.lot?.id === selected.lotId;
   });
 
   function handleSelectAnimal(name: string) {

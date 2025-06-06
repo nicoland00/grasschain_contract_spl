@@ -1,43 +1,45 @@
-// src/components/mobile/MobileBottomNav.tsx
-"use client";
+// src/components/mobile/MobileNavbar.tsx
+import React from "react";
+import { Calculator, FileText, Activity, User } from "lucide-react";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+interface MobileNavbarProps {
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
 
-export default function MobileBottomNav() {
-  const path = usePathname() || "/";
-
-  const tabs = [
-    { href: "/", icon: "/bag.png", alt: "Contracts" },
-    { href: "/tracking", icon: "/track.png", alt: "Tracking" },
-    { href: "/account", icon: "/account.png", alt: "Account" },
+const MobileNavbar: React.FC<MobileNavbarProps> = ({
+  activeTab,
+  onTabChange,
+}) => {
+  const navItems = [
+    { id: "calculator", label: "Calculator", icon: Calculator },
+    { id: "contracts", label: "Contracts", icon: FileText },
+    { id: "tracking", label: "Tracking",  icon: Activity },
+    { id: "account",   label: "Account",   icon: User },
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden z-50">
-      <ul className="flex justify-around py-2">
-        {tabs.map(({ href, icon, alt }) => {
-          const isActive = path === href;
+    // 👇  oculto en ≥768 px 
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50 md:hidden">
+      <div className="flex justify-around items-center py-2">
+        {navItems.map(({ id, label, icon: Icon }) => {
+          const isActive = activeTab === id;
           return (
-            <li key={href} className="flex-1">
-              <Link href={href} className="flex flex-col items-center">
-                <img
-                  src={icon}
-                  alt={alt}
-                  className={`h-8 w-8 mb-2 ${isActive ? "opacity-100" : "opacity-50"}`}
-                />
-                <span
-                  className={`text-sm font-semibold ${
-                    isActive ? "text-green-600" : "text-gray-500"
-                  }`}
-                >
-                  {alt}
-                </span>
-              </Link>
-            </li>
+            <button
+              key={id}
+              onClick={() => onTabChange(id)}
+              className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                isActive ? "text-green-500" : "text-gray-400 hover:text-white"
+              }`}
+            >
+              <Icon size={20} />
+              <span className="text-xs mt-1">{label}</span>
+            </button>
           );
         })}
-      </ul>
-    </nav>
+      </div>
+    </div>
   );
-}
+};
+
+export default MobileNavbar;

@@ -4,10 +4,10 @@ import React from "react";
 import { useLote } from "@/context/tracking/contextLote";
 
 export default function SelectLote() {
-  const { selectedLote, setSelectedLote } = useLote();
+  const { selected, setSelected } = useLote();
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedLote(e.target.value);
+    setSelected({ ranchId: selected?.ranchId ?? "", lotId: e.target.value });
   };
 
   return (
@@ -15,7 +15,7 @@ export default function SelectLote() {
       <label htmlFor="loteSelect" className="mr-2 font-semibold">Lote:</label>
       <select
         id="loteSelect"
-        value={selectedLote ?? ""}
+        value={selected?.lotId ?? ""}
         onChange={handleChange}
         className="px-2 py-1 rounded-[10px] text-black"
       >

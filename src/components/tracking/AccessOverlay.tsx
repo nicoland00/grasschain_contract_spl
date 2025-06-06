@@ -45,7 +45,7 @@ export default function AccessOverlay() {
   const { data: session } = useSession();
   const { publicKey, connected } = useWallet();
   const { connection } = useConnection();
-  const { setSelectedLote, selectedLote } = useLote();
+  const { setSelected, selected } = useLote();
 
   const [contracts, setContracts] = useState<ContractEntry[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -139,7 +139,7 @@ export default function AccessOverlay() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setSelectedLote(data.ranchId);
+        setSelected({ ranchId: data.ranchId, lotId: data.lotId });
         return;
       } else {
         setMessage(data.error || "Verification failed.");
@@ -152,7 +152,7 @@ export default function AccessOverlay() {
   }
 
   // once a lote is selected, hide overlay
-  if (selectedLote) return null;
+  if (selected) return null;
 
   // split active vs others
   const active = contracts?.filter((c) => c.status === "active") ?? [];

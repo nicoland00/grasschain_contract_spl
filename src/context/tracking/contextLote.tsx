@@ -1,24 +1,20 @@
 // src/context/tracking/contextLote.tsx
-"use client"
-import React, { createContext, useContext, useState } from "react";
+import React from "react";
 
-interface LoteContext {
-  selectedLote: string | null;
-  setSelectedLote: (s: string) => void;
-}
+type SelectedLot = { ranchId: string; lotId: string } | null;
 
-const ctx = createContext<LoteContext>({
-  selectedLote: null,
-  setSelectedLote: () => {},
-});
+const LoteContext = React.createContext<{
+  selected: SelectedLot;
+  setSelected: (v: SelectedLot) => void;
+}>({ selected: null, setSelected: () => {} });
 
 export function LoteProvider({ children }: { children: React.ReactNode }) {
-  const [selectedLote, setSelectedLote] = useState<string | null>(null);
+  const [selected, setSelected] = React.useState<SelectedLot>(null);
   return (
-    <ctx.Provider value={{ selectedLote, setSelectedLote }}>
+    <LoteContext.Provider value={{ selected, setSelected }}>
       {children}
-    </ctx.Provider>
+    </LoteContext.Provider>
   );
 }
 
-export const useLote = () => useContext(ctx);
+export const useLote = () => React.useContext(LoteContext);
