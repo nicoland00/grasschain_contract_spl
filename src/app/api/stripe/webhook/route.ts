@@ -36,7 +36,7 @@ export async function POST(req: Request) {
 
   // Lazy‐load the stripe library at runtime only
   const StripePkg = (await import("stripe")).default;
-  const stripe    = new StripePkg(secret, { apiVersion: "2025-03-31.basil" });
+  const stripe    = new StripePkg(secret, { apiVersion: "2025-05-28.basil" });
 
   const buf = await req.arrayBuffer();
   const sig = req.headers.get("stripe-signature") || "";
