@@ -5,7 +5,7 @@ import { ReactNode, Suspense, useState, useEffect } from "react";
 import { useWallet } from "../solana/solana-provider"; 
 import { useSession, signOut } from "next-auth/react";
 import LoginIsland from "@/components/grasschain_contract_spl/LoginIsland";
-import MobileBottomNav from "@/components/mobile/MobileBottomNav";
+import MobileNavbar from "@/components/mobile/MobileBottomNav";
 
 export function UiLayout({ children }: { children: ReactNode }) {
   const { publicKey, disconnect } = useWallet();
@@ -92,7 +92,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
           <p>© 2025 Pastora. All rights reserved.</p>
         </div>
       </footer>
-      <MobileBottomNav activeTab="contracts" onTabChange={() => {}} />
+      <MobileNavbar />
     </div>
   );
 }

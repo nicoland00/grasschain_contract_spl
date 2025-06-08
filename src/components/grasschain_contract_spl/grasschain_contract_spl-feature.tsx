@@ -33,8 +33,8 @@ export default function GrasschainContractSplFeature() {
           <GrasschainContractsList />
         </div>
 
-        {/* Right: static calculator */}
-        <div className="sticky top-0">
+        {/* Right: static calculator, hidden on small screens */}
+        <div className="sticky top-0 hidden md:block">
           <WeightGainProjection />
         </div>
       </div>
