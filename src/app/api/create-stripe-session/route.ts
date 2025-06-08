@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
   // 2) Instantiate Stripe when we know the env var is there
   const stripe = new Stripe(secret, {
-    apiVersion: "2025-03-31.basil",
+    apiVersion: "2025-05-28.basil",
   });
 
   // 3) Parse & validate incoming body
