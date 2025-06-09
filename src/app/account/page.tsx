@@ -8,7 +8,7 @@ export default function AccountPage() {
   const { publicKey, disconnect } = useWallet();
 
   return (
-    <div className="px-4 md:px-8 space-y-6">
+    <div className="min-h-screen px-4 md:px-8 space-y-6">
       {session?.user?.email || publicKey ? (
         <div className="space-y-4">
           {session?.user?.email && (
