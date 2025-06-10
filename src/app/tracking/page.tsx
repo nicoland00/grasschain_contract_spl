@@ -3,18 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { useSession }    from "next-auth/react";
 import { useWallet }     from "@solana/wallet-adapter-react";
-import OverlayLayout     from "@/components/tracking/overlayLayout";
-import dynamicImport     from "next/dynamic";
 
 // import both from the same module:
 import { TrackingStepper, StageKey } from "@/components/tracking/TrackingStepper";
 
 export const dynamic = "force-dynamic";
-
-const MapComponent = dynamicImport(
-  () => import("@/components/tracking/MapComponent"),
-  { ssr: false }
-);
 
 export default function TrackingPage() {
   const { data: session, status: authStatus } = useSession();
@@ -60,15 +53,4 @@ export default function TrackingPage() {
   if (stage === "not-started")
     return <p className="text-center mt-20">Contract not active yet.</p>;
 
-  return (
-    <OverlayLayout>
-      <MapComponent sidebarOpen={false} />
-
-      <div className="px-4 py-6 bg-white/80">
-        <h2 className="text-2xl font-semibold mb-2">Contract Updates</h2>
-        {/* now passing both props */}
-        <TrackingStepper current={stage as StageKey} contractId={sel} />
-      </div>
-    </OverlayLayout>
-  );
 }

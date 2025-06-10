@@ -43,7 +43,13 @@ export async function GET(req: Request) {
     const allCs = await program.account.contract.all();
     const out   = allCs
       .filter(({ account }) => account.admin.toBase58() === wallet)
-      .map(({ publicKey }) => ({ contractId: publicKey.toBase58(), status: "not-started" }));
+      .map(({ publicKey, account }) => {
+        let st: ContractEntry["status"] = "not-started";
+        if      ("active"    in account.status)     st = "active";
+        else if ("settled"   in account.status)     st = "settled";
+        else if ("defaulted" in account.status)     st = "defaulted";
+        return { contractId: publicKey.toBase58(), status: st };
+      });
     return NextResponse.json(out);
   }
 

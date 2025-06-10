@@ -81,7 +81,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
           </div>
         }
       >
-        <main className="flex-grow container mx-auto px-0 md:px-4 py-8">
+        <main className="flex-grow container mx-auto px-0 md:px-4">
           {children}
         </main>
       </Suspense>
