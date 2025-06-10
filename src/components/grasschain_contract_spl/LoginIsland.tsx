@@ -16,10 +16,9 @@ export default function LoginIsland() {
       /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
       if (isMobile) {
+        const redirect = encodeURIComponent("https://app.pastora.io");
         window.location.href =
-          `https://phantom.app/ul/v1/browse?url=${encodeURIComponent(
-            "https://app.pastora.io"
-          )}`;
+          `https://phantom.app/ul/v1/connect?redirect_link=${redirect}`;
     } else {
       setVisible(true);
     }
