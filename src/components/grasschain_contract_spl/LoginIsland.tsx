@@ -14,12 +14,20 @@ export default function LoginIsland() {
     const isMobile =
       typeof window !== "undefined" &&
       /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isInPhantom =
+      typeof window !== "undefined" &&
+      (window as any).solana?.isPhantom;
 
-      if (isMobile) {
-        const target = encodeURIComponent("https://app.pastora.io");
-        const ref = encodeURIComponent(window.location.origin);
-        window.location.href =
-          `https://phantom.app/ul/browse/${target}?ref=${ref}`;
+    if (isInPhantom) {
+      setVisible(true);
+      return;
+    }
+
+    if (isMobile) {
+      const target = encodeURIComponent("https://app.pastora.io");
+      const ref = encodeURIComponent(window.location.origin);
+      window.location.href =
+        `https://phantom.app/ul/browse/${target}?ref=${ref}`;
     } else {
       setVisible(true);
     }
