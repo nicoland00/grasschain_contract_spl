@@ -2,6 +2,7 @@
 "use client";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { User as UserIcon } from "lucide-react";
 
 export default function AccountPage() {
   const { data: session } = useSession();
@@ -20,8 +21,11 @@ export default function AccountPage() {
             </div>
           )}
           {publicKey && (
-            <div className="flex items-center justify-between">
-              <span>{publicKey.toBase58()}</span>
+            <div className="flex flex-col items-center space-y-2">
+            <UserIcon className="w-8 h-8" />
+            <span className="font-mono">
+              {publicKey.toBase58().slice(0, 6)}…{publicKey.toBase58().slice(-4)}
+            </span>
               <button onClick={() => disconnect()} className="btn btn-secondary">
                 Disconnect
               </button>
