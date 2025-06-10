@@ -95,7 +95,7 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
   useEffect(() => {
     if (!mapCenter || !selected) return;
 
-    fetch(`/api/animals/${selected.ranchId}/${selected.lotId}`)
+    fetch(`/api/animals/${selected.ranchId}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Error al obtener animales: ${res.status}`);
         return res.json();
@@ -103,7 +103,10 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
       .then((data) => {
         const list = data?.data ?? data;
         const coords: AnimalWithCoords[] = list
-          .filter((an: any) => an.lastLocation)
+        .filter(
+          (an: any) =>
+            an.lastLocation && an.lot?.id === selected.lotId,
+        )
           .map((an: any) => ({
             id: an.id,
             name: an.name || an.earTag || "Vaca",
