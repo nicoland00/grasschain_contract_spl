@@ -18,7 +18,7 @@ export default function LoginIsland() {
     if (isMobile) {
       window.location.href =
         "https://phantom.app/ul/browse/" +
-        encodeURIComponent(window.location.href);
+        encodeURIComponent("https://app.pastora.io");
     } else {
       setVisible(true);
     }
