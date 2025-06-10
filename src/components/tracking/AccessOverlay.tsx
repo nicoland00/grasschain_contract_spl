@@ -176,7 +176,7 @@ export default function AccessOverlay() {
         {message && <p className="mt-4 text-center text-red-600">{message}</p>}
       </motion.div>
 
-      <div className="w-full max-w-3xl mt-8 space-y-8 mx-auto">
+      <div className="w-full max-w-3xl mt-8 space-y-8  mx-4 md:mx-auto">
         {/* Active contracts first */}
         {active.map((c) => {
           const meta = metaMap[c.contractId] || {

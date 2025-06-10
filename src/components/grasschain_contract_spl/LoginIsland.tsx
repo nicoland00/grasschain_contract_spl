@@ -10,6 +10,20 @@ export default function LoginIsland() {
   const { data: session, status } = useSession();
   const { setVisible } = useWalletModal();
 
+  const handleSolanaLogin = () => {
+    const isMobile =
+      typeof window !== "undefined" &&
+      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      window.location.href =
+        "https://phantom.app/ul/browse/" +
+        encodeURIComponent(window.location.href);
+    } else {
+      setVisible(true);
+    }
+  };
+
   // If the user is already logged in (or auth status is still loading), don't show this overlay
   if (session || status === "loading") return null;
 
@@ -20,6 +34,7 @@ export default function LoginIsland() {
         bg-black      /* solid black background */
         flex items-center justify-center
         z-50
+        px-4 pb-8
       "
     >
       <div
@@ -57,7 +72,7 @@ export default function LoginIsland() {
           Web3:
         </div>
         <button
-          onClick={() => setVisible(true)}
+          onClick={handleSolanaLogin}
           className="
             w-full
             bg-gradient-to-r from-purple-600 to-blue-600

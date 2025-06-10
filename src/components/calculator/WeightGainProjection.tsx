@@ -1,7 +1,6 @@
 
 import React from 'react';
 import WeightGainForm from './WeightGainForm';
-import PastoraLogo from './PastoraLogo';
 import { ArrowLeft } from "lucide-react";
 
 interface WeightGainProjectionProps {
@@ -14,7 +13,7 @@ const WeightGainProjection: React.FC<WeightGainProjectionProps> = ({
   description = "Pastora Weight Gain Program",
 }) => {
   return (
-    <div className="min-h-screen bg-appBlack text-white">
+    <div className="min-h-screen bg-appBlack text-white mx-4 md:mx-auto">
         <WeightGainForm initialWeight={200} initialCaloriesAmount={150} />
     </div>
   );
