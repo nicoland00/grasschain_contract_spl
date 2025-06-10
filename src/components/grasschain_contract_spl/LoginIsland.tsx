@@ -15,10 +15,11 @@ export default function LoginIsland() {
       typeof window !== "undefined" &&
       /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-    if (isMobile) {
-      window.location.href =
-        "https://phantom.app/ul/browse/" +
-        encodeURIComponent("https://app.pastora.io");
+      if (isMobile) {
+        window.location.href =
+          `https://phantom.app/ul/v1/browse?url=${encodeURIComponent(
+            "https://app.pastora.io"
+          )}`;
     } else {
       setVisible(true);
     }
