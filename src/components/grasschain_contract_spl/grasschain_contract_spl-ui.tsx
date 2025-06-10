@@ -699,7 +699,7 @@ export function GrasschainContractsList() {
 
   return (
     <>
-      <div className="flex flex-col space-y-8">
+      <div className="flex flex-col space-y-8 mx-4 md:mx-auto">
         {/* 1) Pendientes de funding */}
         {pendingFunding.length > 0 ? (
           pendingFunding.map(({ publicKey, account }) => (
