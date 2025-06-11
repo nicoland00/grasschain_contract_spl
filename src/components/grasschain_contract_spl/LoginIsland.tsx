@@ -44,6 +44,7 @@ export default function LoginIsland() {
         flex items-center justify-center
         z-50
         px-4 pb-8
+        overflow-y-auto
       "
     >
       <div
@@ -53,6 +54,7 @@ export default function LoginIsland() {
           mx-4
           space-y-6 text-center
           shadow-2xl
+          max-h-[90vh] overflow-y-auto
         "
       >
         {/* Logo (ensure /public/logo.png exists) */}

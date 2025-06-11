@@ -19,6 +19,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+       <link rel="manifest" href="/manifest.json" />
+       <meta name="apple-mobile-web-app-capable" content="yes" />
+       <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+       <meta name="apple-mobile-web-app-title" content="Pastora" />
+       <link rel="apple-touch-icon" href="/icon1.png" />
+      </head>
+
       <body className="flex flex-col min-h-screen">
         <Providers>
           <AuthGuard>
