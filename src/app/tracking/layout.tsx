@@ -7,6 +7,7 @@ export const metadata = {
 };
 
 import React from "react";
+import "leaflet/dist/leaflet.css";
 import TrackingWrapper from "@/components/tracking/TrackingWrapper";
 
 export default function TrackingLayout({
