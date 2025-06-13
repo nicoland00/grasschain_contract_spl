@@ -64,6 +64,8 @@ function ZoomControls({ shift }: { shift?: boolean }) {
   );
 }
 
+
+
 // Hook component to invalidate map size when sidebar state changes
 function InvalidateSize({ sidebarOpen }: { sidebarOpen?: boolean }) {
   const map = useMap();
