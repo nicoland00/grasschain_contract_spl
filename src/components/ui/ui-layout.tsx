@@ -6,6 +6,7 @@ import { useWallet } from "../solana/solana-provider";
 import { useSession, signOut } from "next-auth/react";
 import LoginIsland from "@/components/grasschain_contract_spl/LoginIsland";
 import MobileNavbar from "@/components/mobile/MobileBottomNav";
+import "leaflet/dist/leaflet.css";
 
 export function UiLayout({ children }: { children: ReactNode }) {
   const { publicKey, disconnect } = useWallet();
@@ -19,7 +20,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
     }, [session, status]);
 
   return (
-    <div className="flex flex-col bg-white text-black">
+    <div className="flex flex-col bg-white text-black min-h-screen">
       {showLogin && !session && <LoginIsland />}
       {/* Navbar */}
       <nav className="navbar bg-white px-4 shadow relative z-50">
@@ -81,7 +82,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
           </div>
         }
       >
-        <main className="flex-grow container mx-auto px-0 md:px-4">
+        <main className="flex-grow container mx-auto px-0 md:px-4 flex-1">
           {children}
         </main>
       </Suspense>

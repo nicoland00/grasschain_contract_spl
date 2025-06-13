@@ -69,6 +69,12 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
   const { selected } = useLote();
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [animals, setAnimals] = useState<AnimalWithCoords[]>([]);
+  const map = useMap();
+
+  // Invalidate map size when sidebar opens/closes
+  useEffect(() => {
+    map.invalidateSize();
+  }, [sidebarOpen, map]);
 
   // A) Fetch de ranches para centrar el mapa
   useEffect(() => {
@@ -125,10 +131,10 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
   }
 
   return (
-    <MapContainer center={mapCenter} zoom={14} style={{ height: "100%", width: "100%" }} zoomControl={false}>
+    <MapContainer center={mapCenter} zoom={14} style={{ height: "100%", width: "100%", backgroundColor: "lightblue", border: "2px solid red" }} zoomControl={false}>
       <TileLayer
-        attribution='&copy; <a href="https://www.esri.com/">Esri</a> & contributors'
-        url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {animals.map((a) => (
         <Marker key={a.id} position={[a.lat, a.lng]} icon={getRandomCowIcon()}>

@@ -53,6 +53,7 @@ export async function POST(req: Request) {
     message:    body.message,
     contract:   body.contract ?? null,
     stage:      body.stage ?? "active",
+    mediaUrls:  body.mediaUrls ?? [],
     adminPubkey: body.adminPubkey,
   });
   return NextResponse.json(notif);

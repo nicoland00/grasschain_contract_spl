@@ -14,6 +14,7 @@ export interface INotification extends Document {
   message: string;
   contract: string | null;   // contract ID (or null for global)
   stage:   StageKey;         // <-- new!
+  mediaUrls: string[];
   createdAt: Date;
 }
 
@@ -22,6 +23,7 @@ const NotificationSchema = new mongoose.Schema<INotification>(
     title:   { type: String, required: true },
     message: { type: String, required: true },
     contract:{ type: String, default: null },
+    mediaUrls: { type: [String], default: [] },
     stage:   {
       type: String,
       enum: [

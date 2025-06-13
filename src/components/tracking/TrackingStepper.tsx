@@ -1,9 +1,13 @@
 // src/components/tracking/TrackingStepper.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNotifications, TNotification } from "@/hooks/useNotifications";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { upload } from "@vercel/blob/client";
+
+const ADMIN_PUBKEY = process.env.NEXT_PUBLIC_ADMIN_PUBKEY!;
 
 export type StageKey =
   | "bought"
@@ -32,8 +36,23 @@ export function TrackingStepper({ current, contractId }: Props) {
   const idx = STEP_ORDER.indexOf(effective);
 
   // fetch all notifications for this contract
-  const { all: notes } = useNotifications(`?contract=${contractId}`);
+  const { publicKey } = useWallet();
+  const isAdmin = publicKey?.toBase58() === ADMIN_PUBKEY;
+  const adminParam = publicKey?.toBase58() || "";
 
+  const {
+    all: notes,
+    createNotification,
+    updateNotification,
+    deleteNotification,
+  } = useNotifications(`?contract=${contractId}`);
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [title, setTitle] = useState("");
+  const [message, setMessage] = useState("");
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
   // modal open state
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -47,6 +66,61 @@ export function TrackingStepper({ current, contractId }: Props) {
       setSeen(new Set(notes.map((n) => n._id)));
     }
   }, [modalOpen, notes]);
+
+  function startNew() {
+    setEditId(null);
+    setTitle("");
+    setMessage("");
+    setMediaUrls([]);
+    setFormOpen(true);
+  }
+
+  function startEdit(n: TNotification) {
+    setEditId(n._id);
+    setTitle(n.title);
+    setMessage(n.message);
+    setMediaUrls(n.mediaUrls || []);
+    setFormOpen(true);
+  }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+      });
+      setMediaUrls((m) => [...m, result.url]);
+      if (fileRef.current) fileRef.current.value = "";
+    } catch (err) {
+      console.error(err);
+      alert("Upload failed");
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const body = {
+      title,
+      message,
+      contract: contractId,
+      mediaUrls,
+      adminPubkey: adminParam,
+    };
+    if (editId) {
+      await updateNotification(editId, body);
+    } else {
+      await createNotification(body);
+    }
+    setFormOpen(false);
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Delete update?")) return;
+    await deleteNotification(id, adminParam);
+  }
+
 
   return (
     <>
@@ -107,6 +181,59 @@ export function TrackingStepper({ current, contractId }: Props) {
 
               {/* content */}
               <div className="overflow-y-auto p-4 space-y-4">
+              {isAdmin && !formOpen && (
+                  <button
+                    onClick={startNew}
+                    className="mb-4 px-3 py-2 rounded bg-green-500 text-white"
+                  >
+                    Add update
+                  </button>
+                )}
+
+                {formOpen && (
+                  <form onSubmit={handleSubmit} className="space-y-2 mb-4">
+                    <input
+                      className="input w-full"
+                      placeholder="Title"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      required
+                    />
+                    <textarea
+                      className="textarea w-full"
+                      placeholder="Message"
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      required
+                    />
+                    <input
+                      type="file"
+                      ref={fileRef}
+                      onChange={handleFileChange}
+                      accept="image/*,video/*"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      {mediaUrls.map((url) => (
+                        <span key={url} className="text-xs break-all">
+                          {url}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="space-x-2">
+                      <button className="btn btn-primary" type="submit">
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormOpen(false)}
+                        className="btn btn-secondary"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+
                 {notes.length === 0 ? (
                   <p className="text-center text-gray-500">No updates yet</p>
                 ) : (
@@ -118,7 +245,7 @@ export function TrackingStepper({ current, contractId }: Props) {
                         new Date(a.createdAt).getTime()
                     )
                     .map((n: TNotification) => (
-                      <div key={n._id} className="flex flex-col">
+                      <div key={n._id} className="flex flex-col border-b pb-2">
                         <div className="flex justify-between">
                           <span className="font-medium">{n.title}</span>
                           <span className="text-xs text-gray-400">
@@ -126,6 +253,36 @@ export function TrackingStepper({ current, contractId }: Props) {
                           </span>
                         </div>
                         <p className="mt-1 text-gray-700">{n.message}</p>
+                        {n.mediaUrls?.map((u) => (
+                          u.match(/\.mp4|\.mov$/i) ? (
+                            <video key={u} controls className="mt-2 max-h-48">
+                              <source src={u} />
+                            </video>
+                          ) : (
+                            <img
+                              key={u}
+                              src={u}
+                              alt="media"
+                              className="mt-2 max-h-48 object-contain"
+                            />
+                          )
+                        ))}
+                        {isAdmin && (
+                          <div className="mt-1 space-x-2">
+                            <button
+                              onClick={() => startEdit(n)}
+                              className="text-blue-600 text-xs"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(n._id)}
+                              className="text-red-600 text-xs"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))
                 )}

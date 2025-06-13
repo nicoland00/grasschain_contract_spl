@@ -7,6 +7,7 @@ export interface TNotification {
   message:   string;
   contract:  string | null;
   stage:     string;
+  mediaUrls: string[];
   createdAt: string;
   read?:     boolean;           // ← new
 }
@@ -25,6 +26,7 @@ export function useNotifications(contractQuery = "") {
     message:     string;
     contract:    string | null;
     stage?:      string;
+    mediaUrls?: string[];
     adminPubkey: string;
   }) => {
     await fetch("/api/notifications", {
@@ -35,6 +37,34 @@ export function useNotifications(contractQuery = "") {
     await mutate();
   };
 
+  const updateNotification = async (
+    id: string,
+    body: {
+      title: string;
+      message: string;
+      contract: string | null;
+      mediaUrls: string[];
+      adminPubkey: string;
+    }
+  ) => {
+    await fetch(`/api/notifications/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    await mutate();
+  };
+
+  const deleteNotification = async (id: string, adminPubkey: string) => {
+    await fetch(`/api/notifications/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adminPubkey }),
+    });
+    await mutate();
+  };
+
+
   const unreadCount = (data ?? []).filter(n => n.read !== true).length;
 
   return {
@@ -43,6 +73,8 @@ export function useNotifications(contractQuery = "") {
     isLoading:        !data && !error,
     isError:          !!error,
     createNotification,
+    updateNotification,
+    deleteNotification,
     markAllRead:      () => mutate(),
   };
 }

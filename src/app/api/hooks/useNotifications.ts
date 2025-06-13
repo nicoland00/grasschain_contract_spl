@@ -7,6 +7,7 @@ export interface TNotification {
   message:   string;
   contract:  string | null;
   stage:     string;
+  mediaUrls: string[];
   createdAt: string;
 }
 
@@ -23,6 +24,7 @@ export function useNotifications(query = "") {
     message: string;
     contract?: string | null;
     stage?: string;
+    mediaUrls?: string[];
     adminPubkey: string;
   }) => {
     await fetch("/api/notifications", {
@@ -33,11 +35,41 @@ export function useNotifications(query = "") {
     await mutate();
   };
 
+  const updateNotification = async (
+    id: string,
+    body: {
+      title: string;
+      message: string;
+      contract: string | null;
+      mediaUrls: string[];
+      adminPubkey: string;
+    }
+  ) => {
+    await fetch(`/api/notifications/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    await mutate();
+  };
+
+  const deleteNotification = async (id: string, adminPubkey: string) => {
+    await fetch(`/api/notifications/${id}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ adminPubkey }),
+    });
+    await mutate();
+  };
+
+
   return {
     all:               data ?? [],
     isLoading:         !data && !error,
     isError:           !!error,
     createNotification,
+    updateNotification,
+    deleteNotification,
     markAllRead:       () => mutate(), // clear badge = revalidate
   };
 }

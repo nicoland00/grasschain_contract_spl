@@ -23,13 +23,13 @@ export default function OverlayLayout({ children }: OverlayLayoutProps) {
   const loteBgClass = isStats ? "bg-white" : "bg-white/75";
 
   return (
-    <div className="relative flex-1 overflow-hidden min-h-screen">
+    <div className="relative flex-1 overflow-hidden">
       {/* full-screen map in the back */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 h-full">
         <MapComponent sidebarOpen={sidebarOpen} />
       </div>
 
-      {/* your UI content “in front” */}
+      {/* your UI content "in front" */}
       <div
         className="relative z-10 overflow-auto"
         style={{ paddingTop: "4rem", height: "100%" }}
@@ -41,7 +41,7 @@ export default function OverlayLayout({ children }: OverlayLayoutProps) {
       <button
         onClick={() => setSidebarOpen(true)}
         className={`
-          absolute top-[15px] left-[15px] z-40
+          absolute top-[30px] left-[15px] z-40
           bg-white text-black p-3 rounded-full shadow
           transition-opacity duration-200
           ${sidebarOpen ? "opacity-0 pointer-events-none" : "opacity-100"}
