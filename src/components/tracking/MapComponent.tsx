@@ -64,17 +64,21 @@ function ZoomControls({ shift }: { shift?: boolean }) {
   );
 }
 
+// Hook component to invalidate map size when sidebar state changes
+function InvalidateSize({ sidebarOpen }: { sidebarOpen?: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    map.invalidateSize();
+  }, [sidebarOpen, map]);
+  return null;
+}
+
+
 // 5) Componente MapComponent
 export default function MapComponent({ sidebarOpen }: MapProps) {
   const { selected } = useLote();
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [animals, setAnimals] = useState<AnimalWithCoords[]>([]);
-  const map = useMap();
-
-  // Invalidate map size when sidebar opens/closes
-  useEffect(() => {
-    map.invalidateSize();
-  }, [sidebarOpen, map]);
 
   // A) Fetch de ranches para centrar el mapa
   useEffect(() => {
@@ -132,6 +136,7 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
 
   return (
     <MapContainer center={mapCenter} zoom={14} style={{ height: "100%", width: "100%", backgroundColor: "lightblue", border: "2px solid red" }} zoomControl={false}>
+      <InvalidateSize sidebarOpen={sidebarOpen} />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
