@@ -23,7 +23,7 @@ export default function OverlayLayout({ children }: OverlayLayoutProps) {
   const loteBgClass = isStats ? "bg-white" : "bg-white/75";
 
   return (
-    <div className="relative flex-1 overflow-hidden min-h-[100dvh]">
+    <div className="relative flex-1 overflow-hidden">
       {/* full-screen map in the back */}
       <div className="absolute inset-0 z-0 h-full">
         <MapComponent sidebarOpen={sidebarOpen} />
