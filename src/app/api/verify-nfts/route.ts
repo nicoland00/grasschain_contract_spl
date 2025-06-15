@@ -29,7 +29,7 @@ export async function POST(request: Request) {
           {
             success: false,
             error:
-              "Contract is active, but tracking isn’t configured yet. You’ll be notified once the herd location is available."
+              "Contract is active, but tracking isn't configured yet. You'll be notified once the herd location is available."
           },
           { status: 400 }
         );
@@ -38,6 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success:    true,
         ranchId:    ci.ranchId,
+        lotId:      ci.lotId,
         contractId: ci.contract
       });
     }
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
           {
             success: false,
             error:
-              "Contract is active, but tracking isn’t configured yet. You’ll be notified once the herd location is available."
+              "Contract is active, but tracking isn't configured yet. You'll be notified once the herd location is available."
           },
           { status: 400 }
         );
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success:    true,
         ranchId:    fi.ranchId,
+        lotId:      fi.lotId, 
         contractId: fi.contract
       });
     }
