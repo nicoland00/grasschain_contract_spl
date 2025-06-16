@@ -1,94 +1,63 @@
+// src/components/tracking/sideNavbar.tsx
 "use client";
 
-import React from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
-interface SideNavbarProps {
-  open: boolean;
-  onClose: () => void;
-  isStats?: boolean; // Hide the close button & set background fully white if true
-}
-
-export default function SideNavbar({ open, onClose, isStats = false }: SideNavbarProps) {
+export default function SideNavbar({
+  open,
+  onClose,
+  isStats = false,
+}: {
+  open:     boolean;
+  onClose:  () => void;
+  isStats?: boolean;
+}) {
   const pathname = usePathname();
   const router   = useRouter();
 
-  const handleMapa = () => {
+  function go(path: string) {
     onClose();
-    if (pathname !== "/tracking") {
-      router.push("/tracking");
-    }
-  };
-
-  const handleStats = () => {
-    onClose();
-    if (pathname !== "/stats") {
-      router.push("/stats");
-    }
-  };
+    if (pathname !== path) router.push(path);
+  }
 
   return (
     <div
-      className={`
-        absolute top-0 left-0 bottom-0
-        transform transition-transform duration-300 z-40
-        pointer-events-none
-        ${open ? "translate-x-0" : "-translate-x-full"}
-      `}
+      className={`absolute top-0 left-0 bottom-0 z-40 transform transition-transform duration-300 ${
+        open ? "translate-x-0" : "-translate-x-full"
+      } pointer-events-none`}
     >
-      <div
-        className={`
-          relative w-64 h-full m-[15px]
-          ${isStats ? "bg-white" : "bg-white/75"}
-          rounded-[20px] p-4
-          pointer-events-auto
-        `}
-        style={{ maxHeight: "calc(100% - 30px)" }}
+      <div className={`relative w-64 h-full m-4 p-4 rounded-2xl pointer-events-auto ${
+          isStats ? "bg-white" : "bg-white/75"
+        }`}
       >
-        {/* Close button */}
+        {/* close button */}
         {!isStats && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10 focus:outline-none"
-            aria-label="Close sidebar"
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-black/10"
           >
-            <svg
-              className="w-5 h-5 text-black"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            ✕
           </button>
         )}
 
-        {/* Logo + Title */}
+        {/* logo */}
         <div className="flex flex-col items-center gap-2 mb-6 mt-2">
-          <Image
-            src="/logo.png"
-            alt="Pastora"
-            width={60}
-            height={60}
-            className="rounded-full"
-          />
-          <h2 className="text-2xl font-bold text-black">Pastora</h2>
+          <Image src="/logo.png" width={60} height={60} alt="Pastora" className="rounded-full"/>
+          <h2 className="text-2xl font-bold">Pastora</h2>
         </div>
 
-        {/* Nav items */}
-        <nav className="flex flex-col text-black text-xl divide-y divide-gray-300">
+        {/* vertical nav */}
+        <nav className="flex flex-col space-y-4 text-xl">
           <button
-            onClick={handleMapa}
-            className="py-3 text-left hover:underline"
+            onClick={() => go("/tracking")}
+            className={pathname === "/tracking" ? "font-bold" : ""}
           >
             Mapa
           </button>
           <button
-            onClick={handleStats}
-            className="py-3 text-left hover:underline"
+            onClick={() => go("/tracking/stats")}
+            className={pathname.startsWith("/tracking/stats") ? "font-bold" : ""}
           >
             Estadísticas
           </button>

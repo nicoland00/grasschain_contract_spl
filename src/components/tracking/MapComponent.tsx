@@ -1,4 +1,3 @@
-// app/components/tracking/MapComponent.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -21,131 +20,97 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     "/marker-shadow.png",
 });
 
-interface AnimalWithCoords {
-  id:     string;
-  name:   string;
-  lat:    number;
-  lng:    number;
-  weight?: number | null;
-}
-
-interface MapProps {
-  sidebarOpen?: boolean;
-}
-
 // 2) Random cow icon
 function getRandomCowIcon(): L.Icon {
-  const imgs = ["/cows/2.png", "/cows/5.png", "/cows/8.png", "/cows/11.png"];
+  const imgs = ["/cows/2.png","/cows/5.png","/cows/8.png","/cows/11.png"];
   return L.icon({
-    iconUrl:     imgs[Math.floor(Math.random() * imgs.length)],
-    iconSize:    [40, 40],
-    iconAnchor:  [20, 20],
-    popupAnchor: [0, -20],
+    iconUrl:     imgs[Math.floor(Math.random()*imgs.length)],
+    iconSize:    [40,40],
+    iconAnchor:  [20,20],
+    popupAnchor: [0,-20],
   });
 }
 
-// 3) Zoom buttons (inside MapContainer)
+// 3) Zoom + resize helpers
 function ZoomControls({ shift }: { shift?: boolean }) {
   const map = useMap();
   const pos = shift ? "left-[285px]" : "left-[15px]";
   return (
     <div className={`absolute top-[90px] z-[9999] p-2 bg-white/75 rounded-lg flex flex-col gap-2 ${pos}`}>
-      <button onClick={() => map.zoomIn()} className="w-10 h-10 flex items-center justify-center hover:bg-gray-200">+</button>
-      <button onClick={() => map.zoomOut()} className="w-10 h-10 flex items-center justify-center hover:bg-gray-200">−</button>
+      <button onClick={()=>map.zoomIn()} className="w-10 h-10 flex items-center justify-center hover:bg-gray-200">+</button>
+      <button onClick={()=>map.zoomOut()}className="w-10 h-10 flex items-center justify-center hover:bg-gray-200">−</button>
     </div>
   );
 }
-
-// 4) Resize handler (inside MapContainer)
 function ResizeHandler({ sidebarOpen }: { sidebarOpen?: boolean }) {
   const map = useMap();
-  useEffect(() => {
-    map.invalidateSize();
-  }, [sidebarOpen, map]);
+  useEffect(() => { map.invalidateSize(); }, [sidebarOpen, map]);
   return null;
 }
 
-export default function MapComponent({ sidebarOpen }: MapProps) {
+export default function MapComponent({ sidebarOpen }: { sidebarOpen?: boolean }) {
   const { selected } = useLote();
-  const [center, setCenter]     = useState<[number,number] | null>(null);
-  const [animals, setAnimals]   = useState<AnimalWithCoords[]>([]);
+  const [center, setCenter] = useState<[number,number] | null>(null);
+  const [animals,setAnimals] = useState<any[]>([]);
 
-  // A) get ranch center
+  // A) ranch center
   useEffect(() => {
-    if (!selected?.ranchId) return;
+    if(!selected?.ranchId) return;
     fetch("/api/ixorigue/ranches")
-      .then((res) => res.json())
-      .then(({ data }) => {
-        const ranch = (data ?? []).find((r: any) => r.id === selected.ranchId);
-        if (ranch) {
-          setCenter([ranch.location.latitude, ranch.location.longitude]);
-        }
+      .then(r=>r.json())
+      .then(json=>{
+        const ranch = (json.data||[]).find((r:any)=>r.id===selected.ranchId);
+        if(ranch) setCenter([ranch.location.latitude, ranch.location.longitude]);
       })
       .catch(console.error);
-  }, [selected]);
+  },[selected]);
 
-  // B) fetch ALL animals, then filter by lotId client-side
+  // B) all animals → filter client-side
   useEffect(() => {
-    if (!center || !selected?.lotId) return;
+    if(!center || !selected?.lotId) return;
     fetch(`/api/animals/${selected.ranchId}`)
-      .then((res) => res.json())
-      .then((json) => {
-        const list = json.data ?? [];
-        console.log("▶️ RAW animals count:", list.length);
-        console.log("▶️ selected.lotId:", selected.lotId);
-        const filtered = (list as any[])
-          .filter((an) => an.lot?.lotId === selected.lotId && an.lastLocation)
-          .map((an) => ({
-            id:     an.id,
-            name:   an.name || an.earTag || "Vaca",
-            lat:    an.lastLocation.latitude,
-            lng:    an.lastLocation.longitude,
-            weight: an.lastWeight?.weight ?? null,
-          }));
-        console.log("▶️ filtered count:", filtered.length);
-        console.log("▶️ filtered IDs:", filtered.map((a) => a.id).slice(0, 20));
-        setAnimals(filtered);
+      .then(r=>r.json())
+      .then(json=>{
+        const list = json.data||[];
+        setAnimals(
+          list
+            .filter((a:any)=>a.lot?.lotId===selected.lotId && a.lastLocation)
+            .map((a:any)=>({
+              id:     a.id,
+              lat:    a.lastLocation.latitude,
+              lng:    a.lastLocation.longitude,
+              name:   a.name||a.earTag||"Vaca",
+              weight: a.lastWeight?.weight ?? null,
+            }))
+        );
       })
       .catch(console.error);
-  }, [center, selected]);
+  },[center,selected]);
 
-  if (!center) {
-    return (
-      <div className="absolute inset-0 flex items-center justify-center bg-white">
-        Cargando mapa…
-      </div>
-    );
+  if(!center) {
+    return <div className="absolute inset-0 flex items-center justify-center bg-white">Cargando mapa…</div>;
   }
 
+  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   return (
-    <MapContainer
-      center={center}
-      zoom={14}
-      zoomControl={false}
-      className="absolute inset-0"
-    >
-      {/* Esri Satellite */}
+    <MapContainer center={center} zoom={14} zoomControl={false} className="absolute inset-0">
       <TileLayer
-        url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-        crossOrigin="anonymous"
-        errorTileUrl="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        // Mapbox Satellite
+        url={`https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=${token}`}
+        tileSize={512}
+        zoomOffset={-1}
+        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
       />
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        opacity={0.5}
-      />
-
-      {animals.map((a) => (
-        <Marker key={a.id} position={[a.lat, a.lng]} icon={getRandomCowIcon()}>
+      {animals.map(a=>(
+        <Marker key={a.id} position={[a.lat,a.lng]} icon={getRandomCowIcon()}>
           <Popup>
-            <strong>{a.name}</strong><br />
-            {a.weight != null ? `${a.weight} kg` : "Peso desconocido"}
+            <strong>{a.name}</strong><br/>
+            {a.weight!=null?`${a.weight} kg`:"Peso desconocido"}
           </Popup>
         </Marker>
       ))}
-
-      <ZoomControls shift={sidebarOpen} />
-      <ResizeHandler sidebarOpen={sidebarOpen} />
+      <ZoomControls shift={sidebarOpen}/>
+      <ResizeHandler sidebarOpen={sidebarOpen}/>
     </MapContainer>
   );
 }
