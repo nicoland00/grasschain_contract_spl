@@ -1,162 +1,93 @@
+// src/app/stats/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
 import { useLote } from "@/context/tracking/contextLote";
 
-// Chart.js imports
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import { Line } from "react-chartjs-2";
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
-
-const RANCH_ID = "89228e7c-6e99-492e-b085-b06edfc731b5";
+interface Animal {
+  id:           string;
+  name:         string;
+  earTag?:      string;
+  lot?:         { lotId: string; name: string };
+  lastWeight?:  { weight: number; date: string };
+}
 
 export default function StatsPage() {
   const { selected } = useLote();
-  const [animalsData, setAnimalsData] = useState<any[]>([]);
-  const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
 
-  // On mount or if user changes "lote," fetch animals
   useEffect(() => {
-    fetch(`/api/animals/${RANCH_ID}`)
+    if (!selected?.ranchId || !selected.lotId) return;
+    setLoading(true);
+    setError(null);
+
+    fetch(`/api/animals/${selected.ranchId}`)
       .then((res) => {
-        if (!res.ok) throw new Error(`Error fetching animals: ${res.status}`);
+        if (!res.ok) throw new Error(`Status ${res.status}`);
         return res.json();
       })
-      .then((data) => {
-        setAnimalsData(data.data ?? []);
+      .then((json) => {
+        const list: Animal[] = (json.data ?? []).filter(
+          (a: Animal) => a.lot?.lotId === selected.lotId
+        );
+        setAnimals(list);
       })
       .catch((err) => {
-        console.error("Stats fetch error", err);
+        console.error("Stats fetch error:", err);
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, [selected]);
 
-  // Filter by lote if needed
-  const filteredAnimals = animalsData.filter((an) => {
-    if (!selected) return true;
-    return an.lot?.id === selected.lotId;
-  });
-
-  function handleSelectAnimal(name: string) {
-    setSelectedAnimal((prev) => (prev === name ? null : name));
+  if (!selected) {
+    return (
+      <div className="p-8 text-center text-gray-600">
+        Por favor verifica primero tu contrato para seleccionar un lote.
+      </div>
+    );
   }
-
-  // For the chart
-  const showAnimalGraph = selectedAnimal !== null;
-  const selectedObj = filteredAnimals.find((a) => a.name === selectedAnimal);
-
-  function getWeightHistory(an: any) {
-    if (an.lastWeight) {
-      // Example: older, mid, last
-      return [an.lastWeight.weight - 15, an.lastWeight.weight - 5, an.lastWeight.weight];
-    }
-    return [250, 260, 270];
-  }
-
-  const animalChartData = {
-    labels: ["Day 1", "Day 2", "Day 3"],
-    datasets: [
-      {
-        label: `Peso de ${selectedAnimal || ""}`,
-        data: selectedObj ? getWeightHistory(selectedObj) : [],
-        borderColor: "rgb(75, 192, 192)",
-        fill: false,
-      },
-    ],
-  };
-
-  const day1 = filteredAnimals.map((a) => getWeightHistory(a)[0]);
-  const day2 = filteredAnimals.map((a) => getWeightHistory(a)[1]);
-  const day3 = filteredAnimals.map((a) => getWeightHistory(a)[2]);
-  const avg = (arr: number[]) => arr.reduce((acc, val) => acc + val, 0) / (arr.length || 1);
-
-  const loteChartData = {
-    labels: ["Day 1", "Day 2", "Day 3"],
-    datasets: [
-      {
-        label: "Promedio Lote",
-        data: [avg(day1), avg(day2), avg(day3)],
-        borderColor: "rgb(255, 99, 132)",
-        fill: false,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-  };
 
   return (
-    <div className="min-h-screen w-full bg-gray-800 text-white">
-      <div className="ml-[271px] pt-10 flex flex-col md:flex-row">
-        {/* LEFT: List of animals */}
-        <div
-          className="
-            w-[350px] p-4
-            mt-[50px]
-            max-h-[calc(100vh-105px)]
-            overflow-y-auto
-          "
-        >
-          <ul className="space-y-3">
-            {filteredAnimals.map((animal) => {
-              const isSelected = animal.name === selectedAnimal;
-              return (
-                <li
-                  key={animal.id}
-                  onClick={() => handleSelectAnimal(animal.name)}
-                  className={`
-                    cursor-pointer rounded-[20px] px-4 py-3 text-lg
-                    flex items-center justify-between
-                    ${
-                      isSelected
-                        ? "bg-green-200 text-gray-800 font-semibold"
-                        : "bg-white text-black hover:bg-gray-100"
-                    }
-                  `}
-                >
-                  <span>{animal.name}</span>
-                  {animal.lastWeight && (
-                    <span className="ml-2 text-sm text-gray-600">
-                      {animal.lastWeight.weight} kg
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </div>
+    <div className="max-w-3xl mx-auto p-4">
+      <h1 className="text-3xl font-bold mb-6">Estadísticas del lote</h1>
 
-        {/* RIGHT: Graphs */}
-        <div className="flex-1 mr-4">
-          {/* Single animal graph */}
-          {showAnimalGraph && selectedObj && (
-            <div className="bg-white text-gray-700 rounded-[20px] p-4 my-4">
-              <h2 className="text-xl font-bold mb-4">Ganancia de peso: {selectedObj.name}</h2>
-              <div className="h-64 w-full relative">
-                <Line data={animalChartData} options={chartOptions} />
-              </div>
-            </div>
-          )}
+      {loading && <p>Cargando animales…</p>}
+      {error   && <p className="text-red-600">Error: {error}</p>}
 
-          {/* Lote average graph */}
-          <div className="bg-white text-gray-700 rounded-[20px] p-4 my-4">
-            <h2 className="text-xl font-bold mb-4">Gráfico del Lote</h2>
-            <div className="h-64 w-full relative">
-              <Line data={loteChartData} options={chartOptions} />
-            </div>
-          </div>
-        </div>
-      </div>
+      {!loading && animals.length === 0 && (
+        <p>No se encontraron animales para este lote.</p>
+      )}
+
+      {animals.length > 0 && (
+        <table className="w-full table-auto border-collapse">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2 text-left">Nombre</th>
+              <th className="border p-2 text-left">EarTag</th>
+              <th className="border p-2 text-right">Último Peso (kg)</th>
+              <th className="border p-2 text-left">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            {animals.map((a) => (
+              <tr key={a.id} className="hover:bg-gray-50">
+                <td className="border p-2">{a.name || "–"}</td>
+                <td className="border p-2">{a.earTag || "–"}</td>
+                <td className="border p-2 text-right">
+                  {a.lastWeight?.weight?.toFixed(1) ?? "–"}
+                </td>
+                <td className="border p-2">
+                  {a.lastWeight?.date?.slice(0,10) ?? "–"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

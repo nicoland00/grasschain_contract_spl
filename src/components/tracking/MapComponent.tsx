@@ -125,7 +125,15 @@ export default function MapComponent({ sidebarOpen }: MapProps) {
       className="absolute inset-0"
     >
       {/* Esri Satellite */}
-      <TileLayer url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
+      <TileLayer
+        url="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+        crossOrigin="anonymous"
+        errorTileUrl="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <TileLayer
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        opacity={0.5}
+      />
 
       {animals.map((a) => (
         <Marker key={a.id} position={[a.lat, a.lng]} icon={getRandomCowIcon()}>

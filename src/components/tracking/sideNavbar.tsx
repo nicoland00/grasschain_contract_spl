@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 
 interface SideNavbarProps {
   open: boolean;
@@ -11,6 +12,23 @@ interface SideNavbarProps {
 }
 
 export default function SideNavbar({ open, onClose, isStats = false }: SideNavbarProps) {
+  const pathname = usePathname();
+  const router   = useRouter();
+
+  const handleMapa = () => {
+    onClose();
+    if (pathname !== "/tracking") {
+      router.push("/tracking");
+    }
+  };
+
+  const handleStats = () => {
+    onClose();
+    if (pathname !== "/stats") {
+      router.push("/stats");
+    }
+  };
+
   return (
     <div
       className={`
@@ -29,7 +47,7 @@ export default function SideNavbar({ open, onClose, isStats = false }: SideNavba
         `}
         style={{ maxHeight: "calc(100% - 30px)" }}
       >
-        {/* Hide the close button if isStats */}
+        {/* Close button */}
         {!isStats && (
           <button
             onClick={onClose}
@@ -62,12 +80,18 @@ export default function SideNavbar({ open, onClose, isStats = false }: SideNavba
 
         {/* Nav items */}
         <nav className="flex flex-col text-black text-xl divide-y divide-gray-300">
-          <Link href="/" className="py-3 hover:underline">
+          <button
+            onClick={handleMapa}
+            className="py-3 text-left hover:underline"
+          >
             Mapa
-          </Link>
-          <Link href="/stats" className="py-3 hover:underline">
+          </button>
+          <button
+            onClick={handleStats}
+            className="py-3 text-left hover:underline"
+          >
             Estadísticas
-          </Link>
+          </button>
         </nav>
       </div>
     </div>
