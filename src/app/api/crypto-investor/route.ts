@@ -13,7 +13,22 @@ export async function POST(req: Request) {
     }
 
     await dbConnect();
-    await CryptoInvestor.create({ contract, investor, nftMint, txSignature, amount });
+    await CryptoInvestor.updateOne(
+      { contract, investor },
+      {
+        $inc: { amount },
+        $set: {
+          nftMint,
+          txSignature,
+          updatedAt: new Date(),
+        },
+        $setOnInsert: {
+          createdAt: new Date(),
+        },
+      },
+      { upsert: true }
+    );
+
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (err: any) {
     console.error("crypto-investor POST error:", err);

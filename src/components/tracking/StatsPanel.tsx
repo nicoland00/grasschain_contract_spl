@@ -1,167 +1,141 @@
-// src/components/tracking/StatsPanel.tsx
+// components/tracking/StatsPanel.tsx
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { useLote } from "@/context/tracking/contextLote";
-import { useSession } from "next-auth/react";
-import { useWallet }   from "@solana/wallet-adapter-react";
 
-interface Animal {
-  id:           string;
-  name:         string;
-  earTag?:      string;
-  lastWeight?:  { weight: number; date: string };
-}
-
-interface ContractEntry {
+type ContractEntry = {
   contractId: string;
   ranchId:    string;
-  lotId?:     string;
-  // you could add a "label" field if your backend returns farmName or lotName
-}
+  lotId:      string;
+  label:      string; // e.g. "San Antonio #1"
+};
 
 export default function StatsPanel() {
   const { selected, setSelected } = useLote();
-  const { data: session }         = useSession();
-  const { publicKey, connected }  = useWallet();
 
+  // 1️⃣ load all active contracts (with ranchId+lotId)
   const [contracts, setContracts] = useState<ContractEntry[]>([]);
-  const [animals, setAnimals]     = useState<Animal[]>([]);
-  const [loading, setLoading]     = useState(false);
-  const [error, setError]         = useState<string | null>(null);
+  const [loadingContracts, setLoadingContracts] = useState(true);
+  const [errorContracts, setErrorContracts] = useState<string | null>(null);
 
-  // 1️⃣ Load user's contracts once, so we can populate the Lote selector
   useEffect(() => {
-    let url = "/api/my-contracts";
-    if (!session?.user?.email) {
-      if (connected && publicKey) {
-        url += `?wallet=${publicKey.toBase58()}`;
-      } else {
-        return;
-      }
-    }
-    fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error(`Status ${r.status}`);
-        return r.json();
+    setLoadingContracts(true);
+    fetch("/api/my-contracts")
+      .then((res) => {
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res.json();
       })
       .then((list: any[]) => {
-        // ensure we only keep entries that have a lotId (for fiat) or some default for crypto
-        const mapped: ContractEntry[] = list.map((c) => ({
-          contractId: c.contractId,
-          ranchId:    c.ranchId,
-          lotId:      c.lotId, 
-        }));
-        setContracts(mapped);
-
-        // if nothing selected yet, pick the first
-        if (!selected && mapped.length && mapped[0].lotId) {
-          setSelected({ ranchId: mapped[0].ranchId, lotId: mapped[0].lotId });
-        }
+        // assume API returns items { contractId, ranchId, lotId, farmName }
+        setContracts(
+          list.map((c) => ({
+            contractId: c.contractId,
+            ranchId:    c.ranchId,
+            lotId:      c.lotId,
+            label:      c.farmName, 
+          }))
+        );
       })
-      .catch(console.error);
-  }, [session, connected, publicKey, selected, setSelected]);
+      .catch((err) => setErrorContracts(err.message))
+      .finally(() => setLoadingContracts(false));
+  }, []);
 
-  // 2️⃣ Whenever selected changes, re-fetch the animals for that lot
+  // 2️⃣ stats data for the current selection
+  const [animals, setAnimals] = useState<any[]>([]);
+  const [loadingStats, setLoadingStats] = useState(false);
+  const [errorStats, setErrorStats]     = useState<string | null>(null);
+
   useEffect(() => {
     if (!selected?.ranchId || !selected.lotId) return;
-    setLoading(true);
-    setError(null);
-
+    setLoadingStats(true);
     fetch(`/api/animals/${selected.ranchId}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(`Status ${r.status}`);
-        return r.json();
+      .then((res) => {
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        return res.json();
       })
       .then((json) => {
-        const list = (json.data || []) as any[];
-        const filtered = list
-          .filter((a) => a.lot?.lotId === selected.lotId && a.lastWeight)
-          .map((a) => ({
-            id:         a.id,
-            name:       a.name || a.earTag || "–",
-            earTag:     a.earTag,
-            lastWeight: a.lastWeight,
-          }));
-        setAnimals(filtered);
+        setAnimals(
+          (json.data || [])
+            .filter((a: any) => a.lot?.lotId === selected.lotId)
+            .map((a: any) => ({
+              id:     a.id,
+              name:   a.name || a.earTag || "–",
+              earTag: a.earTag,
+              weight: a.lastWeight?.weight ?? null,
+              date:   a.lastWeight?.date?.slice(0, 10) ?? "–",
+            }))
+        );
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .catch((err) => setErrorStats(err.message))
+      .finally(() => setLoadingStats(false));
   }, [selected]);
 
-  // If user hasn't even picked a contract yet
-  if (!selected) {
-    return (
-      <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/90">
-        <p className="text-lg font-medium">Por favor verifica primero tu contrato.</p>
-      </div>
-    );
-  }
-
+  // 3️⃣ render
   return (
-    <div className="absolute inset-0 z-10 overflow-hidden bg-white/80 pointer-events-auto">
-      <div className="h-full max-w-3xl mx-auto flex flex-col bg-white rounded-lg shadow-lg">
-        <header className="px-6 py-4 border-b">
-          <h1 className="text-2xl font-bold">Estadísticas del lote</h1>
-          {/* ──────────── Lote selector ──────────── */}
-          {contracts.length > 1 && (
-            <div className="mt-3">
-              <label className="block text-sm font-medium text-gray-700">
-                Elige tu inversión:
-              </label>
-              <select
-                value={`${selected.ranchId}|${selected.lotId}`}
-                onChange={(e) => {
-                  const [ranchId, lotId] = e.target.value.split("|");
-                  setSelected({ ranchId, lotId });
-                }}
-                className="mt-1 block w-full border-gray-300 rounded-md"
-              >
-                {contracts.map((c) => (
-                  <option key={c.contractId} value={`${c.ranchId}|${c.lotId}`}>
-                    {/* You can replace this with a human-friendly label if you have one */}
-                    {c.lotId ?? c.contractId}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </header>
+    <div className="absolute inset-0 z-10 overflow-auto p-4 pointer-events-auto">
+      <div className="max-w-3xl mx-auto bg-white/90 rounded-lg p-6 shadow-lg">
+        <h1 className="text-2xl font-bold mb-4">Estadísticas del lote</h1>
 
-        <main className="flex-1 overflow-auto p-6">
-          {loading && <p>Cargando animales…</p>}
-          {error   && <p className="text-red-600">Error: {error}</p>}
-          {!loading && animals.length === 0 && (
-            <p>No se encontraron animales para este lote.</p>
-          )}
+        {/* ——— lot selector ——— */}
+        {loadingContracts && <p>Cargando contratos…</p>}
+        {errorContracts && <p className="text-red-600">{errorContracts}</p>}
+        {!loadingContracts && contracts.length > 0 && (
+          <div className="mb-6">
+            <label className="block font-medium mb-1" htmlFor="lot-select">
+              Elige un lote:
+            </label>
+            <select
+              id="lot-select"
+              className="w-full border rounded px-3 py-2"
+              value={selected?.lotId || ""}
+              onChange={(e) => {
+                const lotId = e.target.value;
+                const c = contracts.find((c) => c.lotId === lotId);
+                if (c) {
+                  setSelected({ ranchId: c.ranchId, lotId: c.lotId });
+                }
+              }}
+            >
+              <option value="" disabled>
+                — Selecciona un lote —
+              </option>
+              {contracts.map((c) => (
+                <option key={c.lotId} value={c.lotId}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
 
-          {animals.length > 0 && (
-            <table className="w-full table-fixed border-collapse">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="w-1/3 border-b p-2 text-left">Nombre</th>
-                  <th className="w-1/6 border-b p-2 text-left">EarTag</th>
-                  <th className="w-1/6 border-b p-2 text-right">Peso (kg)</th>
-                  <th className="w-1/3 border-b p-2 text-left">Fecha</th>
+        {/* ——— stats table ——— */}
+        {loadingStats && <p>Cargando animales…</p>}
+        {errorStats && <p className="text-red-600">{errorStats}</p>}
+        {!loadingStats && animals.length === 0 && <p>No hay animales en este lote.</p>}
+        {animals.length > 0 && (
+          <table className="w-full table-auto border-collapse">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border p-2">Nombre</th>
+                <th className="border p-2">EarTag</th>
+                <th className="border p-2 text-right">Peso (kg)</th>
+                <th className="border p-2">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              {animals.map((a) => (
+                <tr key={a.id} className="hover:bg-gray-50">
+                  <td className="border p-2">{a.name}</td>
+                  <td className="border p-2">{a.earTag || "–"}</td>
+                  <td className="border p-2 text-right">
+                    {a.weight != null ? a.weight.toFixed(1) : "–"}
+                  </td>
+                  <td className="border p-2">{a.date}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {animals.map((a) => (
-                  <tr key={a.id} className="hover:bg-gray-50">
-                    <td className="border-b p-2">{a.name}</td>
-                    <td className="border-b p-2">{a.earTag || "–"}</td>
-                    <td className="border-b p-2 text-right">
-                      {a.lastWeight?.weight.toFixed(1) ?? "–"}
-                    </td>
-                    <td className="border-b p-2">
-                      {a.lastWeight?.date.slice(0, 10) ?? "–"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </main>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
