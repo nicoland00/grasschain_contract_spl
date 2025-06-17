@@ -86,7 +86,9 @@ export default function AccessOverlay() {
         const acc = await program.account.contract.fetch(new PublicKey(c.contractId));
         setMetaMap((m) => ({
           ...m,
-          [c.contractId]: { farmName: acc.farmName, farmImageUrl: acc.farmImageUrl },
+          [c.contractId]: { farmName: acc.farmName === "San Antonio 2" && c.contractId === "Amo8DcGpNvpbkrKfnksRGYp6kCE5eG8V2RXbZku9x2vi"
+            ? "San Antonio 3"
+            : acc.farmName, farmImageUrl: acc.farmImageUrl },
         }));
       } catch {
         console.warn("couldn't fetch on-chain metadata for", c.contractId);

@@ -95,39 +95,43 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
             <h2 className="text-3xl font-bold mb-1 text-black text-center">
               Avg. projected weight gain
             </h2>
-            {/* ───── Duration + Two Cards Row ───── */}
-            <div className="flex flex-col md:flex-row justify-center items-center gap-4 mt-4 text-black">
-              {/* Duration selector on the left */}
-              <div className="flex items-center gap-2">
-                <label htmlFor="duration-select" className="font-semibold">Duration:</label>
-                <select
-                  id="duration-select"
-                  className="border border-gray-300 rounded-md p-1 bg-white"
-                  value={duration}
-                  onChange={(e) => setDuration(Number(e.target.value))}
-                >
-                  {durationOptions.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt} months
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* ───── Duration + Two Cards ───── */}
+          <div className="mt-4 grid grid-cols-3 gap-4 text-black items-center">
+            {/* 1) Duration selector */}
+            <div className="flex flex-col items-start">
+              <label htmlFor="duration-select" className="font-semibold">Duration</label>
+              <select
+                id="duration-select"
+                className="mt-1 w-full border border-gray-300 rounded-md p-1 bg-white"
+                value={duration}
+                onChange={e => setDuration(Number(e.target.value))}
+              >
+                {durationOptions.map(opt => (
+                  <option key={opt} value={opt}>
+                    {opt} m
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              {/* Projected Weight card */}
+            {/* 2) Projected Weight */}
+            <div className="flex items-center justify-center">
               <WeightCard
-                title="Projected Weight"
+                title="Projected"
                 value={formatter(projectedWeight)}
                 color={fillColor}
               />
+            </div>
 
-              {/* Today's Contribution card */}
+            {/* 3) Today's Contribution */}
+            <div className="flex items-center justify-center">
               <WeightCard
-                title="Your today's contributions"
+                title="Today"
                 value={`${meatKilograms.toFixed(1)} kg`}
                 color="#3A86FF"
               />
             </div>
+          </div>
           </div>
 
           {/* ───── Chart ───── */}

@@ -231,7 +231,11 @@ export function GrasschainContractCard({
   const trackColor  = '#E5E7EB';
   const borderColor = '#D1D5DB';
 
-  const farmNameText = contractData.farmName || "N/A";
+  const farmNameText =
+  contractData.farmName === "San Antonio 2" &&
+  contractPk.toBase58() === "Amo8DcGpNvpbkrKfnksRGYp6kCE5eG8V2RXbZku9x2vi"
+    ? "San Antonio 3"
+    : contractData.farmName || "N/A";
   const farmAddressText = contractData.farmAddress || "N/A";
   const farmImageUrl =
     contractData.farmImageUrl || "https://via.placeholder.com/300";

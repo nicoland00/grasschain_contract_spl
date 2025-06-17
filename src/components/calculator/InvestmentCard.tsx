@@ -14,7 +14,7 @@ const InvestmentCard: React.FC<InvestmentCardProps> = ({ title, value, color }) 
       <div className={`w-3 h-3 rounded-sm mt-1.5`} style={{ backgroundColor: color }}></div>
       <div>
         <p className="text-sm text-muted-foreground">{title}</p>
-        <p className="text-xl font-semibold">{value}</p>
+        <p className="text-m font-semibold">{value}</p>
       </div>
     </div>
   );
