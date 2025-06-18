@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import LotSelector from "./lotSelector";
 
 export default function SideNavbar({
   open,
@@ -62,6 +63,9 @@ export default function SideNavbar({
             Estadísticas
           </button>
         </nav>
+        <div className="mt-6">
+          <LotSelector />
+        </div>
       </div>
     </div>
   );

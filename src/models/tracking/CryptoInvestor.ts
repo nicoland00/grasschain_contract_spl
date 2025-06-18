@@ -5,6 +5,7 @@ export interface ICryptoInvestor extends Document {
   investor: string;
   nftMint: string;
   ranchId: string;
+  lotId?: string;
   // …otros campos que necesites
 }
 
@@ -13,6 +14,7 @@ const CryptoInvestorSchema = new Schema({
   investor:   { type: String, required: true },
   nftMint:    { type: String, required: true },
   ranchId:    { type: String, required: true },
+  lotId:      { type: String },
   // …añade aquí createdAt, updatedAt, etc.
 }, { timestamps: true });
 

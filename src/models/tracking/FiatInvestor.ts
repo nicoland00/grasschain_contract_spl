@@ -7,6 +7,7 @@ export interface IFiatInvestor extends Document {
   paymentMethod: string;
   maskedCard: string;
   ranchId: string;
+  lotId?: string;
   // …otros campos
 }
 
@@ -17,6 +18,7 @@ const FiatInvestorSchema = new Schema({
   paymentMethod: { type: String, required: true },
   maskedCard:    { type: String, required: true },
   ranchId:       { type: String, required: true },
+  lotId:         { type: String },
   // …añade timestamps si quieres
 }, { timestamps: true });
 

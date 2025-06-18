@@ -65,27 +65,27 @@ export default function MapComponent({ sidebarOpen }: { sidebarOpen?: boolean })
       .catch(console.error);
   },[selected]);
 
-  // B) all animals → filter client-side
+  // B) all animals → filter by selected lot
   useEffect(() => {
-    if(!center || !selected?.lotId) return;
-    fetch(`/api/animals/${selected.ranchId}`)
-      .then(r=>r.json())
-      .then(json=>{
-        const list = json.data||[];
+    if (!center || !selected?.lotId) return;
+    fetch(`/api/lots/${selected.ranchId}/${selected.lotId}`)
+      .then((r) => r.json())
+      .then((json) => {
+        const list = json.data || [];
         setAnimals(
           list
-            .filter((a:any)=>a.lot?.lotId===selected.lotId && a.lastLocation)
-            .map((a:any)=>({
-              id:     a.id,
-              lat:    a.lastLocation.latitude,
-              lng:    a.lastLocation.longitude,
-              name:   a.name||a.earTag||"Vaca",
+          .filter((a: any) => a.lastLocation)
+          .map((a: any) => ({
+            id: a.id,
+            lat: a.lastLocation.latitude,
+            lng: a.lastLocation.longitude,
+            name: a.name || a.earTag || "Vaca",
               weight: a.lastWeight?.weight ?? null,
             }))
         );
       })
       .catch(console.error);
-  },[center,selected]);
+  }, [center, selected]);
 
   if(!center) {
     return <div className="absolute inset-0 flex items-center justify-center bg-white">Cargando mapa…</div>;

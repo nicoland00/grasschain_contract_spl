@@ -16,6 +16,8 @@ export const dynamic  = "force-dynamic";
 interface ContractEntry {
   contractId: string;
   status:     "not-started" | "active" | "settled" | "defaulted";
+  ranchId?:   string;
+  lotId?:     string;
 }
 
 export async function GET(req: Request) {
@@ -54,13 +56,27 @@ export async function GET(req: Request) {
   }
 
   // — otherwise fall back to your existing investor-based logic —
-  let investors: { contract: string }[] = [];
+  let investors: { contract: string; ranchId?: string; lotId?: string }[] = [];
   if (email) {
-    const fis = await FiatInvestor.find({ email }, "contract").lean();
-    investors = fis.map((fi) => ({ contract: fi.contract }));
+    const fis = await FiatInvestor.find(
+      { email },
+      "contract ranchId lotId"
+    ).lean();
+    investors = fis.map((fi) => ({
+      contract: fi.contract,
+      ranchId:  fi.ranchId,
+      lotId:    (fi as any).lotId,
+    }));
   } else {
-    const cis = await CryptoInvestor.find({ investor: wallet! }, "contract").lean();
-    investors = cis.map((ci) => ({ contract: ci.contract }));
+    const cis = await CryptoInvestor.find(
+      { investor: wallet! },
+      "contract ranchId lotId"
+    ).lean();
+    investors = cis.map((ci) => ({
+      contract: ci.contract,
+      ranchId:  ci.ranchId,
+      lotId:    (ci as any).lotId,
+    }));
   }
 
   // 2) Validate ENV
@@ -83,7 +99,7 @@ export async function GET(req: Request) {
 
   // 4) Fetch on-chain status
   const out: ContractEntry[] = [];
-  for (const { contract } of investors) {
+  for (const { contract, ranchId, lotId } of investors) {
     try {
       const pk   = new PublicKey(contract);
       const acct = await program.account.contract.fetch(pk);
@@ -91,9 +107,9 @@ export async function GET(req: Request) {
       if      ("active"    in acct.status)     st = "active";
       else if ("settled"   in acct.status)     st = "settled";
       else if ("defaulted" in acct.status)     st = "defaulted";
-      out.push({ contractId: contract, status: st });
+      out.push({ contractId: contract, status: st, ranchId, lotId });
     } catch {
-      out.push({ contractId: contract, status: "not-started" });
+      out.push({ contractId: contract, status: "not-started", ranchId, lotId });
     }
   }
 

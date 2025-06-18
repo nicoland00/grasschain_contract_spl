@@ -13,7 +13,7 @@ export default function OverlayLayout({ children }: { children: React.ReactNode 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
 
-  const isStats = pathname === "/stats" || pathname.startsWith("/stats");
+  const isStats = pathname.includes("/stats");
 
   return (
     <div className="relative flex-1 overflow-hidden min-h-screen">
@@ -23,7 +23,10 @@ export default function OverlayLayout({ children }: { children: React.ReactNode 
       </div>
 
       {/* Foreground UI */}
-      <div className="relative z-10 overflow-auto" style={{ paddingTop: "4rem", height: "100%" }}>
+      <div
+        className="relative z-10 overflow-auto"
+        style={{ paddingTop: isStats ? undefined : "4rem", height: "100%" }}
+      >
         {isStats ? <StatsPanel /> : children}
       </div>
 
