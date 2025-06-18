@@ -9,17 +9,19 @@ export async function GET(request: Request, { params }: any) {
 
   // 1) Refresh the access token
   const token = await getRefreshedIxorigueToken();
-
-  // 2) Call Ixorigue with the new token
-  const res = await fetch(`${baseUrl}/api/AnimalsLots/${ranchId}/${lotId}`, {
+  // 2) Call Ixorigue for *all* ranch animals and filter by lotId
+  const res = await fetch(`${baseUrl}/api/Animals/${ranchId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
     return NextResponse.json(
-      { error: `Ixorigue lot animals error: ${res.status}` },
+      { error: `Ixorigue animals error: ${res.status}` },
       { status: 500 }
     );
   }
   const data = await res.json();
-  return NextResponse.json(data);
+
+  const filtered = (data.data || []).filter((a: any) => a.lot?.lotId === lotId);
+
+  return NextResponse.json({ data: filtered });
 }
