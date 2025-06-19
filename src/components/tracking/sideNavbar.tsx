@@ -24,7 +24,7 @@ export default function SideNavbar({
 
   return (
     <div
-      className={`absolute top-0 left-0 bottom-0 z-40 transform transition-transform duration-300 ${
+      className={`fixed top-0 left-0 bottom-0 z-40 transform transition-transform duration-300 ${
         open ? "translate-x-0" : "-translate-x-full"
       } pointer-events-none`}
     >

@@ -22,11 +22,11 @@ export function UiLayout({ children }: { children: ReactNode }) {
     <div className="flex flex-col bg-white text-black">
       {showLogin && !session && <LoginIsland />}
       {/* Navbar */}
-      <nav className="navbar bg-white px-4 shadow relative z-50">
+      <nav className="navbar bg-white px-4 shadow fixed top-0 left-0 right-0 z-50">
         {/* Logo & Links */}
         <div className="navbar-start ">
           <Link href="/" className="flex items-center">
-            <img src="/favicon.ico" alt="Pastora" className="h-11 w-20" />
+            <img src="/logo1.png" alt="Pastora" className="h-11 w-20 rounded-2xl" />
           </Link>
         </div>
 
@@ -81,7 +81,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
           </div>
         }
       >
-        <main className="flex-grow container mx-auto px-0 md:px-4">
+        <main className="flex-grow container mx-auto px-0 md:px-4 pt-16">
           {children}
         </main>
       </Suspense>
