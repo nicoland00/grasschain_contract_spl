@@ -21,8 +21,8 @@ export default function AccountPage() {
             </div>
           )}
           {publicKey && (
-            <div className="flex flex-col items-center space-y-2">
-            <UserIcon className="w-8 h-8" />
+            <div className="flex flex-col items-center space-y-2 mt-8">
+            <UserIcon className="w-16 h-16" />
             <span className="font-mono">
               {publicKey.toBase58().slice(0, 6)}…{publicKey.toBase58().slice(-4)}
             </span>
