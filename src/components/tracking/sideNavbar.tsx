@@ -64,7 +64,7 @@ export default function SideNavbar({
           </button>
         </nav>
         <div className="mt-6">
-          <LotSelector />
+        <LotSelector onSelect={onClose} />
         </div>
       </div>
     </div>

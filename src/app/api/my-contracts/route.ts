@@ -14,10 +14,11 @@ export const runtime  = "nodejs";
 export const dynamic  = "force-dynamic";
 
 interface ContractEntry {
-  contractId: string;
-  status:     "not-started" | "active" | "settled" | "defaulted";
-  ranchId?:   string;
-  lotId?:     string;
+  contractId:  string;
+  status:      "not-started" | "active" | "settled" | "defaulted";
+  ranchId?:    string;
+  lotId?:      string;
+  farmName?:   string;
 }
 
 export async function GET(req: Request) {
@@ -50,7 +51,7 @@ export async function GET(req: Request) {
         if      ("active"    in account.status)     st = "active";
         else if ("settled"   in account.status)     st = "settled";
         else if ("defaulted" in account.status)     st = "defaulted";
-        return { contractId: publicKey.toBase58(), status: st };
+        return { contractId: publicKey.toBase58(), status: st, farmName: account.farmName };
       });
     return NextResponse.json(out);
   }
@@ -107,7 +108,7 @@ export async function GET(req: Request) {
       if      ("active"    in acct.status)     st = "active";
       else if ("settled"   in acct.status)     st = "settled";
       else if ("defaulted" in acct.status)     st = "defaulted";
-      out.push({ contractId: contract, status: st, ranchId, lotId });
+      out.push({ contractId: contract, status: st, ranchId, lotId, farmName: acct.farmName });
     } catch {
       out.push({ contractId: contract, status: "not-started", ranchId, lotId });
     }

@@ -21,7 +21,14 @@ export async function GET(request: Request, { params }: any) {
   }
   const data = await res.json();
 
-  const filtered = (data.data || []).filter((a: any) => a.lot?.lotId === lotId);
+  // filter to animals in the requested lot with a recent location
+  const cutoff = Date.now() - 1000 * 60 * 60 * 24 * 2; // 2 days ago
+  const filtered = (data.data || []).filter((a: any) => {
+    if (a.lot?.lotId !== lotId) return false;
+    if (!a.lastLocationTimestamp || !a.lastLocation) return false;
+    const ts = new Date(a.lastLocationTimestamp).getTime();
+    return ts >= cutoff;
+  });
 
   return NextResponse.json({ data: filtered });
 }

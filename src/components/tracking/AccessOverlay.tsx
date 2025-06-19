@@ -37,6 +37,7 @@ type ContractEntry = {
   contractId: string;
   ranchId?: string;
   status: "not-started" | "active" | "settled" | "defaulted";
+  farmName?: string;
 };
 
 const OVERLAY_Z = 40;
@@ -182,7 +183,7 @@ export default function AccessOverlay() {
         {/* Active contracts first */}
         {active.map((c) => {
           const meta = metaMap[c.contractId] || {
-            farmName: c.contractId,
+            farmName: c.farmName || c.contractId,
             farmImageUrl: "/cows.gif",
           };
           return (
@@ -204,7 +205,7 @@ export default function AccessOverlay() {
             <hr className="border-border" />
             {others.map((c) => {
               const meta = metaMap[c.contractId] || {
-                farmName: c.contractId,
+                farmName: c.farmName || c.contractId,
                 farmImageUrl: "/cows.gif",
               };
               return (

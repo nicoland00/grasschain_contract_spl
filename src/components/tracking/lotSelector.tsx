@@ -9,10 +9,11 @@ export type ContractEntry = {
   contractId: string;
   ranchId: string;
   lotId: string;
+  farmName?: string;
   label: string;
 };
 
-export default function LotSelector({ className }: { className?: string }) {
+export default function LotSelector({ className, onSelect }: { className?: string; onSelect?: () => void }) {
   const { selected, setSelected } = useLote();
   const { data: session } = useSession();
   const { publicKey, connected } = useWallet();
@@ -42,6 +43,7 @@ export default function LotSelector({ className }: { className?: string }) {
             contractId: c.contractId,
             ranchId:    c.ranchId,
             lotId:      c.lotId,
+            farmName:   c.farmName,
             label:      c.farmName || c.lotName || c.lotId || c.contractId,
           }))
         );
@@ -71,7 +73,10 @@ export default function LotSelector({ className }: { className?: string }) {
         onChange={(e) => {
           const lotId = e.target.value;
           const lot = lots.find((l) => l.lotId === lotId);
-          if (lot) setSelected({ ranchId: lot.ranchId, lotId: lot.lotId });
+          if (lot) {
+            setSelected({ ranchId: lot.ranchId, lotId: lot.lotId });
+            onSelect?.();
+          }
         }}
       >
         {lots.map((l) => (
