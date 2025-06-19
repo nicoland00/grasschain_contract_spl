@@ -16,9 +16,9 @@ export default function OverlayLayout({ children }: { children: React.ReactNode 
   const isStats = pathname.includes("/stats");
 
   return (
-    <div className="relative flex-1 overflow-hidden min-h-screen">
+    <div className="relative flex-1 min-h-screen">
       {/* Map behind everything */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-[-10]">
         <MapComponent sidebarOpen={sidebarOpen} />
       </div>
 

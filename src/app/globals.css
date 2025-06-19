@@ -313,3 +313,9 @@ html, body, #__next {
   height: 100vh !important;
   background: #000; /* shows dark while tiles load */
 }
+
+@supports (-webkit-touch-callout: none) {
+  .leaflet-container {
+    background-color: black !important;
+  }
+}
