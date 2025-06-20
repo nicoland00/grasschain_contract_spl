@@ -808,12 +808,13 @@ export function GrasschainContractsList() {
               return (
                 <div
                   key={publicKey.toBase58()}
-                  className="relative opacity-50 pointer-events-none"
+                  className="relative pointer-events-none"
                 >
                   <GrasschainContractCard
                     contractPk={publicKey}
                     contractData={account}
                   />
+                  <div className="absolute inset-0 rounded-2xl bg-black/40 z-40" />
                   {/* wrapper badge igual que Settled */}
                   <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
                     <span
