@@ -11,12 +11,10 @@ export default function LoginIsland() {
   const { setVisible } = useWalletModal();
 
   const handleSolanaLogin = () => {
-    const isMobile =
-      typeof window !== "undefined" &&
-      /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const isInPhantom =
-      typeof window !== "undefined" &&
-      (window as any).solana?.isPhantom;
+    const ua = typeof window !== "undefined" ? navigator.userAgent : "";
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+    const isInPhantom = typeof window !== "undefined" && (window as any).solana?.isPhantom;
+    const isSafari = /Safari/i.test(ua) && !/Chrome/i.test(ua);
 
     if (isInPhantom) {
       setVisible(true);
@@ -26,11 +24,16 @@ export default function LoginIsland() {
     if (isMobile) {
       const target = encodeURIComponent("https://app.pastora.io");
       const ref = encodeURIComponent(window.location.origin);
-      window.location.href =
-        `https://phantom.app/ul/browse/${target}?ref=${ref}`;
-    } else {
-      setVisible(true);
+      window.location.href = `https://phantom.app/ul/browse/${target}?ref=${ref}`;
+      return;
     }
+
+    if (isSafari) {
+      window.open("https://phantom.app/download", "_blank");
+      return;
+    }
+
+    setVisible(true);
   };
 
   // If the user is already logged in (or auth status is still loading), don't show this overlay
