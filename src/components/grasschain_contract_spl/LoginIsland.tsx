@@ -14,7 +14,7 @@ export default function LoginIsland() {
     const ua = typeof window !== "undefined" ? navigator.userAgent : "";
     const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
     const isInPhantom = typeof window !== "undefined" && (window as any).solana?.isPhantom;
-    const isSafari = /Safari/i.test(ua) && !/Chrome/i.test(ua);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
 
     if (isInPhantom) {
       setVisible(true);
