@@ -910,7 +910,7 @@ export function GrasschainContractsList() {
               return (
                 <div
                   key={publicKey.toBase58()}
-                  className="relative pointer-events-none"
+                  className="relative"
                 >
                   <GrasschainContractCard
                     contractPk={publicKey}
@@ -918,7 +918,7 @@ export function GrasschainContractsList() {
                   />
                   <div className="absolute inset-0 rounded-2xl bg-black/40 z-40" />
                   {/* wrapper badge igual que Settled */}
-                  <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+                  <div className="absolute inset-0 flex items-center justify-center z-50">
                     <span
                       className={`px-4 py-2 text-base font-bold text-white rounded-2xl shadow ${badgeColor}`}
                     >
