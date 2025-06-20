@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { AdminExportCSV } from "./AdminExportCSV";
 import { useNotifications, TNotification } from "@/hooks/useNotifications";
+import { upload } from "@vercel/blob/client";
 
 
 // Helpers to derive PDA for metadata and master edition
@@ -207,11 +208,20 @@ export function GrasschainContractCard({
   const [investInput, setInvestInput] = useState("");
   const [hasInvested, setHasInvested] = useState(false);
 
-    // notifications for updates
-    const { all: notes } = useNotifications(`?contract=${contractPk.toBase58()}`);
+  const {
+    all: notes,
+    createNotification,
+    updateNotification,
+    deleteNotification,
+  } = useNotifications(`?contract=${contractPk.toBase58()}`);
     const [modalOpen, setModalOpen] = useState(false);
     const [seen, setSeen] = useState<Set<string>>(new Set());
     const hasUnseen = notes.some((n) => !seen.has(n._id));
+    const [title, setTitle] = useState("");
+    const [message, setMessage] = useState("");
+    const [files, setFiles] = useState<File[]>([]);
+    const [editing, setEditing] = useState<TNotification | null>(null);
+    const isAdmin = publicKey?.toBase58() === ADMIN_PUBKEY;
   
     useEffect(() => {
       if (modalOpen) {
@@ -731,14 +741,106 @@ export function GrasschainContractCard({
                   .slice()
                   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                   .map((n: TNotification) => (
-                    <div key={n._id} className="flex flex-col">
+                    <div key={n._id} className="flex flex-col border-b pb-2">
                       <div className="flex justify-between">
                         <span className="font-medium">{n.title}</span>
                         <span className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
                       </div>
                       <p className="mt-1 text-gray-700">{n.message}</p>
+                      {isAdmin && (
+                        <div className="mt-2 flex gap-2">
+                          <button
+                            className="btn btn-xs"
+                            onClick={() => {
+                              setEditing(n);
+                              setTitle(n.title);
+                              setMessage(n.message);
+                            }}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            className="btn btn-xs btn-error"
+                            onClick={() => deleteNotification(n._id, publicKey!.toBase58())}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))
+              )}
+
+{isAdmin && (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const uploaded = [] as { url: string; contentType: string }[];
+                    for (const f of files) {
+                      const r = await upload(f.name, f, { access: "public", handleUploadUrl: "/api/upload" });
+                      uploaded.push({ url: r.url, contentType: f.type });
+                    }
+                    if (editing) {
+                      await updateNotification(editing._id, {
+                        title,
+                        message,
+                        contract: contractPk.toBase58(),
+                        attachments: uploaded,
+                        adminPubkey: publicKey!.toBase58(),
+                      });
+                    } else {
+                      await createNotification({
+                        title,
+                        message,
+                        contract: contractPk.toBase58(),
+                        stage: "active",
+                        attachments: uploaded,
+                        adminPubkey: publicKey!.toBase58(),
+                      });
+                    }
+                    setTitle("");
+                    setMessage("");
+                    setFiles([]);
+                    setEditing(null);
+                  }}
+                  className="pt-4 space-y-2"
+                >
+                  <h3 className="font-semibold">{editing ? "Edit Update" : "New Update"}</h3>
+                  <input
+                    className="input input-bordered w-full"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Title"
+                    required
+                  />
+                  <textarea
+                    className="textarea textarea-bordered w-full"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Message"
+                    required
+                  />
+                  <input type="file" multiple onChange={(e) => setFiles(Array.from(e.target.files || []))} />
+                  <div className="flex gap-2">
+                    {editing && (
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        onClick={() => {
+                          setEditing(null);
+                          setTitle("");
+                          setMessage("");
+                          setFiles([]);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button type="submit" className="btn btn-primary btn-sm">
+                      {editing ? "Save" : "Publish"}
+                    </button>
+                  </div>
+                </form>
               )}
             </div>
           </div>
