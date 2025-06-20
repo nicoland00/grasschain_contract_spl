@@ -538,7 +538,7 @@ export function GrasschainContractCard({
     <>
     <div className="relative w-full bg-appDarkGray border border-border rounded-2xl p-6 mb-4">
           {status === "Active" && (
-      <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+      <div className="absolute inset-0 flex items-center justify-center z-[60] pointer-events-none">
         <span className="bg-green-600 text-white px-4 py-2 rounded-2xl font-bold text-base">
           {expired
             ? "ACTIVE : Pending Management"
@@ -548,7 +548,7 @@ export function GrasschainContractCard({
     )}
 
     {!["Created", "Funding", "Funded Pending Verification"].includes(status) && (
-        <div className="absolute top-12 inset-x-0 flex justify-center z-40">
+        <div className="absolute top-12 inset-x-0 flex justify-center z-[60]">
           <button
             onClick={() => setModalOpen(true)}
             className="relative px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium"
