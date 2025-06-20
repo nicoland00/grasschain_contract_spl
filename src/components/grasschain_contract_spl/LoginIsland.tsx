@@ -28,12 +28,12 @@ export default function LoginIsland() {
       return;
     }
 
+    const downloadUrl = "https://phantom.app/download";
     if (isSafari) {
-      window.open("https://phantom.app/download", "_blank");
-      return;
+      window.open(downloadUrl, "_blank");
+    }else {
+      window.open(downloadUrl, "_blank");
     }
-
-    setVisible(true);
   };
 
   // If the user is already logged in (or auth status is still loading), don't show this overlay

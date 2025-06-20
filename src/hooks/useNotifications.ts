@@ -2,13 +2,13 @@
 import useSWR from "swr";
 
 export interface TNotification {
-  _id:       string;
-  title:     string;
-  message:   string;
-  contract:  string | null;
-  stage:     string;
-  createdAt: string;
-  read?:     boolean;           // ← new
+  _id:         string;
+  title:       string;
+  message:     string;
+  contract:    string | null;
+  stage:       string;
+  createdAt:   string;
+  attachments?: { url: string; contentType: string }[];
 }
 
 // simple fetcher
@@ -25,6 +25,7 @@ export function useNotifications(contractQuery = "") {
     message:     string;
     contract:    string | null;
     stage?:      string;
+    attachments?: any[];
     adminPubkey: string;
   }) => {
     await fetch("/api/notifications", {
@@ -35,14 +36,35 @@ export function useNotifications(contractQuery = "") {
     await mutate();
   };
 
-  const unreadCount = (data ?? []).filter(n => n.read !== true).length;
+  const updateNotification = async (
+    id: string,
+    body: { title: string; message: string; contract?: string | null; attachments?: any[]; adminPubkey: string }
+  ) => {
+    await fetch(`/api/notifications/${id}`, {
+      method:  "PUT",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(body),
+    });
+    await mutate();
+  };
+
+  const deleteNotification = async (id: string, adminPubkey: string) => {
+    await fetch(`/api/notifications/${id}`, {
+      method:  "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({ adminPubkey }),
+    });
+    await mutate();
+  };
+
 
   return {
-    all:              data ?? [],
-    unreadCount,             
-    isLoading:        !data && !error,
-    isError:          !!error,
+    all:         data ?? [],
+    isLoading:   !data && !error,
+    isError:     !!error,
     createNotification,
-    markAllRead:      () => mutate(),
+    updateNotification,
+    deleteNotification,
+    markAllRead: () => mutate(),
   };
 }

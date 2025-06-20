@@ -54,6 +54,7 @@ export async function POST(req: Request) {
     contract:   body.contract ?? null,
     stage:      body.stage ?? "active",
     adminPubkey: body.adminPubkey,
+    attachments: body.attachments ?? [],
   });
   return NextResponse.json(notif);
 }

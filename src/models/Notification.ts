@@ -15,6 +15,7 @@ export interface INotification extends Document {
   contract: string | null;   // contract ID (or null for global)
   stage:   StageKey;         // <-- new!
   createdAt: Date;
+  attachments?: { url: string; contentType: string }[];
 }
 
 const NotificationSchema = new mongoose.Schema<INotification>(
@@ -34,6 +35,12 @@ const NotificationSchema = new mongoose.Schema<INotification>(
       ],
       required: true,
     },
+    attachments: [
+      {
+        url:         { type: String, required: true },
+        contentType: { type: String, required: true },
+      },
+    ],
   },
   {
     timestamps: { createdAt: true, updatedAt: false },

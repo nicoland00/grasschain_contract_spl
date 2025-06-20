@@ -8,7 +8,7 @@ const ADMIN_PUBKEY = process.env.NEXT_PUBLIC_ADMIN_PUBKEY;
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   await dbConnect();
   const { id } = params;
-  const { title, message, contract, adminPubkey } = await req.json();
+  const { title, message, contract, adminPubkey, attachments } = await req.json();
 
   if (adminPubkey !== ADMIN_PUBKEY) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -16,7 +16,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
   const updated = await Notification.findByIdAndUpdate(
     id,
-    { title, message, contract: contract || null },
+    { title, message, contract: contract || null, attachments: attachments ?? [] },
     { new: true }
   );
   return updated
