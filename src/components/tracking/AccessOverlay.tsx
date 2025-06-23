@@ -142,7 +142,7 @@ export default function AccessOverlay() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setSelected({ ranchId: data.ranchId, lotId: data.lotId });
+        setSelected({ ranchId: data.ranchId, lotId: data.lotId, contractId: data.contractId });
         return;
       } else {
         setMessage(data.error || "Verification failed.");

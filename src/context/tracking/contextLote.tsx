@@ -1,7 +1,7 @@
 // src/context/tracking/contextLote.tsx
 import React, { useEffect } from "react";
 
-type SelectedLot = { ranchId: string; lotId: string } | null;
+type SelectedLot = { ranchId: string; lotId: string; contractId: string } | null;
 
 const LoteContext = React.createContext<{
   selected: SelectedLot;
@@ -19,7 +19,7 @@ export function LoteProvider({ children }: { children: React.ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed?.ranchId && parsed?.lotId) {
-          setSelected({ ranchId: parsed.ranchId, lotId: parsed.lotId });
+          setSelected({ ranchId: parsed.ranchId, lotId: parsed.lotId, contractId: parsed.contractId });
         }
       }
     } catch {

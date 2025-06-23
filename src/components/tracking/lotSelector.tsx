@@ -74,7 +74,7 @@ export default function LotSelector({ className, onSelect }: { className?: strin
           const lotId = e.target.value;
           const lot = lots.find((l) => l.lotId === lotId);
           if (lot) {
-            setSelected({ ranchId: lot.ranchId, lotId: lot.lotId });
+            setSelected({ ranchId: lot.ranchId, lotId: lot.lotId, contractId: lot.contractId });
             onSelect?.();
           }
         }}

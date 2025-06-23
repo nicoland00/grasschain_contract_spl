@@ -7,7 +7,7 @@ export default function SelectLote() {
   const { selected, setSelected } = useLote();
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelected({ ranchId: selected?.ranchId ?? "", lotId: e.target.value });
+    setSelected({ ranchId: selected?.ranchId ?? "", lotId: e.target.value, contractId: selected?.contractId ?? "" });
   };
 
   return (
