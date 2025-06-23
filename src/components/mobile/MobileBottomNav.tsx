@@ -16,7 +16,7 @@ const MobileNavbar: React.FC = () => {
 
   return (
     // 👇  oculto en ≥768 px 
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50 md:hidden">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-[1000] md:hidden">
       <div className="flex justify-around items-center py-2">
         {navItems.map(({ id, label, icon: Icon, href }) => {
           const isActive = pathname === href || (href !== "/" && pathname.startsWith(href));
