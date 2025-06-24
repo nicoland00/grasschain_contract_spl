@@ -20,21 +20,19 @@ export default function StatsPanel() {
   useEffect(() => {
     if (!selected?.ranchId || !selected.lotId) return;
     setLoadingStats(true);
-    fetch(`/api/animals/${selected.ranchId}`)
+    fetch(`/api/lots/${selected.ranchId}/${selected.lotId}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Status ${res.status}`);
         return res.json();
       })
       .then((json) => {
         setAnimals(
-          (json.data || [])
-            .filter((a: any) => a.lot?.lotId === selected.lotId)
-            .map((a: any) => ({
-              id:     a.id,
-              name:   a.name || a.earTag || "–",
-              weight: a.lastWeight?.weight ?? null,
-              date:   a.lastWeight?.date?.slice(0,10)   || "–",
-            }))
+          (json.data || []).map((a: any) => ({
+            id:     a.id,
+            name:   a.name || a.earTag || "–",
+            weight: a.lastWeight?.weight ?? null,
+            date:   a.lastWeight?.date?.slice(0, 10) || "–",
+          }))
         );
       })
       .catch((err) => setErrorStats(err.message))
@@ -45,7 +43,8 @@ export default function StatsPanel() {
   useEffect(() => {
     if (!selected?.contractId) return;
     setLoadingFund(true);
-    fetch(`/api/fiat/summary?contract=${selected.contractId}`)
+    const contract = encodeURIComponent(selected.contractId);
+    fetch(`/api/fiat/summary?contract=${contract}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Status ${res.status}`);
         return res.json();
