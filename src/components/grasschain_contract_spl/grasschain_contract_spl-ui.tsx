@@ -726,7 +726,7 @@ export function GrasschainContractCard({
           onClick={() => setModalOpen(false)}
         >
           <div
-            className="bg-white rounded-lg overflow-hidden max-w-lg w-full max-h-[80vh] flex flex-col"
+            className="bg-white rounded-lg overflow-hidden max-w-lg w-full max-h-[80vh] flex flex-col mx-4"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center px-4 py-2 border-b">
