@@ -747,6 +747,13 @@ export function GrasschainContractCard({
                         <span className="text-xs text-gray-400">{new Date(n.createdAt).toLocaleString()}</span>
                       </div>
                       <p className="mt-1 text-gray-700">{n.message}</p>
+                      {n.attachments?.map((a, i) => (
+                        a.contentType.startsWith("video") ? (
+                          <video key={i} controls className="mt-2 rounded-lg" src={a.url} />
+                        ) : (
+                          <img key={i} className="mt-2 rounded-lg" src={a.url} alt="attachment" />
+                        )
+                      ))}
                       {isAdmin && (
                         <div className="mt-2 flex gap-2">
                           <button
