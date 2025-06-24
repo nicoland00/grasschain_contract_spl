@@ -1,6 +1,7 @@
 
 import React from 'react';
 import WeightGainForm from './WeightGainForm';
+import CalfGrowthChart from './CalfGrowthChart';
 import { ArrowLeft } from "lucide-react";
 
 interface WeightGainProjectionProps {
@@ -13,7 +14,8 @@ const WeightGainProjection: React.FC<WeightGainProjectionProps> = ({
   description = "Pastora Weight Gain Program",
 }) => {
   return (
-    <div className="min-h-screen bg-appBlack text-white m-4 md:mx-auto">
+    <div className="min-h-screen bg-appBlack text-white m-4 md:mx-auto space-y-8">
+        <CalfGrowthChart />
         <WeightGainForm initialWeight={200} initialCaloriesAmount={150} />
     </div>
   );
