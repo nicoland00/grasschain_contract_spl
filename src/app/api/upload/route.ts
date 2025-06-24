@@ -11,7 +11,14 @@ export async function POST(request: Request): Promise<NextResponse> {
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         // e.g. only allow certain file types
         return {
-          allowedContentTypes: ["image/jpeg", "image/png", "image/gif"],
+          allowedContentTypes: [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "video/mp4",
+            "video/quicktime",
+            "video/webm",
+          ],
           // optionally store something in tokenPayload
           tokenPayload: JSON.stringify({ userId: "admin" }),
         };
