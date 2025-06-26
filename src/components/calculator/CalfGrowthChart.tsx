@@ -16,13 +16,13 @@ const CalfGrowthChart: React.FC = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-gray-900 text-white p-3 rounded-lg shadow-xl border border-gray-700">
-          <p className="font-medium text-sm">{`${label} meses`}</p>
+        <div className="bg-card p-3 rounded-md shadow-lg border border-border">
+          <p className="font-semibold">{`Month: ${label}`}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="font-semibold" style={{ color: entry.color }}>
-              {entry.dataKey === 'weight' && `Proyección: ${entry.value} kg`}
-              {entry.dataKey === 'weightPlus20' && `Rango +20%: ${entry.value.toFixed(0)} kg`}
-              {entry.dataKey === 'weightMinus20' && `Rango -20%: ${entry.value.toFixed(0)} kg`}
+              {entry.dataKey === 'weight' && `Projected: ${entry.value} kg`}
+              {entry.dataKey === 'weightPlus20' && `+20% range: ${entry.value.toFixed(0)} kg`}
+              {entry.dataKey === 'weightMinus20' && `-20% range: ${entry.value.toFixed(0)} kg`}
             </p>
           ))}
         </div>
@@ -32,35 +32,35 @@ const CalfGrowthChart: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-gradient-to-br from-gray-900 to-black rounded-2xl shadow-2xl p-8 text-white">
+    <div className="w-full rounded-2xl p-8 bg-white text-black shadow">
       <div className="mb-8">
-        <h2 className="text-3xl font-bold mb-2">Crecimiento de Ternera</h2>
-        <p className="text-gray-400 text-lg">Proyección de peso estimado (0–40 meses)</p>
+      <h2 className="text-3xl font-bold mb-2">Calf Growth</h2>
+      <p className="text-gray-600 text-lg">Estimated weight projection (0–40 months)</p>
       </div>
 
       <div className="mb-6">
         <div className="flex items-center gap-8 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-full bg-green-400"></div>
-            <span className="text-gray-300">Peso proyectado</span>
+          <div className="w-4 h-4 rounded-full bg-[#4ECCA3]"></div>
+          <span className="text-gray-600">Projected</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-full bg-yellow-400"></div>
-            <span className="text-gray-300">Rango +20%</span>
+          <div className="w-4 h-4 rounded-full bg-[#3A86FF]"></div>
+          <span className="text-gray-600">+20% range</span>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-4 h-4 rounded-full bg-orange-400"></div>
-            <span className="text-gray-300">Rango -20%</span>
+          <div className="w-4 h-4 rounded-full bg-[#9dbff9]"></div>
+          <span className="text-gray-600">-20% range</span>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="text-gray-400 text-sm mb-1">Peso inicial</p>
+          <p className="text-gray-600 text-sm mb-1">Starting weight</p>
             <p className="text-2xl font-bold">25 kg</p>
           </div>
           <div>
-            <p className="text-gray-400 text-sm mb-1">Peso final estimado</p>
-            <p className="text-2xl font-bold text-green-400">500 kg</p>
+          <p className="text-gray-600 text-sm mb-1">Estimated final weight</p>
+          <p className="text-2xl font-bold text-[#4ECCA3]">500 kg</p>
           </div>
         </div>
       </div>
@@ -68,27 +68,20 @@ const CalfGrowthChart: React.FC = () => {
       <div className="w-full h-80 mb-6">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={growthData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-            <defs>
-              <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4ade80" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#4ade80" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#374151" strokeOpacity={0.3} />
-            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} tickFormatter={(value) => `${value}m`} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} tickFormatter={(value) => `${value} kg`} domain={[0, 650]} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" strokeOpacity={0.3} />
+            <XAxis dataKey="month" axisLine={{ stroke: '#D1D5DB' }} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} tickFormatter={(value) => `${value}m`} />
+            <YAxis axisLine={{ stroke: '#D1D5DB' }} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} tickFormatter={(value) => `${value} kg`} domain={[0, 650]} />
             <Tooltip content={<CustomTooltip />} />
-            <Line type="monotone" dataKey="weight" stroke="#4ade80" strokeWidth={4} dot={{ fill: '#4ade80', strokeWidth: 0, r: 6 }} activeDot={{ r: 8, fill: '#22c55e', stroke: '#4ade80', strokeWidth: 2 }} fill="url(#growthGradient)" />
-            <Line type="monotone" dataKey="weightPlus20" stroke="#fbbf24" strokeWidth={2} strokeDasharray="5 5" dot={{ fill: '#fbbf24', strokeWidth: 0, r: 4 }} activeDot={{ r: 6, fill: '#f59e0b', stroke: '#fbbf24', strokeWidth: 2 }} />
-            <Line type="monotone" dataKey="weightMinus20" stroke="#fb923c" strokeWidth={2} strokeDasharray="3 3" dot={{ fill: '#fb923c', strokeWidth: 0, r: 4 }} activeDot={{ r: 6, fill: '#ea580c', stroke: '#fb923c', strokeWidth: 2 }} />
+            <Line type="monotone" dataKey="weight" stroke="#4ECCA3" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="weightPlus20" stroke="#3A86FF" strokeWidth={1.5} strokeDasharray="4 2" dot={false} />
+            <Line type="monotone" dataKey="weightMinus20" stroke="#9dbff9" strokeWidth={1.5} strokeDasharray="1 2" dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div className="text-center">
         <p className="text-xs text-gray-500 leading-relaxed">
-          Los datos son aproximaciones basadas en el crecimiento promedio de terneras.<br />
-          Los valores reales pueden variar según factores individuales y condiciones de crianza.
+        Figures are estimates based on average calf growth and may vary with feeding conditions.
         </p>
       </div>
     </div>

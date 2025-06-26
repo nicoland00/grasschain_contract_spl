@@ -25,7 +25,7 @@ export function UiLayout({ children }: { children: ReactNode }) {
       <nav className="navbar bg-white px-4 shadow relative z-50">
         {/* Logo & Links */}
         <div className="navbar-start ">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center cursor-pointer">
             <img src="/favicon.ico" alt="Pastora" className="h-10 w-15" />
           </Link>
         </div>
