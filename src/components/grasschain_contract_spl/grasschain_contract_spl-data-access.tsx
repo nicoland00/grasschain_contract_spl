@@ -7,6 +7,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   Keypair,
+  Transaction,
 } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -38,7 +39,7 @@ function getProgram(provider: AnchorProvider): Program<GrasschainContractSpl> {
 
 export function useGrasschainContractSplProgram() {
   const { connection } = useConnection();
-  const { publicKey } = useWallet();
+  const { publicKey, signTransaction } = useWallet();
   const queryClient = useQueryClient();
 
   // Crear el provider
@@ -409,20 +410,27 @@ export function useGrasschainContractSplProgram() {
       adminTokenAccount,
       investorTokenAccount,
     }) => {
-      if (!publicKey) throw new Error("No wallet connected.");
+      if (!publicKey || !signTransaction) throw new Error("No wallet connected.");
 
-      const txSig = await program.methods
-        .settleInvestor() // método recién creado en Rust
+      const ix = await program.methods
+        .settleInvestor()// método recién creado en Rust
         .accountsPartial({
           contract: contractPk,
           admin: publicKey,
           investorRecord: investorRecordPk,
-          investor: investorPk,      // se ignora: se usa solo para validar PDA
+          investor: investorPk,    
           adminTokenAccount,
           investorTokenAccount,
           tokenProgram: TOKEN_PROGRAM_ID,
         })
-        .rpc();
+        .instruction();
+
+        const tx = new Transaction().add(ix);
+        tx.feePayer = publicKey;
+        tx.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+        const signed = await signTransaction(tx);
+        const txSig = await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(txSig, "processed");
 
       toast.success("settleInvestor success: " + txSig);
       allContracts.refetch();

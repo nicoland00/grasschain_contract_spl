@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { PublicKey, Transaction, Keypair, SystemProgram } from "@solana/web3.js";
+import { PublicKey, Transaction, Keypair, SystemProgram, SendTransactionError } from "@solana/web3.js";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { BN } from "@coral-xyz/anchor";
 import {
@@ -20,6 +20,7 @@ import { useSession } from "next-auth/react";
 import { AdminExportCSV } from "./AdminExportCSV";
 import { useNotifications, TNotification } from "@/hooks/useNotifications";
 import { upload } from "@vercel/blob/client";
+import { isExternal } from "util/types";
 
 
 // Helpers to derive PDA for metadata and master edition
@@ -508,8 +509,9 @@ export function GrasschainContractCard({
         program.programId
       );
   
+      let txSig: string | undefined;
       try {
-        await settleInvestor.mutateAsync({
+        txSig = await settleInvestor.mutateAsync({
           contractPk,
           investorRecordPk: recordPda,
           investorPk: investorPk,
@@ -523,6 +525,14 @@ export function GrasschainContractCard({
           ) / 1_000_000} USDC a ${investorPk.toBase58()}`
         );
       } catch (err: any) {
+        if (err instanceof SendTransactionError && txSig) {
+          try {
+            const logs = await err.getLogs(connection);
+            console.error("Transaction failed logs:", logs);
+          } catch (logErr) {
+            console.error("Failed to fetch logs:", logErr);
+          }
+        }
         toast.error(`Error a ${investorPk.toBase58()}: ${err.message}`);
       }
     }
@@ -860,6 +870,8 @@ export function GrasschainContractCard({
 
 export function GrasschainContractsList() {
   const { allContracts } = useGrasschainContractSplProgram();
+  const { publicKey } = useWallet();
+  const isAdmin = publicKey?.toBase58() === ADMIN_PUBKEY;
 
   if (allContracts.isLoading) return <p>Loading contracts...</p>;
   if (allContracts.isError)   return <p>Error loading contracts.</p>;
@@ -874,7 +886,9 @@ export function GrasschainContractsList() {
   );
   // 2) Activos
   const activeContracts = contracts.filter(({ account }) =>
-    "active" in account.status
+    "active" in account.status ||
+    "pendingBuyback" in account.status ||
+    "prolonged" in account.status
   );
   // 3) Completados (settled/defaulted)
   const doneContracts = contracts.filter(({ account }) =>
@@ -901,17 +915,27 @@ export function GrasschainContractsList() {
         {(activeContracts.length > 0 || doneContracts.length > 0) && (
           <div className="space-y-4">
             {[...activeContracts, ...doneContracts].map(({ publicKey, account }) => {
-              const isSettled = "settled" in account.status;
-              const isActive  = "active" in account.status;
+              const isSettled        = "settled" in account.status;
+              const isActive         = "active" in account.status;
+              const isPendingBuyback = "pendingBuyback" in account.status;
+              const isProlonged      = "prolonged" in account.status;
               const badgeText = isSettled
                 ? "SETTLED"
                 : isActive
                 ? ""
+                : isPendingBuyback
+                ? "PENDING BUYBACK"
+                : isProlonged
+                ? "PROLONGED"
                 : "DEFAULTED";
               const badgeColor = isSettled
                 ? "bg-cyan-600"
                 : isActive
                 ? ""
+                : isPendingBuyback
+                ? "bg-yellow-600"
+                : isProlonged
+                ? "bg-purple-600"
                 : "bg-red-600";
 
               return (
@@ -923,15 +947,22 @@ export function GrasschainContractsList() {
                     contractPk={publicKey}
                     contractData={account}
                   />
-                  <div className="absolute inset-0 rounded-2xl bg-black/40 z-40" />
-                  {/* wrapper badge igual que Settled */}
-                  <div className="absolute inset-0 flex items-center justify-center z-50">
-                    <span
-                      className={`px-4 py-2 text-base font-bold text-white rounded-2xl shadow ${badgeColor}`}
+                  {!isAdmin && (
+                    <div className="absolute inset-0 rounded-2xl bg-black/40 z-40" />
+                  )}
+                  {badgeText && (
+                    <div
+                      className={`absolute inset-0 flex items-center justify-center z-50 ${
+                        isAdmin ? "pointer-events-none" : ""
+                      }`}
                     >
-                      {badgeText}
-                    </span>
-                  </div>
+                      <span
+                        className={`px-4 py-2 text-base font-bold text-white rounded-2xl shadow ${badgeColor}`}
+                      >
+                        {badgeText}
+                      </span>
+                    </div>
+                  )}
                 </div>
               );
             })}
