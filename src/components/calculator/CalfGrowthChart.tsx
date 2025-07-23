@@ -10,7 +10,7 @@ const CalfGrowthChart: React.FC = () => {
     { month: 24, weight: 320, weightPlus20: 320 * 1.2, weightMinus20: 320 * 0.8 },
     { month: 30, weight: 410, weightPlus20: 410 * 1.2, weightMinus20: 410 * 0.8 },
     { month: 36, weight: 480, weightPlus20: 480 * 1.2, weightMinus20: 480 * 0.8 },
-    { month: 40, weight: 500, weightPlus20: 500 * 1.2, weightMinus20: 500 * 0.8 },
+    { month: 48, weight: 500, weightPlus20: 500 * 1.2, weightMinus20: 500 * 0.8 },
   ];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -35,7 +35,7 @@ const CalfGrowthChart: React.FC = () => {
     <div className="w-full rounded-2xl p-8 bg-white text-black shadow">
       <div className="mb-8">
       <h2 className="text-3xl font-bold mb-2">Calf Growth</h2>
-      <p className="text-gray-600 text-lg">Estimated weight projection (0–40 months)</p>
+      <p className="text-gray-600 text-lg">Estimated weight projection (0–48 months)</p>
       </div>
 
       <div className="mb-6">
