@@ -1,6 +1,6 @@
 "use client";
-import React from 'react';
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import React, { useEffect, useState } from 'react';
+import { Bar, BarChart, LabelList, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 interface DataPoint {
   month: number;
@@ -13,27 +13,6 @@ interface WeightGainChartProps {
   yAxisFormatter: (value: number) => string;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    const projectedWeight = payload[0].value;
-    const contribution = payload[0].payload.caloriesContribution;
-    const costPerKilogram = 2.5; // $2.5 per kg of meat
-    const meatKilograms = contribution / costPerKilogram; // Convert dollars to kg
-
-    return (
-      <div className="bg-card p-3 rounded-md shadow-lg border border-border text-black">
-        <p className="font-semibold">{`Period: ${label}`}</p>
-        <p className="text-projection">
-          {`Projected: ${projectedWeight.toFixed(1)} kg`}
-        </p>
-        <p className="text-contribution">
-        {`Total Contribution: $${contribution.toFixed(2)} (${meatKilograms.toFixed(2)}kg)`}
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
 
 const WeightGainChart: React.FC<WeightGainChartProps> = ({ data, yAxisFormatter }) => {
   const barData = [
@@ -41,13 +20,20 @@ const WeightGainChart: React.FC<WeightGainChartProps> = ({ data, yAxisFormatter 
     { period: '24m', projectedWeight: data.find(d => d.month === 24)?.projectedWeight || 0, caloriesContribution: data.find(d => d.month === 24)?.caloriesContribution || 0 },
     { period: '36m', projectedWeight: data.find(d => d.month === 36)?.projectedWeight || 0, caloriesContribution: data.find(d => d.month === 36)?.caloriesContribution || 0 }
   ];
+  const [axisMax, setAxisMax] = useState(0);
+
+  useEffect(() => {
+    const localMax = Math.max(...barData.map(d => d.projectedWeight));
+    setAxisMax(prev => (localMax > prev ? localMax : prev));
+  }, [barData]);
+
 
   return (
     <div className="w-full h-64 mt-4 mb-8">
       <ResponsiveContainer width="100%" height="100%">
       <BarChart
           data={barData}
-          margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+          margin={{ top: 20, right: 5, left: 5, bottom: 5 }}
         >
           <XAxis
             dataKey="period"
@@ -58,19 +44,26 @@ const WeightGainChart: React.FC<WeightGainChartProps> = ({ data, yAxisFormatter 
 
           <YAxis
             tickFormatter={yAxisFormatter}
+            domain={[0, axisMax * 1.1]}
             axisLine={false}
             tickLine={false}
             tick={{ fill: '#888', fontSize: 12 }}
             width={60}
           />
 
-          <Tooltip content={<CustomTooltip />} />
-
           <Bar
             dataKey="projectedWeight"
             fill="#4ECCA3"
             radius={[4, 4, 0, 0]}
-          />
+            isAnimationActive={false}
+            >
+              <LabelList
+                dataKey="projectedWeight"
+                position="top"
+                formatter={(v: number) => `${v.toFixed(1)} kg`}
+                fill="#000"
+              />
+            </Bar>
         </BarChart>
       </ResponsiveContainer>
     </div>

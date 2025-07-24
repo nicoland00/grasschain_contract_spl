@@ -89,26 +89,9 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
             <h2 className="text-3xl font-bold mb-1 text-black text-center">
               Projected Weight Gain
             </h2>
-            {/* ───── Summary Cards ───── */}
-            <div className="mt-4 grid grid-cols-2 gap-4 text-black items-center">
-            {/* Projected Weight */}
-            <div className="flex items-center justify-center">
-              <WeightCard
-                title="Projected (36 months)"
-                value={formatter(projectedWeight)}
-                color={fillColor}
-              />
-            </div>
-
-            {/* 3) Today's Contribution */}
-            <div className="flex items-center justify-center">
-              <WeightCard
-                title="Today"
-                value={`${meatKilograms.toFixed(1)} kg`}
-                color="#3A86FF"
-              />
-            </div>
-          </div>
+            <p className="text-gray-600 text-lg text-center mt-2">
+              Simulated weight gain projections based on contribution amount
+            </p>
           </div>
 
           {/* ───── Chart ───── */}
@@ -128,7 +111,7 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
               type="range"
               min={minAmt}
               max={maxAmt}
-              step={0.5}
+              step={1}
               value={caloriesAmount}
               onChange={(e) => setCaloriesAmount(Number(e.target.value))}
               className="w-full h-2 rounded-lg appearance-none cursor-pointer investment-slider"
@@ -168,18 +151,18 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
         /* WebKit slider thumb */
         input.investment-slider::-webkit-slider-thumb {
           -webkit-appearance: none;
-          width: 1rem;             /* 16px */
-          height: 1rem;            /* 16px */
+          width: 1.5rem;             /* 16px */
+          height: 1.5rem;            /* 16px */
           border-radius: 50%;
           background: ${fillColor};
           cursor: pointer;
-          margin-top: -0.25rem;     /* center on 8px track */
+          margin-top: -0.5rem;     /* center on 8px track */
         }
 
         /* Firefox slider thumb */
         input.investment-slider::-moz-range-thumb {
-          width: 1rem;
-          height: 1rem;
+          width: 1.5rem;
+          height: 1.5rem;
           border-radius: 50%;
           background: ${fillColor};
           cursor: pointer;
