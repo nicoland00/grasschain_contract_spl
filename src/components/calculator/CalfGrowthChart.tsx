@@ -32,10 +32,10 @@ const CalfGrowthChart: React.FC = () => {
   };
 
   return (
-    <div className="w-full rounded-2xl p-8 bg-white text-black shadow">
+    <div className="w-full rounded-2xl p-8 bg-white text-black justify-center border text-card-foreground shadow-sm">
       <div className="mb-8">
-      <h2 className="text-3xl font-bold mb-2">Calf Growth</h2>
-      <p className="text-gray-600 text-lg">Estimated weight projection (0–48 months)</p>
+      <h2 className="text-3xl font-bold mb-2 text-center">Standard Growth</h2>
+      <p className="text-gray-600 text-lg text-center">Estimated weight projection (0–48 months)</p>
       </div>
 
       <div className="mb-6">
@@ -53,7 +53,7 @@ const CalfGrowthChart: React.FC = () => {
           <span className="text-gray-600">-20% range</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-2 gap-6 text-center">
           <div>
           <p className="text-gray-600 text-sm mb-1">Starting weight</p>
             <p className="text-2xl font-bold">25 kg</p>

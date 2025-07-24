@@ -20,13 +20,9 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
   const minAmt = 2.5;
   const maxAmt = 10000;
 
-  // Duration options (in months)
-  const durationOptions = [12, 18, 24, 36];
-
   // ────────────────────────────────────────────────────────────────────────────
   // Local state
   // ────────────────────────────────────────────────────────────────────────────
-  const [duration, setDuration] = useState<number>(36);
   const [caloriesAmount, setCaloriesAmount] = useState<number>(initialCaloriesAmount);
   const [projectionData, setProjectionData] = useState<Array<{
     month: number;
@@ -38,7 +34,6 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
     range20: number;
   }>>([]);
   const [projectedWeight, setProjectedWeight] = useState<number>(0);
-  const [totalCalories, setTotalCalories] = useState<number>(0);
 
   // price per kilogram of meat
   const costPerKilogram = 2.5;
@@ -63,13 +58,12 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
       calculateWeightGain({
         initialWeight,
         dailyCaloriesAmount: caloriesAmount,
-        months: duration,
+        months: 36,
       });
 
     setProjectionData(data);
     setProjectedWeight(finalProjectedWeight);
-    setTotalCalories(finalCaloriesContribution);
-  }, [caloriesAmount, duration, initialWeight]);
+  }, [caloriesAmount, initialWeight]);
 
   // ────────────────────────────────────────────────────────────────────────────
   // Compute fill percentage for the slider (0 → 100%)
@@ -93,31 +87,14 @@ const WeightGainForm: React.FC<WeightGainFormProps> = ({
           {/* ───── Title ───── */}
           <div className="mb-6 animate-fade-in">
             <h2 className="text-3xl font-bold mb-1 text-black text-center">
-              Avg. projected weight gain
+              Projected Weight Gain
             </h2>
-            {/* ───── Duration + Two Cards ───── */}
-          <div className="mt-4 grid grid-cols-3 gap-4 text-black items-center">
-            {/* 1) Duration selector */}
-            <div className="flex flex-col items-start">
-              <label htmlFor="duration-select" className="font-semibold">Duration</label>
-              <select
-                id="duration-select"
-                className="mt-1 w-full border border-gray-300 rounded-md p-1 bg-white"
-                value={duration}
-                onChange={e => setDuration(Number(e.target.value))}
-              >
-                {durationOptions.map(opt => (
-                  <option key={opt} value={opt}>
-                    {opt} m
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* 2) Projected Weight */}
+            {/* ───── Summary Cards ───── */}
+            <div className="mt-4 grid grid-cols-2 gap-4 text-black items-center">
+            {/* Projected Weight */}
             <div className="flex items-center justify-center">
               <WeightCard
-                title="Projected"
+                title="Projected (36 months)"
                 value={formatter(projectedWeight)}
                 color={fillColor}
               />
