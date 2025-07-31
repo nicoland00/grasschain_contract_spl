@@ -15,6 +15,18 @@ export default function MapComponent({ sidebarOpen }: { sidebarOpen?: boolean })
   const { selected } = useLote();
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
+  // Cleanup map instance and markers on unmount
+  useEffect(() => {
+    return () => {
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+    };
+  }, []);
+
   // Create or update the map center based on the selected ranch
   useEffect(() => {
     if (!selected?.ranchId) return;
