@@ -11,26 +11,8 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { useLote } from "@/context/tracking/contextLote";
 import { useGrasschainContractSplProgram } from "@/components/grasschain_contract_spl/grasschain_contract_spl-data-access";
 import { PublicKey } from "@solana/web3.js";
-import { TrackingStepper } from "./TrackingStepper";
-import { StageKey } from "@/components/tracking/TrackingStepper"; // wherever you export it
-
-function contractStatusToStage(status: ContractEntry["status"]): StageKey {
-  switch (status) {
-    case "not-started":
-      return "bought";
-    case "active":
-      return "active";
-    case "settled":
-      return "settled";
-    case "defaulted":
-      return "defaulted";
-    // you can add more mappings later:
-    // case "pending-settlement": return "settling";
-    // case "verifying":       return "verification";
-    default:
-      return "bought";
-  }
-}
+// The TrackingStepper was removed as contract status is no longer
+// displayed on the tracking page
 
 
 type ContractEntry = {
@@ -296,14 +278,7 @@ function ContractCard({
             </div>
           </div>
     
-          <hr className="border-t border-border mx-6" />
-          {/** stepper lives *inside* the card, below the two-col area **/}
-          <div className="px-6 pb-6 relative overflow-visible">
-            <TrackingStepper
-              current={contractStatusToStage(entry.status)}
-              contractId={entry.contractId}
-            />
-          </div>
-        </div>
+          {/* status stepper removed */}
+       </div>
       );
 }
