@@ -588,7 +588,7 @@ export function GrasschainContractCard({
       <div className="flex flex-col md:flex-row">
         {/* Right Side: Contract Details */}
         <div className="w-full p-6">
-        <span className="absolute top-3 left-3 px-3 py-2 text-sm bg-green-600 uppercase rounded-2xl text-white font-bold">
+        <span className="absolute top-3 left-3 px-3 py-2 text-sm bg-green-600 uppercase rounded-2xl text-white font-bold z-50">
             {status}
           </span>
           {/* Farm Name as title */}
@@ -878,6 +878,16 @@ export function GrasschainContractsList() {
 
   const contracts = allContracts.data || [];
 
+  function shortStatus(status: any): string {
+    if ("funding" in status || "created" in status) return "Funding";
+    if ("fundedPendingVerification" in status) return "Funded";
+    if ("active" in status) return "Active";
+    if ("pendingBuyback" in status || "prolonged" in status) return "Settling";
+    if ("settled" in status) return "Settled";
+    if ("defaulted" in status) return "Defaulted";
+    return "Unknown";
+  }
+
   // 1) Pendientes de funding / creación
   const pendingFunding = contracts.filter(({ account }) =>
     "created" in account.status ||
@@ -901,11 +911,15 @@ export function GrasschainContractsList() {
         {/* 1) Pendientes de funding */}
         {pendingFunding.length > 0 ? (
           pendingFunding.map(({ publicKey, account }) => (
-            <GrasschainContractCard
-              key={publicKey.toBase58()}
-              contractPk={publicKey}
-              contractData={account}
-            />
+            <div key={publicKey.toBase58()} className="space-y-1">
+              <GrasschainContractCard
+                contractPk={publicKey}
+                contractData={account}
+              />
+              <p className="text-center text-sm font-medium z-50">
+                {shortStatus(account.status)}
+              </p>
+            </div>
           ))
         ) : (
           <p>No pending contracts.</p>
@@ -939,30 +953,32 @@ export function GrasschainContractsList() {
                 : "bg-red-600";
 
               return (
-                <div
-                  key={publicKey.toBase58()}
-                  className="relative"
-                >
-                  <GrasschainContractCard
-                    contractPk={publicKey}
-                    contractData={account}
-                  />
-                  {!isAdmin && (
-                    <div className="absolute inset-0 rounded-2xl bg-black/40 z-40" />
-                  )}
-                  {badgeText && (
-                    <div
-                      className={`absolute inset-0 flex items-center justify-center z-50 ${
-                        isAdmin ? "pointer-events-none" : ""
-                      }`}
-                    >
-                      <span
-                        className={`px-4 py-2 text-base font-bold text-white rounded-2xl shadow ${badgeColor}`}
+                <div key={publicKey.toBase58()} className="space-y-1">
+                  <div className="relative">
+                    <GrasschainContractCard
+                      contractPk={publicKey}
+                      contractData={account}
+                    />
+                    {!isAdmin && (
+                      <div className="absolute inset-0 rounded-2xl bg-black/40 z-40" />
+                    )}
+                    {badgeText && (
+                      <div
+                        className={`absolute inset-0 flex items-center justify-center z-50 ${
+                          isAdmin ? "pointer-events-none" : ""
+                        }`}
                       >
-                        {badgeText}
-                      </span>
-                    </div>
-                  )}
+                        <span
+                          className={`px-4 py-2 text-base font-bold text-white rounded-2xl shadow ${badgeColor}`}
+                        >
+                          {badgeText}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-center text-sm font-medium z-50">
+                    {shortStatus(account.status)}
+                  </p>
                 </div>
               );
             })}
