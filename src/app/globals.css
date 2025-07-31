@@ -299,23 +299,3 @@ body {
   border: 0;
   border-top: 1px solid #e5e7eb;
 }
-
-.leaflet-container {
-  background: #000;   /* dark behind your cows until tiles load */
-}
-
-html, body, #__next {
-  height: 100%;
-  margin: 0;
-}
-.leaflet-container {
-  width: 100vw !important;
-  height: 100vh !important;
-  background: #000; /* shows dark while tiles load */
-}
-
-@supports (-webkit-touch-callout: none) {
-  .leaflet-container {
-    background-color: black !important;
-  }
-}
