@@ -1,116 +1,86 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMap,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import React, { useEffect, useRef } from "react";
+import mapboxgl from "mapbox-gl";
 import { useLote } from "@/context/tracking/contextLote";
+import "mapbox-gl/dist/mapbox-gl.css";
 
-// 1) Leaflet default icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "/marker-icon-2x.png",
-  iconUrl:       "/marker-icon.png",
-  shadowUrl:     "/marker-shadow.png",
-});
-
-// 2) Random cow icon
-function getRandomCowIcon(): L.Icon {
-  const imgs = ["/cows/2.png","/cows/5.png","/cows/8.png","/cows/11.png"];
-  return L.icon({
-    iconUrl:     imgs[Math.floor(Math.random()*imgs.length)],
-    iconSize:    [40,40],
-    iconAnchor:  [20,20],
-    popupAnchor: [0,-20],
-  });
-}
-
-// 3) Zoom + resize helpers
-function ZoomControls({ shift }: { shift?: boolean }) {
-  const map = useMap();
-  const pos = shift ? "left-[285px]" : "left-[15px]";
-  return (
-    <div className={`absolute top-[90px] z-[9999] p-2 bg-white/75 rounded-lg flex flex-col gap-2 ${pos}`}>
-      <button onClick={()=>map.zoomIn()} className="w-10 h-10 flex items-center justify-center hover:bg-gray-200">+</button>
-      <button onClick={()=>map.zoomOut()}className="w-10 h-10 flex items-center justify-center hover:bg-gray-200">−</button>
-    </div>
-  );
-}
-function ResizeHandler({ sidebarOpen }: { sidebarOpen?: boolean }) {
-  const map = useMap();
-  useEffect(() => { map.invalidateSize(); }, [sidebarOpen, map]);
-  return null;
-}
+// Explicitly set Mapbox access token
+mapboxgl.accessToken =
+  "pk.eyJ1Ijoibmljb2xhbmQwMCIsImEiOiJjbWRwbm84NGcwZzRkMmpzOHM2dGc5NTA3In0.ypUF5A-pit_YVraEp8YQOQ";
 
 export default function MapComponent({ sidebarOpen }: { sidebarOpen?: boolean }) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<mapboxgl.Map | null>(null);
   const { selected } = useLote();
-  const [center, setCenter] = useState<[number,number] | null>(null);
-  const [animals,setAnimals] = useState<any[]>([]);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
 
-  // A) ranch center
+  // Create or update the map center based on the selected ranch
   useEffect(() => {
-    if(!selected?.ranchId) return;
+    if (!selected?.ranchId) return;
+
     fetch("/api/ixorigue/ranches")
-      .then(r=>r.json())
-      .then(json=>{
-        const ranch = (json.data||[]).find((r:any)=>r.id===selected.ranchId);
-        if(ranch) setCenter([ranch.location.latitude, ranch.location.longitude]);
-      })
-      .catch(console.error);
-  },[selected]);
-
-  // B) all animals → filter by selected lot
-  useEffect(() => {
-    if (!center || !selected?.lotId) return;
-    fetch(`/api/lots/${selected.ranchId}/${selected.lotId}`)
-      .then((r) => r.json())
+      .then((res) => res.json())
       .then((json) => {
-        const list = json.data || [];
-        setAnimals(
-          list
-          .filter((a: any) => a.lastLocation)
-          .map((a: any) => ({
-            id: a.id,
-            lat: a.lastLocation.latitude,
-            lng: a.lastLocation.longitude,
-            name: a.name || a.earTag || "Vaca",
-              weight: a.lastWeight?.weight ?? null,
-            }))
-        );
+        const ranch = (json.data || []).find((r: any) => r.id === selected.ranchId);
+        if (!ranch) return;
+
+        const center: [number, number] = [ranch.location.longitude, ranch.location.latitude];
+
+        if (!mapInstance.current && mapRef.current) {
+          mapInstance.current = new mapboxgl.Map({
+            container: mapRef.current,
+            style: "mapbox://styles/nicoland00/cmdol1doo003s01sb9car74qr",
+            center,
+            zoom: 13,
+          });
+          mapInstance.current.addControl(new mapboxgl.NavigationControl(), "top-left");
+        } else if (mapInstance.current) {
+          mapInstance.current.setCenter(center);
+        }
       })
       .catch(console.error);
-  }, [center, selected]);
+  }, [selected]);
 
-  if(!center) {
-    return <div className="absolute inset-0 flex items-center justify-center bg-white">Cargando mapa…</div>;
-  }
+  // Load animals for the selected lot and display them as markers
+  useEffect(() => {
+    if (!selected?.ranchId || !selected.lotId) return;
+    if (!mapInstance.current) return;
 
-  const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
-  return (
-    <MapContainer center={center} zoom={14} zoomControl={false} className="absolute inset-0">
-      <TileLayer
-        // Mapbox Satellite
-        url={`https://api.mapbox.com/styles/v1/mapbox/satellite-v9/tiles/{z}/{x}/{y}?access_token=${token}`}
-        tileSize={512}
-        zoomOffset={-1}
-        attribution='&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-      />
-      {animals.map(a=>(
-        <Marker key={a.id} position={[a.lat,a.lng]} icon={getRandomCowIcon()}>
-          <Popup>
-            <strong>{a.name}</strong><br/>
-            {a.weight!=null?`${a.weight} kg`:"Peso desconocido"}
-          </Popup>
-        </Marker>
-      ))}
-      <ZoomControls shift={sidebarOpen}/>
-      <ResizeHandler sidebarOpen={sidebarOpen}/>
-    </MapContainer>
-  );
+    fetch(`/api/lots/${selected.ranchId}/${selected.lotId}`)
+      .then((res) => res.json())
+      .then((json) => {
+        markersRef.current.forEach((m) => m.remove());
+        const imgs = ["/cows/2.png", "/cows/5.png", "/cows/8.png", "/cows/11.png"];
+        markersRef.current = (json.data || [])
+          .filter((a: any) => a.lastLocation)
+          .map((a: any) => {
+            const el = document.createElement("img");
+            el.src = imgs[Math.floor(Math.random() * imgs.length)];
+            el.style.width = "40px";
+            el.style.height = "40px";
+            el.style.transform = "translate(-20px,-20px)";
+
+            const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+              `<strong>${a.name || a.earTag || "Vaca"}</strong><br/>` +
+                `${a.lastWeight?.weight != null ? `${a.lastWeight.weight} kg` : "Peso desconocido"}`
+            );
+
+            return new mapboxgl.Marker({ element: el })
+              .setLngLat([a.lastLocation.longitude, a.lastLocation.latitude])
+              .setPopup(popup)
+              .addTo(mapInstance.current!);
+          });
+      })
+      .catch(console.error);
+  }, [selected]);
+
+  // Resize map when the sidebar toggles
+  useEffect(() => {
+    if (mapInstance.current) {
+      mapInstance.current.resize();
+    }
+  }, [sidebarOpen]);
+
+  return <div ref={mapRef} className="absolute inset-0 z-0" />;
 }
