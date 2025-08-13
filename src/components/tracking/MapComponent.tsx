@@ -3,61 +3,69 @@
 import React, { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import { useLote } from "@/context/tracking/contextLote";
-import "mapbox-gl/dist/mapbox-gl.css";
 
-// Explicitly set Mapbox access token
-mapboxgl.accessToken =
-  "pk.eyJ1Ijoibmljb2xhbmQwMCIsImEiOiJjbWRwbm84NGcwZzRkMmpzOHM2dGc5NTA3In0.ypUF5A-pit_YVraEp8YQOQ";
+// Configure Mapbox
+mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN!;
+(mapboxgl as any).setTelemetryEnabled?.(false);
 
 export default function MapComponent({ sidebarOpen }: { sidebarOpen?: boolean }) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const { selected } = useLote();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const { selected } = useLote();
 
-  // Cleanup map instance and markers on unmount
+  // initialize map once
   useEffect(() => {
+    if (mapRef.current || !containerRef.current) return;
+
+    const map = new mapboxgl.Map({
+      container: containerRef.current,
+      style: "mapbox://styles/nicoland00/cmdol1doo003s01sb9car74qr",
+      center: [-3.7038, 40.4168],
+      zoom: 8,
+      antialias: false,
+      failIfMajorPerformanceCaveat: false,
+    });
+
+    map.on("load", () => {
+      map.resize();
+    });
+
+    const handleResize = () => map.resize();
+    window.addEventListener("resize", handleResize);
+
+    mapRef.current = map;
+
     return () => {
+      window.removeEventListener("resize", handleResize);
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
+      map.remove();
+      mapRef.current = null;
     };
   }, []);
 
-  // Create or update the map center based on the selected ranch
+  // center map when ranch changes
   useEffect(() => {
-    if (!selected?.ranchId) return;
+    if (!selected?.ranchId || !mapRef.current) return;
 
     fetch("/api/ixorigue/ranches")
       .then((res) => res.json())
       .then((json) => {
         const ranch = (json.data || []).find((r: any) => r.id === selected.ranchId);
-        if (!ranch) return;
-
-        const center: [number, number] = [ranch.location.longitude, ranch.location.latitude];
-
-        if (!mapInstance.current && mapRef.current) {
-          mapInstance.current = new mapboxgl.Map({
-            container: mapRef.current,
-            style: "mapbox://styles/nicoland00/cmdol1doo003s01sb9car74qr",
-            center,
-            zoom: 13,
-          });
-          mapInstance.current.addControl(new mapboxgl.NavigationControl(), "top-left");
-        } else if (mapInstance.current) {
-          mapInstance.current.setCenter(center);
+        if (ranch) {
+          mapRef.current!.setCenter([
+            ranch.location.longitude,
+            ranch.location.latitude,
+          ]);
         }
       })
       .catch(console.error);
-  }, [selected]);
+  }, [selected?.ranchId]);
 
-  // Load animals for the selected lot and display them as markers
+  // load animal markers for selected lot
   useEffect(() => {
-    if (!selected?.ranchId || !selected.lotId) return;
-    if (!mapInstance.current) return;
+    if (!selected?.ranchId || !selected.lotId || !mapRef.current) return;
 
     fetch(`/api/lots/${selected.ranchId}/${selected.lotId}`)
       .then((res) => res.json())
@@ -81,18 +89,18 @@ export default function MapComponent({ sidebarOpen }: { sidebarOpen?: boolean })
             return new mapboxgl.Marker({ element: el })
               .setLngLat([a.lastLocation.longitude, a.lastLocation.latitude])
               .setPopup(popup)
-              .addTo(mapInstance.current!);
+              .addTo(mapRef.current!);
           });
       })
       .catch(console.error);
-  }, [selected]);
+  }, [selected?.lotId, selected?.ranchId]);
 
-  // Resize map when the sidebar toggles
+  // resize map when sidebar toggles
   useEffect(() => {
-    if (mapInstance.current) {
-      mapInstance.current.resize();
+    if (mapRef.current) {
+      mapRef.current.resize();
     }
   }, [sidebarOpen]);
 
-  return <div ref={mapRef} className="absolute inset-0 z-0" />;
+  return <div ref={containerRef} className="w-full h-full" />;
 }

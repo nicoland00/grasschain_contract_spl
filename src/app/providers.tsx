@@ -8,6 +8,7 @@ import { SolanaProvider } from "@/components/solana/solana-provider";
 // add these:
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import "@solana/wallet-adapter-react-ui/styles.css";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
