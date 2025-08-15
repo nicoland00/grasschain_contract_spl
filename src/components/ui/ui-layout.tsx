@@ -1,26 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { ReactNode, Suspense, useState, useEffect } from "react";
-import { useWallet } from "../solana/solana-provider"; 
-import { useSession, signOut } from "next-auth/react";
-import LoginIsland from "@/components/grasschain_contract_spl/LoginIsland";
+import { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthIdentity } from "@/hooks/useAuthIdentity";
+import { getStripe } from "@/lib/stripeClient";
 import MobileNavbar from "@/components/mobile/MobileBottomNav";
 
 export function UiLayout({ children }: { children: ReactNode }) {
-  const { publicKey, disconnect } = useWallet();
-  const { data: session, status } = useSession();
-  const [showLogin, setShowLogin] = useState(false);
-  const userEmail = session?.user?.email;
+  const { email, address, authenticated, login } = useAuthIdentity();
+  const router = useRouter();
 
-  // auto‐close our overlay once they really are signed in
-  useEffect(() => {
-      if (session || status === "loading") setShowLogin(false);
-    }, [session, status]);
+  const handleCrypto = async () => {
+    if (!authenticated) await login();
+    router.push("/invest/crypto");
+  };
+
+  const handleStripe = async () => {
+    if (!authenticated) await login();
+    const stripe = await getStripe();
+    const res = await fetch("/api/checkout/sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, address }),
+    });
+    const data = await res.json();
+    await stripe?.redirectToCheckout({ sessionId: data.id });
+  };
 
   return (
     <div className="flex flex-col bg-white text-black">
-      {showLogin && !session && <LoginIsland />}
       {/* Navbar */}
       <nav className="navbar bg-white px-4 shadow relative z-50">
         {/* Logo & Links */}
@@ -46,45 +55,27 @@ export function UiLayout({ children }: { children: ReactNode }) {
           </ul>
         </div>
 
-        {/* Auth / Wallet controls */}
+        {/* CTA Buttons */}
         <div className="navbar-end space-x-2 hidden md:flex">
-          {publicKey ? (
-            <button
-              className="btn btn-outline"
-              onClick={() => disconnect()}
-            >
-              {publicKey.toBase58().slice(0, 6)}…{publicKey.toBase58().slice(-4)} (Disconnect)
-            </button>
-          ) : userEmail ? (
-            <button
-              className="btn btn-outline"
-              onClick={() => signOut()}
-            >
-              {userEmail} (Sign out)
-            </button>
-          ) : (
-                        // Not signed in: we'll pop the LoginIsland on protected pages—
-                        // here you could just show a "Sign in" link if you like
-                        <button className="btn btn-outline" onClick={() => setShowLogin(true)}>
-                          Sign in
-                        </button>
-                     )}
-
+          <button
+            className="btn btn-primary rounded-xl font-bold shadow"
+            onClick={handleCrypto}
+          >
+            Invest with Crypto
+          </button>
+          <button
+            className="btn btn-secondary rounded-xl font-bold shadow"
+            onClick={handleStripe}
+          >
+            Invest with Stripe
+          </button>
         </div>
       </nav>
 
       {/* Page content */}
-      <Suspense
-        fallback={
-          <div className="flex-grow flex items-center justify-center">
-            <div className="loading loading-spinner loading-lg" />
-          </div>
-        }
-      >
-        <main className="flex-grow container mx-auto px-0 md:px-4">
-          {children}
-        </main>
-      </Suspense>
+      <main className="flex-grow container mx-auto px-0 md:px-4">
+        {children}
+      </main>
 
       {/* Footer */}
       <footer className="footer items-center p-4 bg-white border-t">

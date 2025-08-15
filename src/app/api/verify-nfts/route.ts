@@ -1,89 +1,31 @@
 // src/app/api/verify-nfts/route.ts
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/dbConnect";
-import CryptoInvestor, { ICryptoInvestor } from "@/models/tracking/CryptoInvestor";
-import FiatInvestor, { IFiatInvestor } from "@/models/tracking/FiatInvestor";
+import CryptoInvestor from "@/models/tracking/CryptoInvestor";
+import FiatInvestor from "@/models/tracking/FiatInvestor";
 
 export async function POST(request: Request) {
   try {
-    // 1) Conecta a Mongo
     await dbConnect();
+    const { contract, lotId, email, address } = await request.json();
 
-    // 2) Parsea body
-    const { userNFTs, email } = await request.json();
-
-    // 3) Si vienen NFTs (crypto)
-    if (Array.isArray(userNFTs) && userNFTs.length > 0) {
-      const ci = await CryptoInvestor
-        .findOne<ICryptoInvestor>({ nftMint: { $in: userNFTs } })
-        .lean();
-
-      if (!ci) {
-        return NextResponse.json(
-          { success: false, error: "No matching NFT found." },
-          { status: 404 }
-        );
+    if (address) {
+      const ci = await CryptoInvestor.findOne({ investor: address, contract }).lean();
+      if (ci && ci.ranchId) {
+        return NextResponse.json({ success: true, ranchId: ci.ranchId, lotId: ci.lotId, contractId: ci.contract });
       }
-      if (!ci.ranchId) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Contract is active, but tracking isn't configured yet. You'll be notified once the herd location is available."
-          },
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json({
-        success:    true,
-        ranchId:    ci.ranchId,
-        lotId:      ci.lotId,
-        contractId: ci.contract
-      });
     }
 
-    // 4) Si viene email (fiat)
-    if (typeof email === "string" && email.trim() !== "") {
-      const fi = await FiatInvestor
-        .findOne<IFiatInvestor>({ email })
-        .lean();
-
-      if (!fi) {
-        return NextResponse.json(
-          { success: false, error: "No matching email found." },
-          { status: 404 }
-        );
+    if (email) {
+      const fi = await FiatInvestor.findOne({ email, contract }).lean();
+      if (fi && fi.ranchId) {
+        return NextResponse.json({ success: true, ranchId: fi.ranchId, lotId: fi.lotId, contractId: fi.contract });
       }
-      if (!fi.ranchId) {
-        return NextResponse.json(
-          {
-            success: false,
-            error:
-              "Contract is active, but tracking isn't configured yet. You'll be notified once the herd location is available."
-          },
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json({
-        success:    true,
-        ranchId:    fi.ranchId,
-        lotId:      fi.lotId, 
-        contractId: fi.contract
-      });
     }
 
-    // 5) Ningún parámetro válido
-    return NextResponse.json(
-      { success: false, error: "You must provide either userNFTs or email." },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, reason: "No matching investment" }, { status: 404 });
   } catch (err: any) {
     console.error("Error in /api/verify-nfts:", err);
-    return NextResponse.json(
-      { success: false, error: err.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, reason: err.message }, { status: 500 });
   }
 }
