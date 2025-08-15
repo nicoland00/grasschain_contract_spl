@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useLote } from "@/context/tracking/contextLote";
-import { useSession } from "next-auth/react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAuthIdentity } from "@/hooks/useAuthIdentity";
 
 export type ContractEntry = {
   contractId: string;
@@ -15,8 +14,7 @@ export type ContractEntry = {
 
 export default function LotSelector({ className, onSelect }: { className?: string; onSelect?: () => void }) {
   const { selected, setSelected } = useLote();
-  const { data: session } = useSession();
-  const { publicKey, connected } = useWallet();
+  const { email, address, authenticated, login } = useAuthIdentity();
 
   const [lots, setLots] = useState<ContractEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,27 +22,29 @@ export default function LotSelector({ className, onSelect }: { className?: strin
 
   useEffect(() => {
     async function load() {
-      if (!session?.user?.email && !(connected && publicKey)) {
-        setError("Conecta tu wallet o inicia sesión");
+      if (!email && !address) {
+        if (!authenticated) await login();
+        setError("Conecta tu identidad");
         setLoading(false);
         return;
       }
 
       setLoading(true);
-      const url = session?.user?.email
-        ? "/api/my-contracts"
-        : `/api/my-contracts?wallet=${publicKey!.toBase58()}`;
       try {
-        const res = await fetch(url);
+        const res = await fetch("/api/my-contracts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, address }),
+        });
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const contracts: any[] = await res.json();
         setLots(
           contracts.map((c) => ({
             contractId: c.contractId,
-            ranchId:    c.ranchId,
-            lotId:      c.lotId,
-            farmName:   c.farmName,
-            label:      c.farmName || c.lotName || c.lotId || c.contractId,
+            ranchId: c.ranchId,
+            lotId: c.lotId,
+            farmName: c.farmName,
+            label: c.farmName || c.lotName || c.lotId || c.contractId,
           }))
         );
         setError(null);
@@ -55,7 +55,7 @@ export default function LotSelector({ className, onSelect }: { className?: strin
       }
     }
     load();
-  }, [session, connected, publicKey]);
+  }, [email, address, authenticated, login]);
 
   if (loading) return <p className={className}>Cargando lotes…</p>;
   if (error) return <p className={className + " text-red-600"}>{error}</p>;

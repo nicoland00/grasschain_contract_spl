@@ -5,19 +5,15 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { useSession } from "next-auth/react";
-import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { useAuthIdentity } from "@/hooks/useAuthIdentity";
 import { useLote } from "@/context/tracking/contextLote";
 import { useGrasschainContractSplProgram } from "@/components/grasschain_contract_spl/grasschain_contract_spl-data-access";
 import { PublicKey } from "@solana/web3.js";
-// The TrackingStepper was removed as contract status is no longer
-// displayed on the tracking page
 
-
-type ContractEntry = {
+export type ContractEntry = {
   contractId: string;
   ranchId?: string;
+  lotId?: string;
   status: "not-started" | "active" | "settled" | "defaulted";
   farmName?: string;
 };
@@ -25,9 +21,7 @@ type ContractEntry = {
 const OVERLAY_Z = 40;
 
 export default function AccessOverlay() {
-  const { data: session } = useSession();
-  const { publicKey, connected } = useWallet();
-  const { connection } = useConnection();
+  const { email, address } = useAuthIdentity();
   const { setSelected, selected } = useLote();
 
   const [contracts, setContracts] = useState<ContractEntry[] | null>(null);
@@ -35,20 +29,19 @@ export default function AccessOverlay() {
   const [message, setMessage] = useState<string | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
 
-  // on-chain metadata
   const { program } = useGrasschainContractSplProgram();
   const [metaMap, setMetaMap] = useState<Record<string, { farmName: string; farmImageUrl: string }>>({});
 
-  // 1) load your contracts (fiat or crypto)
   useEffect(() => {
     async function load() {
-      if (!session?.user?.email && !(connected && publicKey)) return;
+      if (!email && !address) return;
       setLoading(true);
-      const url = session?.user?.email
-        ? `/api/my-contracts`
-        : `/api/my-contracts?wallet=${publicKey!.toBase58()}`;
       try {
-        const res = await fetch(url);
+        const res = await fetch("/api/my-contracts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, address }),
+        });
         const data: ContractEntry[] = await res.json();
         setContracts(data);
       } catch {
@@ -58,9 +51,8 @@ export default function AccessOverlay() {
       }
     }
     load();
-  }, [session, connected, publicKey]);
+  }, [email, address]);
 
-  // 2) fetch on-chain farmName & farmImageUrl for each contract
   useEffect(() => {
     if (!contracts || !program) return;
     contracts.forEach(async (c) => {
@@ -69,9 +61,7 @@ export default function AccessOverlay() {
         const acc = await program.account.contract.fetch(new PublicKey(c.contractId));
         setMetaMap((m) => ({
           ...m,
-          [c.contractId]: { farmName: acc.farmName === "San Antonio 2" && c.contractId === "Amo8DcGpNvpbkrKfnksRGYp6kCE5eG8V2RXbZku9x2vi"
-            ? "San Antonio 3"
-            : acc.farmName, farmImageUrl: acc.farmImageUrl },
+          [c.contractId]: { farmName: acc.farmName, farmImageUrl: acc.farmImageUrl },
         }));
       } catch {
         console.warn("couldn't fetch on-chain metadata for", c.contractId);
@@ -79,7 +69,6 @@ export default function AccessOverlay() {
     });
   }, [contracts, program, metaMap]);
 
-  // 3) verify handler
   async function handleVerify(entry: ContractEntry) {
     if (entry.status !== "active") {
       setMessage(
@@ -91,43 +80,18 @@ export default function AccessOverlay() {
     }
     setVerifyingId(entry.contractId);
     setMessage(null);
-       const payload: any = { contractId: entry.contractId };
-    
-       if (session?.user?.email) {
-         // off-chain path
-         payload.email = session.user.email;
-       } else if (publicKey) {
-         // on-chain path: gather all the user's NFTs (no signature)
-         const resp = await connection.getParsedTokenAccountsByOwner(publicKey, {
-           programId: TOKEN_PROGRAM_ID,
-         });
-         // filter to decimals=0 & amount=1 (typical NFT)
-         const userNFTs = resp.value
-           .filter(({ account }) => {
-             const info = account.data.parsed.info.tokenAmount;
-             return info.uiAmount === 1 && info.decimals === 0;
-           })
-           .map(({ account }) => account.data.parsed.info.mint);
-    
-         payload.userNFTs = userNFTs;
-       } else {
-         setMessage("You must connect a wallet or sign in to verify.");
-         setVerifyingId(null);
-         return;
-       }
-
     try {
       const res = await fetch("/api/verify-nfts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ contract: entry.contractId, lotId: entry.lotId, email, address }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setSelected({ ranchId: data.ranchId, lotId: data.lotId, contractId: data.contractId });
+        setSelected({ ranchId: data.ranchId, lotId: data.lotId, contractId: entry.contractId });
         return;
       } else {
-        setMessage(data.error || "Verification failed.");
+        setMessage(data.reason || "Verification failed.");
       }
     } catch {
       setMessage("Verification error.");
@@ -136,22 +100,16 @@ export default function AccessOverlay() {
     }
   }
 
-  // once a lote is selected, hide overlay
   if (selected) return null;
 
-  // split active vs others
   const active = contracts?.filter((c) => c.status === "active") ?? [];
   const others = contracts?.filter((c) => c.status !== "active") ?? [];
 
   return createPortal(
     <div
       className="fixed inset-0 flex flex-col overflow-y-auto bg-white"
-      style={{
-        zIndex: OVERLAY_Z,
-        background: "rgba(255,255,255,0.95)",
-      }}
+      style={{ zIndex: OVERLAY_Z, background: "rgba(255,255,255,0.95)" }}
     >
-      {/* Sticky header */}
       <motion.div
         className="sticky top-16 w-full bg-white/95 py-4 z-50"
         initial={{ opacity: 0, y: -20 }}
@@ -162,7 +120,6 @@ export default function AccessOverlay() {
       </motion.div>
 
       <div className="w-full max-w-3xl mt-8 space-y-8  mx-4 md:mx-auto">
-        {/* Active contracts first */}
         {active.map((c) => {
           const meta = metaMap[c.contractId] || {
             farmName: c.farmName || c.contractId,
@@ -175,13 +132,11 @@ export default function AccessOverlay() {
                 meta={meta}
                 verifyingId={verifyingId}
                 onVerify={() => handleVerify(c)}
-                session={session}
               />
             </div>
           );
         })}
 
-        {/* Divider & inactive */}
         {others.length > 0 && (
           <>
             <hr className="border-border" />
@@ -197,7 +152,6 @@ export default function AccessOverlay() {
                     meta={meta}
                     verifyingId={verifyingId}
                     onVerify={() => handleVerify(c)}
-                    session={session}
                   />
                 </div>
               );
@@ -210,75 +164,26 @@ export default function AccessOverlay() {
   );
 }
 
-// A little helper component to keep things DRY
-function ContractCard({
-  entry,
-  meta,
-  verifyingId,
-  onVerify,
-  session,
-}: {
-  entry: ContractEntry;
-  meta: { farmName: string; farmImageUrl: string };
-  verifyingId: string | null;
-  onVerify: () => void;
-  session: any;
-}) {
-  const isActive = entry.status === "active";
-  const isVerifying = verifyingId === entry.contractId;
-
-    return (
-        <div
-          className={`
-            flex flex-col            
-            bg-white rounded-lg shadow
-            overflow-hidden
-            ${!isActive ? "opacity-50" : ""}
-          `}
+function ContractCard({ entry, meta, verifyingId, onVerify }: { entry: ContractEntry; meta: { farmName: string; farmImageUrl: string }; verifyingId: string | null; onVerify: () => void; }) {
+  return (
+    <div className="rounded-xl shadow-lg overflow-hidden bg-white">
+      <Image
+        src={meta.farmImageUrl}
+        alt={meta.farmName}
+        width={800}
+        height={400}
+        className="object-cover w-full h-48"
+      />
+      <div className="p-4 flex flex-col space-y-4">
+        <h2 className="text-2xl font-bold text-gray-900">{meta.farmName}</h2>
+        <button
+          className="btn btn-primary"
+          disabled={verifyingId === entry.contractId}
+          onClick={onVerify}
         >
-          {/** inner two-column area **/}
-          <div className="flex flex-col md:flex-row">
-            {/* left: 50% image */}
-            <div className="w-full md:w-1/2 aspect-video relative">
-              <Image
-                src={meta.farmImageUrl}
-                alt={meta.farmName}
-                fill
-                className="object-cover"
-              />
-            </div>
-    
-            {/* right: details & button */}
-            <div className="w-full md:w-1/2 p-6 flex flex-col justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold mb-2">
-                  {meta.farmName}
-                </h2>
-              </div>
-    
-              <button
-                onClick={onVerify}
-                disabled={!isActive || isVerifying}
-                className={`
-                  w-full py-3 rounded-lg text-white font-medium
-                  ${isActive
-                    ? "bg-green-500 hover:bg-green-600"
-                    : "bg-gray-300 cursor-not-allowed"
-                  }
-                `}
-              >
-                {isVerifying
-                  ? "Verifying…"
-                  : isActive
-                  ? "Verify"
-                  : entry.status === "not-started"
-                  ? "Not active"
-                  : "Closed"}
-              </button>
-            </div>
-          </div>
-    
-          {/* status stepper removed */}
-       </div>
-      );
+          {verifyingId === entry.contractId ? "Verifying…" : "Verify Access"}
+        </button>
+      </div>
+    </div>
+  );
 }
