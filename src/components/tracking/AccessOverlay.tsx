@@ -9,6 +9,9 @@ import { useAuthIdentity } from "@/hooks/useAuthIdentity";
 import { useLote } from "@/context/tracking/contextLote";
 import { useGrasschainContractSplProgram } from "@/components/grasschain_contract_spl/grasschain_contract_spl-data-access";
 import { PublicKey } from "@solana/web3.js";
+// PRIVY:
+import { PRIVY_ENABLED } from "@/lib/flags";
+import { useUnifiedIdentity } from "@/hooks/useUnifiedIdentity";
 
 export type ContractEntry = {
   contractId: string;
@@ -21,7 +24,11 @@ export type ContractEntry = {
 const OVERLAY_Z = 40;
 
 export default function AccessOverlay() {
-  const { email, address } = useAuthIdentity();
+  const legacy = useAuthIdentity();
+  // PRIVY:
+  const unified = useUnifiedIdentity();
+  const email = PRIVY_ENABLED ? unified.email : legacy.email;
+  const address = PRIVY_ENABLED ? unified.address : legacy.address;
   const { setSelected, selected } = useLote();
 
   const [contracts, setContracts] = useState<ContractEntry[] | null>(null);

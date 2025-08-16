@@ -6,9 +6,15 @@ import { useRouter } from "next/navigation";
 import { useAuthIdentity } from "@/hooks/useAuthIdentity";
 import { getStripe } from "@/lib/stripeClient";
 import MobileNavbar from "@/components/mobile/MobileBottomNav";
+// PRIVY:
+import { PRIVY_ENABLED } from "@/lib/flags";
+import WalletButton from "@/components/wallet/WalletButton";
+import { useUnifiedIdentity } from "@/hooks/useUnifiedIdentity";
 
 export function UiLayout({ children }: { children: ReactNode }) {
   const { email, address, authenticated, login } = useAuthIdentity();
+  // PRIVY:
+  const unified = useUnifiedIdentity();
   const router = useRouter();
 
   const handleCrypto = async () => {
@@ -69,6 +75,26 @@ export function UiLayout({ children }: { children: ReactNode }) {
           >
             Invest with Stripe
           </button>
+          {/* PRIVY: Wallet and Invest buttons */}
+          {PRIVY_ENABLED && (
+            <>
+              <WalletButton />
+              <button
+                className="btn btn-success"
+                onClick={async () => {
+                  const { authenticated: auth2, login: login2, address: address2 } = unified;
+                  if (!auth2) await login2();
+                  await fetch("/api/invest", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ address: address2 }),
+                  });
+                }}
+              >
+                Invest
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
