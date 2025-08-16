@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from "react";
 import { useLote } from "@/context/tracking/contextLote";
 import { useAuthIdentity } from "@/hooks/useAuthIdentity";
+// PRIVY:
+import { PRIVY_ENABLED } from "@/lib/flags";
+import { useUnifiedIdentity } from "@/hooks/useUnifiedIdentity";
 
 export type ContractEntry = {
   contractId: string;
@@ -14,7 +17,13 @@ export type ContractEntry = {
 
 export default function LotSelector({ className, onSelect }: { className?: string; onSelect?: () => void }) {
   const { selected, setSelected } = useLote();
-  const { email, address, authenticated, login } = useAuthIdentity();
+  const legacy = useAuthIdentity();
+  // PRIVY:
+  const unified = useUnifiedIdentity();
+  const email = PRIVY_ENABLED ? unified.email : legacy.email;
+  const address = PRIVY_ENABLED ? unified.address : legacy.address;
+  const authenticated = PRIVY_ENABLED ? unified.authenticated : legacy.authenticated;
+  const login = PRIVY_ENABLED ? unified.login : legacy.login;
 
   const [lots, setLots] = useState<ContractEntry[]>([]);
   const [loading, setLoading] = useState(true);
